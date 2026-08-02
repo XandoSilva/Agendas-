@@ -37,11 +37,21 @@
 .text-amber { color: var(--amber); }
 .text-green { color: var(--green); }
 
-.kpi-progress {
-  grid-column: span 2;
-}
 @media (max-width: 600px) {
-  .kpi-progress { grid-column: span 1; }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .kpi-card {
+    padding: 10px 12px;
+  }
+  .kpi-value {
+    font-size: 18px;
+  }
+  .kpi-progress {
+    grid-column: span 2;
+  }
 }
 
 .progress-bar-bg {
@@ -253,7 +263,15 @@ textarea#pasteBox:focus {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-group::-webkit-scrollbar {
+  display: none;
 }
 .filter-label {
   font-size: 11px;
@@ -261,11 +279,12 @@ textarea#pasteBox:focus {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: .5px;
-  margin-right: 2px;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 .chip {
-  font-size: 11.5px;
-  padding: 6px 12px;
+  font-size: 12px;
+  padding: 7px 14px;
   border-radius: 20px;
   border: 1px solid var(--line);
   background: var(--panel);
@@ -273,6 +292,8 @@ textarea#pasteBox:focus {
   cursor: pointer;
   font-weight: 600;
   transition: all .15s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .chip.active {
   background: var(--teal);
