@@ -1,0 +1,801 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg: #0B1220;
+    --panel: #121A2B;
+    --panel-2: #17203380;
+    --line: #24304A;
+    --text: #E8ECF1;
+    --muted: #8592A6;
+    --muted-2: #5C6B85;
+    --amber: #F5A623;
+    --teal: #2DD4BF;
+    --coral: #FB7185;
+    --violet: #A78BFA;
+    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);}
+  #app{display:grid;grid-template-columns:360px 1fr;min-height:100vh;}
+  @media (max-width: 900px){ 
+    #app{grid-template-columns:1fr;} 
+    #intake {
+      position: relative;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      overflow-y: visible;
+    }
+    #main { padding: 16px; }
+    #search { width: 100%; }
+    .card-top { flex-direction: column; }
+    .card-actions { justify-content: flex-end; }
+  }
+
+  /* ---------- LEFT: intake panel ---------- */
+  #intake{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    padding:20px;
+    display:flex; flex-direction:column; gap:14px;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber);}
+  .brand h1{font-family:var(--font-display); font-size:17px; font-weight:600; margin:0; letter-spacing:.2px;}
+  .brand span{color:var(--muted); font-size:11px; font-family:var(--font-mono);}
+
+  textarea#pasteBox{
+    width:100%; min-height:130px; resize:vertical;
+    background:#0D1524; border:1px solid var(--line); border-radius:8px;
+    color:var(--text); font-family:var(--font-mono); font-size:12.5px; padding:10px; line-height:1.5;
+  }
+  textarea#pasteBox:focus{outline:none; border-color:var(--teal);}
+  .row{display:flex; gap:8px;}
+  .btn{
+    cursor:pointer; border:none; border-radius:7px; padding:9px 14px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--teal); color:#062824;}
+  .btn-ghost{background:transparent; color:var(--muted); border:1px solid var(--line);}
+  .btn-ghost:hover{color:var(--text); border-color:var(--muted-2);}
+  .btn-block{width:100%;}
+
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted-2); font-weight:600;}
+  .field input, .field select, .field textarea{
+    background:#0D1524; border:1px solid var(--line); border-radius:6px;
+    color:var(--text); font-family:var(--font-body); font-size:13px; padding:7px 9px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--teal);}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  #form{display:flex; flex-direction:column; gap:8px; padding-top:10px; border-top:1px dashed var(--line);}
+  #formHint{font-size:11px; color:var(--muted); line-height:1.5;}
+  #formHint b{color:var(--amber);}
+
+  /* ---------- RIGHT: timeline ---------- */
+  #main{padding:26px 32px 60px;}
+  #toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
+  #toolbar h2{font-family:var(--font-display); font-size:22px; margin:0; margin-right:auto;}
+  .chip{
+    font-size:11.5px; padding:6px 11px; border-radius:20px; border:1px solid var(--line);
+    background:transparent; color:var(--muted); cursor:pointer; font-weight:600;
+  }
+  .chip.active{background:var(--teal); border-color:var(--teal); color:#062824;}
+  #search{
+    background:#0D1524; border:1px solid var(--line); border-radius:20px; color:var(--text);
+    padding:7px 14px; font-size:12.5px; width:190px;
+  }
+  #search:focus{outline:none; border-color:var(--teal);}
+
+  #timeline{position:relative; padding-left:26px;}
+  #timeline::before{
+    content:''; position:absolute; left:5px; top:6px; bottom:20px; width:2px;
+    background:linear-gradient(var(--teal), var(--line) 15%, var(--line) 85%, var(--coral));
+    opacity:.5;
+  }
+  .day-group{margin-bottom:30px; position:relative;}
+  .day-marker{
+    position:absolute; left:-26px; top:2px; width:14px; height:14px; border-radius:50%;
+    background:var(--bg); border:2px solid var(--teal);
+  }
+  .day-header{
+    font-family:var(--font-mono); font-size:13px; color:var(--teal); font-weight:700;
+    letter-spacing:.5px; margin-bottom:12px; display:flex; align-items:baseline; gap:8px;
+  }
+  .day-header .dow{color:var(--muted); font-weight:400; text-transform:capitalize;}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; margin-bottom:10px; position:relative;
+  }
+  .card.st-Cancelada, .card.st-Reagendada{opacity:.6;}
+  .card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .tag-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;}
+  .tag{font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; letter-spacing:.3px; text-transform:uppercase;}
+  .tag-tipo{background:#1E2A45; color:var(--violet);}
+  .tag-status{color:#06282A;}
+  .st-Confirmada{background:var(--teal);}
+  .st-Pendente{background:var(--amber);}
+  .st-Realizada{background:#4ADE80;}
+  .st-Cancelada{background:var(--coral); color:#3A0A12;}
+  .st-Reagendada{background:#94A3B8; color:#1E293B;}
+
+  .cliente{font-family:var(--font-display); font-size:15.5px; font-weight:600; margin:2px 0 3px;}
+  .contrato{font-family:var(--font-mono); font-size:11.5px; color:var(--muted); margin-bottom:6px;}
+  .endereco{font-size:12.5px; color:var(--muted); line-height:1.5; margin-bottom:8px;}
+  .meta{display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--text);}
+  .meta div span{display:block; color:var(--muted-2); font-size:10px; text-transform:uppercase; letter-spacing:.4px; margin-bottom:1px;}
+  .hora{font-family:var(--font-mono); color:var(--amber); font-weight:700;}
+  .obs{margin-top:8px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:8px; white-space:pre-wrap;}
+  .card-actions{display:flex; gap:6px; margin-top:10px;}
+  .icon-btn{
+    background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px;
+    padding:4px 9px; font-size:11px; cursor:pointer;
+  }
+  .icon-btn:hover{color:var(--text); border-color:var(--muted-2);}
+  select.status-select{
+    background:#0D1524; color:var(--text); border:1px solid var(--line); border-radius:6px;
+    font-size:11px; padding:4px 6px; font-family:var(--font-body);
+  }
+
+  #empty{color:var(--muted); font-size:13px; padding:30px 0;}
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+</style>
+
+<div id="settingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:var(--panel); padding:20px; border-radius:10px; border:1px solid var(--line); width:400px; max-width:90%;">
+    <h3 style="margin-top:0; font-family:var(--font-display);">Modo Multi-Usuário (Supabase)</h3>
+    <p style="font-size:12px; color:var(--muted); line-height:1.5;">Para compartilhar a agenda com a equipe, cole a <code>URL</code> e a <code>anon key</code> do seu projeto Supabase. Deixe em branco para usar modo local.</p>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+      <input type="text" id="sbUrl" style="width:100%; background:#0D1524; border:1px solid var(--line); color:var(--text); font-family:var(--font-mono); font-size:11px; padding:10px; border-radius:6px;" placeholder="SUPABASE_URL (ex: https://xxx.supabase.co)">
+      <textarea id="sbKey" rows="3" style="width:100%; background:#0D1524; border:1px solid var(--line); color:var(--text); font-family:var(--font-mono); font-size:11px; padding:10px; border-radius:6px;" placeholder="SUPABASE_ANON_KEY"></textarea>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:15px; justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="document.getElementById('settingsModal').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Salvar & Reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="intake">
+    <div class="brand">
+      <div class="dot" id="onlineDot"></div>
+      <div style="flex:1;">
+        <h1>Painel de Agendamentos</h1>
+        <span id="connStatus" style="color:var(--muted); font-size:11px; font-family:var(--font-mono);">vistorias &amp; passagens de cabo</span>
+      </div>
+      <button class="icon-btn" onclick="openSettings()" style="margin-left:auto; font-size:14px; padding:4px 8px; border:none; background:var(--line); color:var(--text);" title="Configurar Banco de Dados">⚙️</button>
+    </div>
+
+    <div class="field">
+      <label>Colar mensagem do Teams</label>
+      <textarea id="pasteBox" placeholder="Cole aqui o bloco de mensagem recebido no grupo do Teams..."></textarea>
+    </div>
+    <div class="row">
+      <button class="btn btn-primary btn-block" onclick="parsePaste()">Analisar mensagem</button>
+    </div>
+    
+    <div id="syncSection" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
+      <label style="font-size:10.5px; text-transform:uppercase; color:var(--muted-2); font-weight:600; display:block; margin-bottom:4px;">Sincronização Automática (Teams)</label>
+      <input type="text" id="syncUrl" class="field" style="width:100%; background:#0D1524; border:1px solid var(--line); border-radius:6px; color:var(--text); padding:7px 9px; font-size:11.5px; font-family:var(--font-mono);" placeholder="Cole a URL do CSV (Google Sheets)" onchange="saveSyncUrl()">
+      <button type="button" class="btn btn-ghost btn-block" style="margin-top:8px;" onclick="syncMessages()" id="btnSync">Sincronizar Mensagens</button>
+    </div>
+
+    <div id="formHint" style="margin-top:14px;">Confira os campos abaixo — a extração automática pode errar em datas sem ano ou horários por extenso. <b>Ajuste antes de salvar.</b></div>
+
+    <form id="form" onsubmit="saveEntry(event)">
+      <input type="hidden" id="f_id">
+      <input type="hidden" id="f_source_id">
+      <div class="field-row">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="f_tipo">
+            <option>Vistoria</option>
+            <option>Passagem de Cabo</option>
+            <option>Ativação</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="f_status">
+            <option>Confirmada</option>
+            <option>Pendente</option>
+            <option>Realizada</option>
+            <option>Reagendada</option>
+            <option>Cancelada</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="f_data">
+        </div>
+        <div class="field">
+          <label>Horário</label>
+          <input type="text" id="f_hora" placeholder="ex: 10:00 ou HC">
+        </div>
+      </div>
+      <div class="field">
+        <label>Contrato</label>
+        <input type="text" id="f_contrato">
+      </div>
+      <div class="field">
+        <label>Cliente</label>
+        <input type="text" id="f_cliente">
+      </div>
+      <div class="field">
+        <label>Endereço</label>
+        <input type="text" id="f_endereco">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Acompanhante</label>
+          <input type="text" id="f_acompanhante" placeholder="nome">
+        </div>
+        <div class="field">
+          <label>Contato</label>
+          <input type="text" id="f_contato" placeholder="telefone">
+        </div>
+      </div>
+      <div class="field">
+        <label>Observações (empreiteira, OS, técnico...)</label>
+        <textarea id="f_obs" rows="3"></textarea>
+      </div>
+      <div class="row" style="margin-top:4px;">
+        <button type="submit" class="btn btn-primary btn-block">Salvar na agenda</button>
+        <button type="button" class="btn btn-ghost" onclick="clearForm()">Limpar</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="main">
+    <div id="toolbar">
+      <h2 id="counter">Agenda</h2>
+      <input id="search" placeholder="Buscar contrato ou cliente..." oninput="render()">
+      <button class="chip active" data-f="all" onclick="setFilter('all', this)">Todos</button>
+      <button class="chip" data-f="Confirmada" onclick="setFilter('Confirmada', this)">Confirmada</button>
+      <button class="chip" data-f="Pendente" onclick="setFilter('Pendente', this)">Pendente</button>
+      <button class="chip" data-f="Realizada" onclick="setFilter('Realizada', this)">Realizada</button>
+      <button class="chip" data-f="Cancelada" onclick="setFilter('Cancelada', this)">Cancelada/Reagendada</button>
+    </div>
+    <div id="timeline"></div>
+  </div>
+</div>
+
+<script>
+let entries = [];
+let currentFilter = 'all';
+const STORAGE_KEY = 'agendamentos';
+let sbClient = null;
+
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function initSupabase() {
+  const sbUrl = (localStorage.getItem('sb_url') || '').trim();
+  const sbKey = (localStorage.getItem('sb_key') || '').trim();
+  if(sbUrl && sbKey) {
+    try {
+      sbClient = window.supabase.createClient(sbUrl, sbKey);
+      document.getElementById('onlineDot').style.background = '#4ADE80';
+      document.getElementById('onlineDot').style.boxShadow = '0 0 12px #4ADE80';
+      document.getElementById('connStatus').textContent = 'Online (Supabase)';
+      return true;
+    } catch(e) { 
+      console.error('Supabase setup failed', e); 
+      alert('Falha ao conectar no Supabase: ' + e.message + '\nVerifique as credenciais nas configurações.');
+    }
+  }
+  document.getElementById('onlineDot').style.background = '#38BDF8';
+  document.getElementById('onlineDot').style.boxShadow = '0 0 12px #38BDF8';
+  document.getElementById('connStatus').textContent = 'Modo Local (localStorage)';
+  return false;
+}
+
+function openSettings() {
+  document.getElementById('sbUrl').value = localStorage.getItem('sb_url') || '';
+  document.getElementById('sbKey').value = localStorage.getItem('sb_key') || '';
+  document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function saveSettings() {
+  const url = document.getElementById('sbUrl').value.trim();
+  const key = document.getElementById('sbKey').value.trim();
+  if(!url || !key) {
+    localStorage.removeItem('sb_url');
+    localStorage.removeItem('sb_key');
+  } else {
+    localStorage.setItem('sb_url', url);
+    localStorage.setItem('sb_key', key);
+  }
+  location.reload();
+}
+
+async function loadEntries(){
+  document.getElementById('syncUrl').value = localStorage.getItem('agendamentos_sync_url') || '';
+  
+  if (initSupabase()) {
+    const { data, error } = await sbClient.from('agendamentos').select('*');
+    if(error) {
+      console.error(error);
+      alert('Erro de permissão no Supabase. O banco está criado e as políticas RLS permitem leitura?');
+    } else {
+      entries = data || [];
+      render();
+    }
+    
+    sbClient.channel('public:agendamentos')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
+        if (payload.eventType === 'INSERT') {
+          if (!entries.some(e => e.id === payload.new.id)) entries.push(payload.new);
+        } else if (payload.eventType === 'UPDATE') {
+          const idx = entries.findIndex(e => e.id === payload.new.id);
+          if (idx >= 0) entries[idx] = payload.new;
+        } else if (payload.eventType === 'DELETE') {
+          entries = entries.filter(e => e.id !== payload.old.id);
+        }
+        render();
+      }).subscribe();
+  } else {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      entries = raw ? JSON.parse(raw) : [];
+    } catch(e) { 
+      console.error('Falha ao carregar dados locais', e);
+      entries = []; 
+    }
+    render();
+  }
+}
+
+async function persist(singleEntry = null, isDelete = false, isUpdate = false){
+  if (sbClient) {
+    if (isDelete) {
+      await sbClient.from('agendamentos').delete().eq('id', singleEntry.id);
+    } else if (isUpdate) {
+      await sbClient.from('agendamentos').update(singleEntry.data).eq('id', singleEntry.id);
+    } else if (singleEntry) {
+      await sbClient.from('agendamentos').upsert(singleEntry);
+    }
+  } else {
+    try { 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); 
+    } catch(e) { 
+      console.error('Falha ao salvar localmente no localStorage', e); 
+    }
+  }
+}
+
+function uid(){ return 'e' + Date.now() + Math.random().toString(36).slice(2,7); }
+
+// ---------- CSV Parser ----------
+function parseCSV(text) {
+  let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+  for (l of text) {
+    if ('"' === l) {
+      if (s && l === p) row[i] += l;
+      s = !s;
+    } else if (',' === l && s) l = row[++i] = '';
+    else if ('\n' === l && s) {
+      if ('\r' === p) row[i] = row[i].slice(0, -1);
+      row = ret[++r] = [l = '']; i = 0;
+    } else row[i] += l;
+    p = l;
+  }
+  return ret;
+}
+
+function saveSyncUrl(){
+  localStorage.setItem('agendamentos_sync_url', document.getElementById('syncUrl').value);
+}
+
+// --- SINCRONIZAÇÃO VIA CSV (GOOGLE SHEETS/EXCEL) ---
+async function fetchGoogleSheetsCsv(silent = false){
+  const urlInput = document.getElementById('syncUrl').value.trim();
+  if(!urlInput) {
+    if(!silent) alert('Por favor, insira a URL do CSV primeiro.');
+    return;
+  }
+  
+  localStorage.setItem('agendamentos_sync_url', urlInput);
+  
+  try {
+    const res = await fetch(urlInput);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    
+    let added = 0;
+    // Pula o cabeçalho
+    for(let i=1; i<rows.length; i++) {
+      const idMsg = rows[i][0];
+      const texto = rows[i][1];
+      if(!idMsg || !texto) continue;
+      
+      // Verifica se a mensagem já existe
+      if(entries.some(e => e.sourceId === idMsg)) continue;
+      
+      const dataArr = extractData(texto);
+      if(dataArr && dataArr.length > 0) {
+        dataArr.forEach((data, index) => {
+          if(data && (data.contrato || data.cliente || data.endereco)) {
+            const entry = {
+              id: uid() + index,
+              sourceId: idMsg,
+              ...data
+            };
+            entries.push(entry);
+            persist(entry);
+            added++;
+          }
+        });
+      }
+    }
+    
+    if(added > 0) {
+      if(!sbClient) { persist(); render(); }
+      if(!silent) alert(added + ' novo(s) agendamento(s) sincronizado(s)!');
+    } else {
+      if(!silent) alert('Nenhuma mensagem nova encontrada.');
+    }
+  } catch(e) {
+    console.error(e);
+    if(!silent) alert('Erro ao buscar o CSV. Verifique se o link é público e válido.');
+  }
+}
+
+async function syncMessages() {
+  const btn = document.getElementById('btnSync');
+  btn.textContent = 'Sincronizando...';
+  await fetchGoogleSheetsCsv(false);
+  btn.textContent = 'Sincronizar Mensagens';
+}
+
+// Auto-sync a cada 2 minutos
+setInterval(() => {
+  if (document.getElementById('syncUrl').value.trim()) {
+    fetchGoogleSheetsCsv(true);
+  }
+}, 120000);
+
+// ---------- Parser ----------
+function extractDataSingle(raw){
+  if(!raw || !raw.trim()) return null;
+  const cleanRaw = raw.replace(/\*/g, '');
+  const get = (regex) => { const m = cleanRaw.match(regex); return m ? m[1].trim() : ''; };
+
+  let tipo = 'Outro';
+  if(/VISTORIA/i.test(cleanRaw)) tipo = 'Vistoria';
+  if(/PASSAGEM DE CABO/i.test(cleanRaw)) tipo = 'Passagem de Cabo';
+  if(/ATIVA[ÇC][ÃA]O/i.test(cleanRaw)) tipo = 'Ativação';
+
+  let status = 'Confirmada';
+  if(/REAGENDAD/i.test(cleanRaw)) status = 'Reagendada';
+  else if(/CANCELAD/i.test(cleanRaw)) status = 'Cancelada';
+  else if(/N[ÃA]O FOI LIBERAD|SEM LIBERA[ÇC][ÃA]O|EM PROCESSO DE APROVA/i.test(cleanRaw)) status = 'Pendente';
+
+  let contrato = get(/CONTRATO:?\s*([0-9]+)/i);
+  let cliente = get(/CLIENTE:?\s*(.*?)(?=\n|ENDERE[ÇC]O|$)/i);
+  let endereco = get(/ENDERE[ÇC]O:?\s*(.*?)(?=\n|QUEM ACOMPANHAR[ÁA]|CONTATO|DATA|T[ÉE]CNICO|$)/i) 
+              || get(/EDNEREÇO:?\s*(.*?)(?=\n|QUEM ACOMPANHAR[ÁA]|CONTATO|DATA|T[ÉE]CNICO|$)/i);
+
+  if (!contrato) {
+    const altMatch = cleanRaw.match(/(?:PASSAGEM DE CABO|VISTORIA|ATIVAÇÃO).*?\s*-\s*([0-9]+)\s*-\s*(.*?)(?=\n|ENDERE[ÇC]O|$)/i);
+    if (altMatch) {
+      contrato = altMatch[1].trim();
+      cliente = altMatch[2].trim();
+    } else {
+      const altMatch2 = cleanRaw.match(/(?:\s|^)([0-9]{6,10})[\s\t]+([a-zÀ-ÿ0-9\s]+?)\s*-\s*(.*?)(?=\n|DATA|HORA|QUEM ACOMPANHAR[ÁA]|$)/i);
+      if (altMatch2) {
+        contrato = altMatch2[1].trim();
+        cliente = altMatch2[2].trim();
+        if (!endereco) endereco = altMatch2[3].trim();
+      }
+    }
+  }
+
+  let acompanhante = get(/QUEM ACOMPANHAR[ÁA](?:\s+A\s+EQUIPE\s+SER[ÁA])?:?\s*(.*?)(?=\n|T[ÉE]CNICO|CONFORME|OBS|$)/i);
+  
+  let dataStr = get(/PARA\s+(\d{1,2}[\/\.]\d{1,2})/i)
+    || get(/DATA(?: DE ACESSO)?:?\s*(\d{1,2}[\/\.]\d{1,2})/i)
+    || get(/DIA\s+(\d{1,2}[\/\.]\d{1,2})/i);
+  let f_data = '';
+  if(dataStr){
+    const [d,m] = dataStr.replace('.','/').split('/');
+    const year = new Date().getFullYear();
+    f_data = `${year}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  let hora = get(/HORA?:?\s*(\d{1,2}[:hH]\d{0,2}(?:\s*(?:[aàAÀ]s|-|e)\s*\d{1,2}[:hH]\d{0,2})?)/i) 
+          || get(/(?:^|\s)[aàAÀ]S\s*(\d{1,2}[:hH]\d{0,2}(?:\s*(?:[aàAÀ]s|-|e)\s*\d{1,2}[:hH]\d{0,2})?)/i) 
+          || get(/HOR[ÁA]RIO:?\s*(\d{1,2}[:hH]?\d{0,2})/i);
+  if(/EM HC|HOR[ÁA]RIO COMERCIAL/i.test(cleanRaw) && !hora) hora = 'Horário Comercial';
+  
+  if(hora) { hora = hora.replace(/H/gi,':').replace(/:(?!\d)/g,':00').toUpperCase(); }
+
+  let contato = get(/CONTATO\s*:?\s*([^\n]+)/i);
+  const contatoM = cleanRaw.match(/(\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4})/);
+  if (!contato && contatoM) { contato = contatoM[1]; }
+
+  const obsBits = [];
+  const osM = cleanRaw.match(/O\.?S\.?\s*(?:AUTORIZADA|APROVADA)?:?\s*([0-9]+)/i);
+  if(osM) obsBits.push('OS: ' + osM[1]);
+  else if(/SEM NECESSIDADE DE OS/i.test(cleanRaw)) obsBits.push('Sem necessidade de OS');
+  
+  const empM = cleanRaw.match(/EMPREITEIRA\s*(?:DIRECIONADA)?:?\s*([^\n]+)/i);
+  if(empM) obsBits.push('Empreiteira: ' + empM[1].trim());
+  
+  const tecM = cleanRaw.match(/T[ÉE]CNICO(?:\s*DA\s*TERJ)?:?\s*([^\n,]+)/i);
+  if(tecM) obsBits.push('Técnico: ' + tecM[1].trim());
+
+  return { tipo, status, data: f_data, hora, contrato, cliente, endereco, acompanhante, contato, obs: obsBits.join('\n') };
+}
+
+function extractData(raw) {
+  if(!raw || !raw.trim()) return [];
+  const entries = [];
+  let current = null;
+  let currentTipo = 'Outro';
+  
+  const lines = raw.split('\n');
+  for(let line of lines) {
+    const cleanLine = line.trim().replace(/\*/g, '');
+    if(!cleanLine) continue;
+    
+    if (cleanLine.match(/PASSAGEM DE CABO/i)) currentTipo = 'Passagem de Cabo';
+    if (cleanLine.match(/VISTORIAS?/i)) currentTipo = 'Vistoria';
+    if (cleanLine.match(/ATIVA[ÇC][ÃA]O/i)) currentTipo = 'Ativação';
+    
+    const dataMatch = cleanLine.match(/📅\s*(\d{2})\/(\d{2})\/(\d{4})/);
+    if (dataMatch) {
+      if (current && (current.contrato || current.cliente)) entries.push(current);
+      current = {
+        tipo: currentTipo,
+        data: `${dataMatch[3]}-${dataMatch[2]}-${dataMatch[1]}`,
+        hora: '', status: 'Confirmada', contrato: '', cliente: '', endereco: '', acompanhante: '', contato: '', obs: []
+      };
+      continue;
+    }
+    
+    if (current) {
+      if (cleanLine.match(/^Hora:\s*(.+)/i)) current.hora = cleanLine.match(/^Hora:\s*(.+)/i)[1];
+      else if (cleanLine.match(/^Status:\s*(.+)/i)) {
+        const st = cleanLine.match(/^Status:\s*(.+)/i)[1];
+        if(st.match(/Reagendad/i)) current.status = 'Reagendada';
+        else if(st.match(/Cancelad/i)) current.status = 'Cancelada';
+        else if(st.match(/Confirmad/i)) current.status = 'Confirmada';
+        else current.status = 'Pendente';
+      }
+      else if (cleanLine.match(/^Contrato:\s*(\d+)/i)) current.contrato = cleanLine.match(/^Contrato:\s*(\d+)/i)[1];
+      else if (cleanLine.match(/^Cliente:\s*(.+)/i)) current.cliente = cleanLine.match(/^Cliente:\s*(.+)/i)[1];
+      else if (cleanLine.match(/^Endere[çc]o:\s*(.+)/i)) current.endereco = cleanLine.match(/^Endere[çc]o:\s*(.+)/i)[1];
+      else if (cleanLine.match(/^Acompanhamento.*?:\s*(.+)/i)) {
+        const ac = cleanLine.match(/^Acompanhamento.*?:\s*(.+)/i)[1];
+        const fone = ac.match(/(\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4})/);
+        if(fone) {
+          current.contato = fone[1];
+          current.acompanhante = ac.replace(fone[1], '').replace(/[\(\)\-]/g, '').trim().replace(/\|\s*$/, '').trim();
+        } else {
+          current.acompanhante = ac;
+        }
+      }
+      else if (cleanLine.match(/^OS(?:\s.*?)?:\s*(.+)/i)) current.obs.push('OS: ' + cleanLine.match(/^OS(?:\s.*?)?:\s*(.+)/i)[1]);
+      else if (cleanLine.match(/^Observ.*:\s*(.+)/i)) current.obs.push(cleanLine.match(/^Observ.*:\s*(.+)/i)[1]);
+      else if (cleanLine.match(/^T[ée]cnico.*:\s*(.+)/i)) current.obs.push('Técnico: ' + cleanLine.match(/^T[ée]cnico.*:\s*(.+)/i)[1]);
+      else if (cleanLine.match(/^Equipe.*:\s*(.+)/i)) current.obs.push('Equipe: ' + cleanLine.match(/^Equipe.*:\s*(.+)/i)[1]);
+    }
+  }
+  if (current && (current.contrato || current.cliente)) entries.push(current);
+  
+  if (entries.length === 0) {
+     const single = extractDataSingle(raw);
+     if(single && (single.contrato || single.cliente)) entries.push(single);
+  }
+  
+  entries.forEach(e => {
+    if(Array.isArray(e.obs)) e.obs = e.obs.join('\n');
+  });
+  
+  return entries;
+}
+
+function parsePaste(){
+  const raw = document.getElementById('pasteBox').value;
+  const dataArr = extractData(raw);
+  if(!dataArr || dataArr.length === 0) return;
+  
+  if (dataArr.length > 1) {
+    dataArr.forEach((data, index) => {
+      const entry = { id: uid() + index, sourceId: '', ...data };
+      entries.push(entry);
+      persist(entry);
+    });
+    render();
+    clearForm();
+    alert(dataArr.length + ' agendamentos importados com sucesso!');
+  } else {
+    const parsed = dataArr[0];
+    document.getElementById('f_id').value = '';
+    document.getElementById('f_source_id').value = '';
+    document.getElementById('f_tipo').value = parsed.tipo;
+    document.getElementById('f_status').value = parsed.status;
+    document.getElementById('f_data').value = parsed.data;
+    document.getElementById('f_hora').value = parsed.hora;
+    document.getElementById('f_contrato').value = parsed.contrato;
+    document.getElementById('f_cliente').value = parsed.cliente;
+    document.getElementById('f_endereco').value = parsed.endereco;
+    document.getElementById('f_acompanhante').value = parsed.acompanhante;
+    document.getElementById('f_contato').value = parsed.contato;
+    document.getElementById('f_obs').value = parsed.obs;
+    document.getElementById('form').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+
+function clearForm(){
+  document.getElementById('form').reset();
+  document.getElementById('f_id').value = '';
+  document.getElementById('f_source_id').value = '';
+  document.getElementById('pasteBox').value = '';
+}
+
+function saveEntry(ev){
+  ev.preventDefault();
+  const id = document.getElementById('f_id').value || uid();
+  const entry = {
+    id,
+    tipo: document.getElementById('f_tipo').value,
+    status: document.getElementById('f_status').value,
+    data: document.getElementById('f_data').value,
+    hora: document.getElementById('f_hora').value,
+    contrato: document.getElementById('f_contrato').value,
+    cliente: document.getElementById('f_cliente').value,
+    endereco: document.getElementById('f_endereco').value,
+    acompanhante: document.getElementById('f_acompanhante').value,
+    contato: document.getElementById('f_contato').value,
+    obs: document.getElementById('f_obs').value,
+    sourceId: document.getElementById('f_source_id').value,
+  };
+  const idx = entries.findIndex(e => e.id === id);
+  if(idx >= 0) entries[idx] = entry; else entries.push(entry);
+  
+  persist(entry);
+  clearForm();
+  if(!sbClient) render();
+}
+
+function editEntry(id){
+  const e = entries.find(x => x.id === id);
+  if(!e) return;
+  document.getElementById('f_id').value = e.id;
+  document.getElementById('f_tipo').value = e.tipo;
+  document.getElementById('f_status').value = e.status;
+  document.getElementById('f_data').value = e.data;
+  document.getElementById('f_hora').value = e.hora;
+  document.getElementById('f_contrato').value = e.contrato;
+  document.getElementById('f_cliente').value = e.cliente;
+  document.getElementById('f_endereco').value = e.endereco;
+  document.getElementById('f_acompanhante').value = e.acompanhante;
+  document.getElementById('f_contato').value = e.contato;
+  document.getElementById('f_obs').value = e.obs;
+  document.getElementById('f_source_id').value = e.sourceId || '';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function deleteEntry(id){
+  if(!sbClient) {
+    entries = entries.filter(e => e.id !== id);
+    persist();
+    render();
+  } else {
+    persist({id}, true);
+  }
+}
+
+function quickStatus(id, status){
+  const e = entries.find(x => x.id === id);
+  if(!e) return;
+  e.status = status;
+  if(!sbClient) {
+    persist();
+    render();
+  } else {
+    persist({id, data: {status}}, false, true);
+  }
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function fmtDate(iso){
+  if(!iso) return {label:'Sem data', dow:''};
+  const d = new Date(iso + 'T00:00:00');
+  const dow = d.toLocaleDateString('pt-BR', {weekday:'long'});
+  const label = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+  return {label, dow};
+}
+
+function render(){
+  const search = document.getElementById('search').value.toLowerCase();
+  let list = entries.filter(e => {
+    if(currentFilter === 'Cancelada' && !['Cancelada','Reagendada'].includes(e.status)) return false;
+    if(currentFilter !== 'all' && currentFilter !== 'Cancelada' && e.status !== currentFilter) return false;
+    if(search && !(`${e.contrato} ${e.cliente}`.toLowerCase().includes(search))) return false;
+    return true;
+  });
+  list.sort((a,b) => (a.data || '9999').localeCompare(b.data || '9999'));
+
+  document.getElementById('counter').textContent = `Agenda (${list.length})`;
+  const tl = document.getElementById('timeline');
+
+  if(list.length === 0){
+    tl.innerHTML = '<div id="empty">Nenhum agendamento por aqui ainda. Cole uma mensagem do Teams ao lado para começar.</div>';
+    return;
+  }
+
+  const groups = {};
+  list.forEach(e => { (groups[e.data || ''] = groups[e.data || ''] || []).push(e); });
+
+  tl.innerHTML = Object.keys(groups).map(dateKey => {
+    const {label, dow} = fmtDate(dateKey);
+    const cards = groups[dateKey].map(e => `
+      <div class="card st-${escapeHTML(e.status)}">
+        <div class="tag-row">
+          <span class="tag tag-tipo">${escapeHTML(e.tipo)}</span>
+          <span class="tag tag-status st-${escapeHTML(e.status)}">${escapeHTML(e.status)}</span>
+        </div>
+        <div class="card-top">
+          <div>
+            <div class="cliente">${escapeHTML(e.cliente || 'Cliente não informado')}</div>
+            <div class="contrato">Contrato ${escapeHTML(e.contrato || '—')}</div>
+          </div>
+        </div>
+        <div class="endereco">${escapeHTML(e.endereco || '')}</div>
+        <div class="meta">
+          <div><span>Horário</span><span class="hora">${escapeHTML(e.hora || '—')}</span></div>
+          <div><span>Acompanha</span>${escapeHTML(e.acompanhante || '—')}</div>
+          <div><span>Contato</span>${escapeHTML(e.contato || '—')}</div>
+        </div>
+        ${e.obs ? `<div class="obs">${escapeHTML(e.obs)}</div>` : ''}
+        <div class="card-actions">
+          <select class="status-select" onchange="quickStatus('${escapeHTML(e.id)}', this.value)">
+            ${['Confirmada','Pendente','Realizada','Reagendada','Cancelada'].map(s=>`<option ${s===e.status?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="icon-btn" onclick="editEntry('${escapeHTML(e.id)}')">Editar</button>
+          <button class="icon-btn" onclick="deleteEntry('${escapeHTML(e.id)}')">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="day-group">
+        <div class="day-marker"></div>
+        <div class="day-header">${label} <span class="dow">${dow}</span></div>
+        ${cards}
+      </div>
+    `;
+  }).join('');
+}
+
+loadEntries();
+</script>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google.com https://*.googleusercontent.com;">
+  <title>Agenda de Vistorias &amp; Passagens</title>
+  
+  <!-- PWA Meta Tags (iOS Safari & Android Chrome) -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0B1220">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vistorias">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
+
+  <!-- Estilos CSS Separados -->
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/mobile.css">
+
+  <!-- Supabase JS Client via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="tab-agenda">
+
+  <div id="modalContainer"></div>
+
+  <div id="app">
+    <!-- LEFT: intake panel -->
+    <div id="intake">
+      <div id="headerContainer"></div>
+
+      <div class="field">
+        <label>Colar mensagem do Teams</label>
+        <textarea id="pasteBox" placeholder="Cole aqui o bloco de mensagem recebido no grupo do Teams..."></textarea>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary btn-block" id="btnParsePaste">Analisar mensagem</button>
+      </div>
+      
+      <div id="syncSection" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
+        <label style="font-size:10.5px; text-transform:uppercase; color:var(--muted-2); font-weight:600; display:block; margin-bottom:4px;">Sincronização Automática (Teams)</label>
+        <input type="text" id="syncUrl" class="field" style="width:100%; background:#0D1524; border:1px solid var(--line); border-radius:6px; color:var(--text); padding:7px 9px; font-size:11.5px; font-family:var(--font-mono);" placeholder="Cole a URL do CSV (Google Sheets)">
+        <button type="button" class="btn btn-ghost btn-block" style="margin-top:8px;" id="btnSync">Sincronizar Mensagens</button>
+      </div>
+
+      <div id="formHint" style="margin-top:14px;">Confira os campos abaixo — a extração automática pode errar em datas sem ano. <b>Ajuste antes de salvar.</b></div>
+
+      <form id="form">
+        <input type="hidden" id="f_id">
+        <input type="hidden" id="f_source_id">
+        <div class="field-row">
+          <div class="field">
+            <label>Tipo</label>
+            <select id="f_tipo">
+              <option>Vistoria</option>
+              <option>Passagem de Cabo</option>
+              <option>Ativação</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="f_status">
+              <option>Confirmada</option>
+              <option>Pendente</option>
+              <option>Realizada</option>
+              <option>Reagendada</option>
+              <option>Cancelada</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="f_data">
+          </div>
+          <div class="field">
+            <label>Horário</label>
+            <input type="text" id="f_hora" placeholder="ex: 10:00 ou HC">
+          </div>
+        </div>
+        <div class="field">
+          <label>Contrato</label>
+          <input type="text" id="f_contrato">
+        </div>
+        <div class="field">
+          <label>Cliente</label>
+          <input type="text" id="f_cliente">
+        </div>
+        <div class="field">
+          <label>Endereço</label>
+          <input type="text" id="f_endereco">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Acompanhante</label>
+            <input type="text" id="f_acompanhante" placeholder="nome">
+          </div>
+          <div class="field">
+            <label>Contato</label>
+            <input type="text" id="f_contato" placeholder="telefone">
+          </div>
+        </div>
+        <div class="field">
+          <label>Observações (empreiteira, OS, técnico...)</label>
+          <textarea id="f_obs" rows="3"></textarea>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button type="submit" class="btn btn-primary btn-block">Salvar na agenda</button>
+          <button type="button" class="btn btn-ghost" id="btnClearForm">Limpar</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT: timeline -->
+    <div id="main">
+      <div id="toolbar">
+        <h2 id="counter">Agenda</h2>
+        <input id="search" placeholder="Buscar contrato ou cliente...">
+        <button class="chip active" data-f="all">Todos</button>
+        <button class="chip" data-f="Confirmada">Confirmada</button>
+        <button class="chip" data-f="Pendente">Pendente</button>
+        <button class="chip" data-f="Realizada">Realizada</button>
+        <button class="chip" data-f="Cancelada">Cancelada/Reagendada</button>
+      </div>
+      <div id="timeline"></div>
+    </div>
+  </div>
+
+  <div id="mobileNavContainer"></div>
+
+  <!-- JavaScript ES6 Modules -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
