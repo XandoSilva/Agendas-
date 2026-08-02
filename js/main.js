@@ -103,10 +103,21 @@ function handleSaveSettings(url, key) {
 
 function render() {
   const searchInput = document.getElementById('search').value.toLowerCase();
+  
+  // 1. Filtragem por busca e categoria
   let list = entries.filter(e => {
     if (currentFilter === 'Cancelada' && !['Cancelada', 'Reagendada'].includes(e.status)) return false;
     if (currentFilter !== 'all' && currentFilter !== 'Cancelada' && e.status !== currentFilter) return false;
     if (searchInput && !(`${e.contrato} ${e.cliente}`.toLowerCase().includes(searchInput))) return false;
+    return true;
+  });
+
+  // 2. Deduplicação automática por contrato + cliente + data + hora
+  const seenKeys = new Set();
+  list = list.filter(e => {
+    const key = `${(e.contrato || '').trim().toLowerCase()}_${(e.cliente || '').trim().toLowerCase()}_${(e.data || '').trim()}_${(e.hora || '').trim()}`;
+    if (seenKeys.has(key)) return false;
+    seenKeys.add(key);
     return true;
   });
 
