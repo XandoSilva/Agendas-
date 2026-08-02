@@ -9,7 +9,8 @@ import { renderMobileNav } from './components/MobileNav.js';
 import { renderSettingsModal, openSettingsModal } from './components/SettingsModal.js';
 
 let entries = [];
-let currentFilter = 'all';
+let currentTipoFilter = 'all';
+let currentStatusFilter = 'all';
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -43,12 +44,22 @@ async function main() {
     localStorage.setItem('agendamentos_sync_url', e.target.value);
   });
 
-  // Filtros em chips
-  document.querySelectorAll('.chip').forEach(btn => {
+  // Filtros de Tipo de Atividade
+  document.querySelectorAll('.chip-tipo').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.chip-tipo').forEach(c => c.classList.remove('active'));
       e.target.classList.add('active');
-      currentFilter = e.target.getAttribute('data-f');
+      currentTipoFilter = e.target.getAttribute('data-tipo');
+      render();
+    });
+  });
+
+  // Filtros de Status
+  document.querySelectorAll('.chip-status').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.chip-status').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      currentStatusFilter = e.target.getAttribute('data-status');
       render();
     });
   });
@@ -104,11 +115,18 @@ function handleSaveSettings(url, key) {
 function render() {
   const searchInput = document.getElementById('search').value.toLowerCase();
   
-  // 1. Filtragem por busca e categoria
+  // 1. Filtragem por busca, tipo de atividade e status
   let list = entries.filter(e => {
-    if (currentFilter === 'Cancelada' && !['Cancelada', 'Reagendada'].includes(e.status)) return false;
-    if (currentFilter !== 'all' && currentFilter !== 'Cancelada' && e.status !== currentFilter) return false;
+    // Filtro por Atividade (Vistoria, Passagem de Cabo, Ativação)
+    if (currentTipoFilter !== 'all' && e.tipo !== currentTipoFilter) return false;
+
+    // Filtro por Status
+    if (currentStatusFilter === 'Cancelada' && !['Cancelada', 'Reagendada'].includes(e.status)) return false;
+    if (currentStatusFilter !== 'all' && currentStatusFilter !== 'Cancelada' && e.status !== currentStatusFilter) return false;
+    
+    // Filtro por texto livre
     if (searchInput && !(`${e.contrato} ${e.cliente}`.toLowerCase().includes(searchInput))) return false;
+    
     return true;
   });
 
