@@ -1,3 +1,65 @@
+/* ---------- DASHBOARD & KPIS ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.kpi-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+.kpi-value-sm {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+.text-teal { color: var(--teal); }
+.text-blue { color: var(--blue); }
+.text-amber { color: var(--amber); }
+.text-green { color: var(--green); }
+
+.kpi-progress {
+  grid-column: span 2;
+}
+@media (max-width: 600px) {
+  .kpi-progress { grid-column: span 1; }
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: var(--input-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
 /* ---------- LEFT: intake panel ---------- */
 #intake {
   background: var(--panel);
@@ -127,6 +189,27 @@ textarea#pasteBox:focus {
   outline: none;
   border-color: var(--teal);
 }
+.date-shortcuts {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.btn-xs {
+  background: var(--input-bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.btn-xs:hover {
+  color: var(--text);
+  border-color: var(--teal);
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

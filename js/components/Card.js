@@ -6,7 +6,7 @@ import { buildMapsUrl, buildWhatsAppUrl } from '../utils/formatters.js';
 
 export function createCardHTML(entry) {
   const mapsUrl = buildMapsUrl(entry.endereco);
-  const waUrl = buildWhatsAppUrl(entry.contato);
+  const waUrl = buildWhatsAppUrl(entry.contato, entry);
   const safeId = escapeHTML(entry.id);
   const safeStatus = escapeHTML(entry.status);
   const safeTipo = escapeHTML(entry.tipo);

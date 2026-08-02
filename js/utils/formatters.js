@@ -1,5 +1,5 @@
 /**
- * Módulo de formatadores de data, links de mapas e WhatsApp.
+ * Módulo de formatadores de data, links de mapas e WhatsApp com copywriting e máscaras.
  */
 
 export function fmtDate(iso) {
@@ -19,10 +19,31 @@ export function buildMapsUrl(address) {
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
-export function buildWhatsAppUrl(phone) {
+export function buildWhatsAppUrl(phone, entry = null) {
   if (!phone || typeof phone !== 'string') return '#';
   const cleanPhone = phone.replace(/\D/g, '');
   if (!cleanPhone) return '#';
   const fullPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
+  
+  if (entry) {
+    const cliente = entry.cliente || 'Cliente';
+    const tipo = entry.tipo || 'atendimento';
+    const contrato = entry.contrato ? `Contrato ${entry.contrato}` : '';
+    const { label: dataFmt } = fmtDate(entry.data);
+    const hora = entry.hora || 'Horário Comercial';
+    
+    const textMsg = `Olá ${cliente}! Sou o técnico responsável pela sua ${tipo} ${contrato}. Nosso atendimento está agendado para ${dataFmt} às ${hora}. Confirma a presença no local?`;
+    return `https://wa.me/${fullPhone}?text=${encodeURIComponent(textMsg)}`;
+  }
+  
   return `https://wa.me/${fullPhone}`;
+}
+
+export function formatPhoneMask(value) {
+  if (!value) return '';
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }

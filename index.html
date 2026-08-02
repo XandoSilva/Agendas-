@@ -77,6 +77,11 @@
           <div class="field">
             <label>Data</label>
             <input type="date" id="f_data">
+            <div class="date-shortcuts">
+              <button type="button" class="btn-xs" id="btnDateToday">Hoje</button>
+              <button type="button" class="btn-xs" id="btnDateTomorrow">Amanhã</button>
+              <button type="button" class="btn-xs" id="btnDateMonday">Segunda</button>
+            </div>
           </div>
           <div class="field">
             <label>Horário</label>
@@ -118,6 +123,8 @@
 
     <!-- RIGHT: timeline -->
     <div id="main">
+      <div id="dashboardContainer"></div>
+
       <div id="toolbar">
         <h2 id="counter">Agenda</h2>
         <input id="search" placeholder="Buscar contrato ou cliente...">

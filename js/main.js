@@ -7,6 +7,8 @@ import { renderHeader, updateConnectionStatus } from './components/Header.js';
 import { renderTimeline } from './components/Timeline.js';
 import { renderMobileNav } from './components/MobileNav.js';
 import { renderSettingsModal, openSettingsModal } from './components/SettingsModal.js';
+import { renderDashboard } from './components/Dashboard.js';
+import { formatPhoneMask } from './utils/formatters.js';
 
 let entries = [];
 let currentTipoFilter = 'all';
@@ -43,6 +45,41 @@ async function main() {
   document.getElementById('syncUrl').addEventListener('change', (e) => {
     localStorage.setItem('agendamentos_sync_url', e.target.value);
   });
+
+  // Máscara dinâmica de telefone no campo contato
+  const inputContato = document.getElementById('f_contato');
+  if (inputContato) {
+    inputContato.addEventListener('input', (e) => {
+      e.target.value = formatPhoneMask(e.target.value);
+    });
+  }
+
+  // Atalhos de Data em 1-Clique
+  const btnToday = document.getElementById('btnDateToday');
+  const btnTomorrow = document.getElementById('btnDateTomorrow');
+  const btnMonday = document.getElementById('btnDateMonday');
+
+  if (btnToday) {
+    btnToday.addEventListener('click', () => {
+      document.getElementById('f_data').value = new Date().toISOString().split('T')[0];
+    });
+  }
+  if (btnTomorrow) {
+    btnTomorrow.addEventListener('click', () => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      document.getElementById('f_data').value = d.toISOString().split('T')[0];
+    });
+  }
+  if (btnMonday) {
+    btnMonday.addEventListener('click', () => {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() + (day === 0 ? 1 : (8 - day));
+      d.setDate(diff);
+      document.getElementById('f_data').value = d.toISOString().split('T')[0];
+    });
+  }
 
   // Filtros de Tipo de Atividade
   document.querySelectorAll('.chip-tipo').forEach(btn => {
@@ -150,6 +187,10 @@ function render() {
   });
 
   list.sort((a, b) => (a.data || '9999').localeCompare(b.data || '9999'));
+
+  // 3. Atualizar Dashboard de KPIs e Métricas
+  const dashEl = document.getElementById('dashboardContainer');
+  if (dashEl) renderDashboard(dashEl, entries);
 
   document.getElementById('counter').textContent = `Agenda (${list.length})`;
   
