@@ -112,10 +112,20 @@ function render() {
     return true;
   });
 
-  // 2. Deduplicação automática por contrato + cliente + data + hora
+  // 2. Deduplicação inteligente por TIPO + CONTRATO + CLIENTE + DATA + HORA
   const seenKeys = new Set();
   list = list.filter(e => {
-    const key = `${(e.contrato || '').trim().toLowerCase()}_${(e.cliente || '').trim().toLowerCase()}_${(e.data || '').trim()}_${(e.hora || '').trim()}`;
+    const tipo = (e.tipo || '').trim().toLowerCase();
+    const contrato = (e.contrato || '').trim().toLowerCase();
+    const cliente = (e.cliente || '').trim().toLowerCase();
+    const dataAg = (e.data || '').trim();
+    const horaAg = (e.hora || '').trim();
+
+    // Se não houver contrato nem cliente (entrada genérica/sem identificador), mantém
+    if (!contrato && !cliente) return true;
+
+    // Chave única preservando a diferença entre Vistoria e Passagem de Cabo
+    const key = `${tipo}_${contrato}_${cliente}_${dataAg}_${horaAg}`;
     if (seenKeys.has(key)) return false;
     seenKeys.add(key);
     return true;

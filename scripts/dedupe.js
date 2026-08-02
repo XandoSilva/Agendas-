@@ -1,5 +1,6 @@
 /**
  * Script nativo (Node fetch) para deduplicar registros no Supabase
+ * Preservando a diferença entre TIPO (Vistoria vs Passagem de Cabo vs Ativação)
  */
 
 const SUPABASE_URL = 'https://cccyycqxasypvzwhcsok.supabase.co/rest/v1/agendamentos';
@@ -27,14 +28,15 @@ async function deduplicate() {
   const duplicatesToDelete = [];
 
   for (const entry of data) {
+    const tipo = (entry.tipo || '').trim().toLowerCase();
     const contrato = (entry.contrato || '').trim().toLowerCase();
     const cliente = (entry.cliente || '').trim().toLowerCase();
     const dataAg = (entry.data || '').trim();
     
-    // Ignora registros totalmente vazios
     if (!contrato && !cliente) continue;
 
-    const key = `${contrato}_${cliente}_${dataAg}`;
+    // Chave única que preserva Passagens de Cabo e Vistorias do mesmo contrato
+    const key = `${tipo}_${contrato}_${cliente}_${dataAg}`;
     
     if (seen.has(key)) {
       duplicatesToDelete.push(entry.id);
@@ -43,7 +45,7 @@ async function deduplicate() {
     }
   }
 
-  console.log(`⚠️ Registros duplicados encontrados: ${duplicatesToDelete.length}`);
+  console.log(`⚠️ Registros duplicados idênticos encontrados: ${duplicatesToDelete.length}`);
 
   if (duplicatesToDelete.length > 0) {
     for (const id of duplicatesToDelete) {
