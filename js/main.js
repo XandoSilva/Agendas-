@@ -188,9 +188,9 @@ function render() {
 
   list.sort((a, b) => (a.data || '9999').localeCompare(b.data || '9999'));
 
-  // 3. Atualizar Dashboard de KPIs e Métricas
+  // 3. Atualizar Dashboard de KPIs e Métricas (Sincronizado com os itens deduplicados da lista)
   const dashEl = document.getElementById('dashboardContainer');
-  if (dashEl) renderDashboard(dashEl, entries);
+  if (dashEl) renderDashboard(dashEl, list);
 
   document.getElementById('counter').textContent = `Agenda (${list.length})`;
   
