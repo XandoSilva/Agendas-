@@ -32,6 +32,7 @@
   font-weight: 600;
   margin: 0;
   letter-spacing: .2px;
+  color: var(--text);
 }
 .brand span {
   color: var(--muted);
@@ -43,7 +44,7 @@ textarea#pasteBox {
   width: 100%;
   min-height: 120px;
   resize: vertical;
-  background: #0D1524;
+  background: var(--input-bg);
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--text);
@@ -83,10 +84,10 @@ textarea#pasteBox:focus {
 }
 .btn-primary {
   background: var(--teal);
-  color: #062824;
+  color: #FFFFFF;
 }
 .btn-primary:hover {
-  background: #25beab;
+  opacity: 0.9;
 }
 .btn-ghost {
   background: transparent;
@@ -96,17 +97,6 @@ textarea#pasteBox:focus {
 .btn-ghost:hover {
   color: var(--text);
   border-color: var(--muted-2);
-}
-.btn-action-mobile {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  color: var(--text);
-  font-size: 12px;
-  padding: 6px 12px;
-  border-radius: 6px;
-}
-.btn-action-mobile:hover {
-  background: var(--line);
 }
 .btn-block {
   width: 100%;
@@ -121,11 +111,11 @@ textarea#pasteBox:focus {
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: .5px;
-  color: var(--muted-2);
+  color: var(--muted);
   font-weight: 600;
 }
 .field input, .field select, .field textarea {
-  background: #0D1524;
+  background: var(--input-bg);
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--text);
@@ -174,13 +164,14 @@ textarea#pasteBox:focus {
   font-size: 22px;
   margin: 0;
   margin-right: auto;
+  color: var(--text);
 }
 .chip {
   font-size: 11.5px;
   padding: 7px 13px;
   border-radius: 20px;
   border: 1px solid var(--line);
-  background: transparent;
+  background: var(--panel);
   color: var(--muted);
   cursor: pointer;
   font-weight: 600;
@@ -189,10 +180,10 @@ textarea#pasteBox:focus {
 .chip.active {
   background: var(--teal);
   border-color: var(--teal);
-  color: #062824;
+  color: #FFFFFF;
 }
 #search {
-  background: #0D1524;
+  background: var(--input-bg);
   border: 1px solid var(--line);
   border-radius: 20px;
   color: var(--text);
@@ -250,39 +241,34 @@ textarea#pasteBox:focus {
   text-transform: capitalize;
 }
 
-/* CARDS & DESIGN SPELLS MICRO-INTERACTIONS */
+/* CARDS CONTRANSTE ELEVADO & DESIGN SYSTEM */
 @keyframes cardFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(45, 212, 191, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); }
-}
-
 .card {
-  background: rgba(18, 26, 43, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--card-bg);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 18px;
+  border-left: 5px solid var(--muted);
+  border-radius: 12px;
+  padding: 16px 18px;
   margin-bottom: 14px;
   position: relative;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  transition: transform .25s cubic-bezier(0.16, 1, 0.3, 1), border-color .25s ease, box-shadow .25s ease;
-  animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) ease-out;
+  box-shadow: var(--card-shadow);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  animation: cardFadeIn 0.25s ease-out;
 }
 .card:hover {
   transform: translateY(-2px);
-  border-color: rgba(45, 212, 191, 0.35);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.3), 0 0 16px rgba(45, 212, 191, 0.08);
+  box-shadow: var(--card-shadow), 0 8px 20px rgba(0,0,0,0.08);
 }
-.card.st-Cancelada, .card.st-Reagendada {
-  opacity: .65;
-}
+.card.st-Confirmada { border-left-color: var(--teal); }
+.card.st-Pendente { border-left-color: var(--amber); }
+.card.st-Realizada { border-left-color: var(--green); }
+.card.st-Cancelada { border-left-color: var(--coral); opacity: .7; }
+.card.st-Reagendada { border-left-color: var(--muted-2); opacity: .7; }
+
 .card-top {
   display: flex;
   align-items: flex-start;
@@ -291,72 +277,82 @@ textarea#pasteBox:focus {
 }
 .tag-row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
 .tag {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 3.5px 10px;
-  border-radius: 20px;
+  padding: 4px 10px;
+  border-radius: 6px;
   letter-spacing: .4px;
   text-transform: uppercase;
-  transition: all .2s ease;
 }
 .tag-tipo {
-  background: rgba(30, 42, 69, 0.9);
+  background: rgba(139, 92, 246, 0.12);
   color: var(--violet);
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.25);
 }
-.tag-status {
-  color: #06282A;
+.tag-status.st-Confirmada {
+  background: rgba(20, 184, 166, 0.12);
+  color: var(--teal);
+  border: 1px solid rgba(20, 184, 166, 0.3);
 }
-.st-Confirmada { 
-  background: var(--teal); 
-  animation: pulseGlow 2.5s infinite;
+.tag-status.st-Pendente {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
-.st-Pendente { background: var(--amber); }
-.st-Realizada { background: var(--green); }
-.st-Cancelada { background: var(--coral); color: #3A0A12; }
-.st-Reagendada { background: #94A3B8; color: #1E293B; }
+.tag-status.st-Realizada {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.tag-status.st-Cancelada {
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--coral);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.tag-status.st-Reagendada {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--muted);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
 
 .cliente {
   font-family: var(--font-display);
   font-size: 16.5px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text);
   margin: 2px 0 4px;
-  letter-spacing: -.2px;
 }
 .contrato {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 8px;
 }
 .endereco {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--text-secondary);
   line-height: 1.45;
   margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
   font-size: 12px;
   color: var(--text);
-  background: rgba(14, 22, 38, 0.7);
+  background: var(--meta-bg);
   padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(36, 48, 74, 0.6);
+  border-radius: 8px;
+  border: 1px solid var(--line);
 }
 .meta div span {
   display: block;
-  color: var(--muted-2);
+  color: var(--muted);
   font-size: 9.5px;
   text-transform: uppercase;
   letter-spacing: .5px;
@@ -369,8 +365,8 @@ textarea#pasteBox:focus {
 }
 .obs {
   margin-top: 12px;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 12.5px;
+  color: var(--text-secondary);
   border-top: 1px dashed var(--line);
   padding-top: 10px;
   white-space: pre-wrap;
@@ -392,33 +388,23 @@ textarea#pasteBox:focus {
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
-  color: var(--text);
-  background: rgba(24, 34, 54, 0.8);
-  border: 1px solid var(--line);
-  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.quick-action-link:hover {
-  background: var(--line);
-  transform: translateY(-1px);
-  border-color: var(--muted);
+  transition: all .15s ease;
 }
 .quick-action-link.maps {
-  color: #38BDF8;
-  border-color: rgba(56, 189, 248, 0.3);
+  color: var(--blue);
+  border: 1px solid rgba(56, 189, 248, 0.3);
   background: rgba(56, 189, 248, 0.08);
 }
 .quick-action-link.maps:hover {
-  background: rgba(56, 189, 248, 0.18);
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.16);
 }
 .quick-action-link.wa {
-  color: #4ADE80;
-  border-color: rgba(74, 222, 128, 0.3);
-  background: rgba(74, 222, 128, 0.08);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.08);
 }
 .quick-action-link.wa:hover {
-  background: rgba(74, 222, 128, 0.18);
-  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
+  background: rgba(34, 197, 94, 0.16);
 }
 
 .card-actions {
@@ -428,9 +414,9 @@ textarea#pasteBox:focus {
   align-items: center;
 }
 .icon-btn {
-  background: none;
+  background: var(--input-bg);
   border: 1px solid var(--line);
-  color: var(--muted);
+  color: var(--text);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 11.5px;
@@ -440,12 +426,11 @@ textarea#pasteBox:focus {
   transition: all .2s ease;
 }
 .icon-btn:hover {
-  color: var(--text);
-  border-color: var(--muted-2);
-  background: rgba(255,255,255,0.04);
+  border-color: var(--muted);
+  background: var(--line);
 }
 select.status-select {
-  background: #0D1524;
+  background: var(--input-bg);
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -454,7 +439,6 @@ select.status-select {
   font-family: var(--font-body);
   font-weight: 600;
   min-height: 34px;
-  transition: border-color .2s ease;
 }
 select.status-select:focus {
   outline: none;

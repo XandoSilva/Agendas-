@@ -11,9 +11,25 @@ import { renderSettingsModal, openSettingsModal } from './components/SettingsMod
 let entries = [];
 let currentFilter = 'all';
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+}
+
+function handleToggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  applyTheme(newTheme);
+  renderHeader(document.getElementById('headerContainer'), openSettingsModal, handleToggleTheme);
+}
+
 async function main() {
+  // Inicializar Tema (localStorage ou preferência do sistema)
+  const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  applyTheme(savedTheme);
+
   // Renderizar componentes estáticos de apoio
-  renderHeader(document.getElementById('headerContainer'), openSettingsModal);
+  renderHeader(document.getElementById('headerContainer'), openSettingsModal, handleToggleTheme);
   renderMobileNav(document.getElementById('mobileNavContainer'), handleTabChange);
   renderSettingsModal(document.getElementById('modalContainer'), handleSaveSettings);
 
