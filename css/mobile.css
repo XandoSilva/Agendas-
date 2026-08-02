@@ -57,7 +57,13 @@
   display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+  html {
+    font-size: 120% !important;
+  }
+  body {
+    -webkit-text-size-adjust: 120% !important;
+  }
   #app {
     grid-template-columns: 1fr;
     padding-bottom: 95px;
