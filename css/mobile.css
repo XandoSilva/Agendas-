@@ -106,16 +106,21 @@
   body.tab-novo #intake { display: flex !important; }
   body.tab-novo #main { display: none !important; }
 
-  /* Rótulos e Chips de Filtro */
+  /* Rótulos e Chips de Filtro Ampliados para Celulares */
   .filter-label {
-    font-size: 12px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
   }
 
   .chip {
-    padding: 9px 16px !important;
-    font-size: 13.5px !important;
+    padding: 10px 18px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
-    border-radius: 22px !important;
+    border-radius: 24px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* Dashboard de KPIs Ampliado para iPhone */
