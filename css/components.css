@@ -263,15 +263,9 @@ textarea#pasteBox:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  overflow-x: auto;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   width: 100%;
   padding: 6px 0;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.filter-group::-webkit-scrollbar {
-  display: none;
 }
 .filter-label {
   font-size: 13px;

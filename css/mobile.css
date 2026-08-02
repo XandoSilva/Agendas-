@@ -1,4 +1,8 @@
-/* Mobile Navigation Bar & 150% Amplified Smartphone View (iPhone 16e / Android) */
+/* ============================================================
+   MOBILE-FIRST: Visualização Ampliada para Smartphones
+   Foco: iPhone 16e, iPhone 15/14, Galaxy S24, Pixel 8
+   Fonte base: 20px (vs 16px padrão = +25% sobre tudo)
+   ============================================================ */
 
 .mobile-nav {
   display: none;
@@ -41,34 +45,25 @@
   fill: currentColor;
 }
 
-/* Container de Filtros com Rolagem Touch Suave */
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  overflow-x: auto;
-  flex-wrap: nowrap;
-  width: 100%;
-  padding: 8px 0;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.filter-group::-webkit-scrollbar {
-  display: none;
-}
-
+/* ============================================================
+   TELAS ATÉ 1024px — TABLETS E CELULARES
+   ============================================================ */
 @media (max-width: 1024px) {
+
+  /* ==== FONTE RAIZ GRANDE ==== */
   html {
-    font-size: 120% !important;
+    font-size: 20px !important;
   }
   body {
-    -webkit-text-size-adjust: 120% !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
   }
+
   #app {
     grid-template-columns: 1fr;
     padding-bottom: 95px;
   }
-  
+
   #intake {
     position: relative;
     height: auto;
@@ -77,29 +72,9 @@
     overflow-y: visible;
     padding: 24px 18px;
   }
-  
+
   #main {
     padding: 18px 14px 110px;
-  }
-
-  /* Header & Barra de Busca (150% Escala) */
-  #toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  #counter {
-    font-size: 32px !important;
-    font-weight: 800 !important;
-  }
-  
-  #search {
-    width: 100%;
-    border-radius: 16px;
-    padding: 15px 22px !important;
-    font-size: 19px !important;
-    border: 1.5px solid var(--line) !important;
   }
 
   .mobile-nav {
@@ -109,33 +84,70 @@
   /* Abas do App no Celular */
   body.tab-agenda #intake { display: none !important; }
   body.tab-agenda #main { display: block !important; }
-  
   body.tab-novo #intake { display: flex !important; }
   body.tab-novo #main { display: none !important; }
 
-  /* Rótulos e Chips de Filtro (150% Escala) */
-  .filter-label {
-    font-size: 16px !important;
+  /* ==== TOOLBAR: TÍTULO + BUSCA ==== */
+  #toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  #counter {
+    font-size: 1.8rem !important;
     font-weight: 800 !important;
   }
 
-  .chip {
-    padding: 13px 22px !important;
-    font-size: 18px !important;
+  #search {
+    width: 100%;
+    border-radius: 16px;
+    padding: 14px 20px !important;
+    font-size: 1.05rem !important;
+    border: 1.5px solid var(--line) !important;
+  }
+
+  /* ==== FILTROS: CHIPS DE ATIVIDADE E STATUS ==== */
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .filter-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-label {
+    font-size: 0.85rem !important;
     font-weight: 800 !important;
-    border-radius: 28px !important;
-    min-height: 52px !important;
+    flex-shrink: 0;
+  }
+
+  .chip {
+    padding: 12px 20px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border-radius: 26px !important;
+    min-height: 48px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     border-width: 2px !important;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
-  /* Dashboard de KPIs (150% Escala) */
+  /* ==== DASHBOARD KPI ==== */
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 12px !important;
-    margin-bottom: 22px !important;
+    margin-bottom: 20px !important;
   }
 
   .kpi-card {
@@ -144,113 +156,211 @@
   }
 
   .kpi-title {
-    font-size: 14px !important;
+    font-size: 0.7rem !important;
     font-weight: 800 !important;
   }
 
   .kpi-value {
-    font-size: 34px !important;
+    font-size: 1.7rem !important;
     font-weight: 800 !important;
   }
 
   .kpi-value-sm {
-    font-size: 18px !important;
+    font-size: 1rem !important;
     font-weight: 800 !important;
   }
 
-  /* Cartões da Agenda - Tipografia Ampliada em 150% */
+  /* ==== TIMELINE: CABEÇALHO DE DIA ==== */
   .day-header {
-    font-size: 20px !important;
-    margin: 22px 0 14px !important;
+    font-size: 1.1rem !important;
+    margin: 20px 0 14px !important;
     font-weight: 800 !important;
   }
 
+  /* ==== CARTÕES DA AGENDA ==== */
   .card {
-    padding: 22px 20px !important;
-    border-radius: 18px !important;
-    margin-bottom: 20px !important;
-    border-left-width: 7px !important;
+    padding: 20px 18px !important;
+    border-radius: 16px !important;
+    margin-bottom: 18px !important;
+    border-left-width: 6px !important;
   }
 
   .card .tag {
-    font-size: 14px !important;
-    padding: 7px 15px !important;
+    font-size: 0.72rem !important;
+    padding: 6px 14px !important;
     font-weight: 800 !important;
     border-radius: 8px !important;
   }
 
   .card .cliente {
-    font-size: 23px !important;
+    font-size: 1.25rem !important;
     font-weight: 800 !important;
     color: var(--text) !important;
     line-height: 1.35 !important;
-    margin: 8px 0 6px !important;
+    margin: 6px 0 4px !important;
   }
 
   .card .contrato {
-    font-size: 17px !important;
+    font-size: 0.9rem !important;
     font-weight: 700 !important;
-    margin-bottom: 14px !important;
+    margin-bottom: 12px !important;
   }
 
   .card .endereco {
-    font-size: 19px !important;
+    font-size: 1rem !important;
     color: var(--text-secondary) !important;
     line-height: 1.5 !important;
-    margin-bottom: 18px !important;
+    margin-bottom: 16px !important;
   }
 
-  /* Bloco Meta (Horário, Acompanha, Contato) 150% */
+  /* ==== BLOCO META (Horário, Acompanhante, Contato) ==== */
   .card .meta {
-    padding: 16px 18px !important;
-    gap: 16px !important;
-    border-radius: 14px !important;
+    padding: 14px 16px !important;
+    gap: 14px !important;
+    border-radius: 12px !important;
   }
 
   .card .meta div {
-    font-size: 18px !important;
+    font-size: 0.95rem !important;
     font-weight: 700 !important;
   }
 
   .card .meta div span:first-child {
-    font-size: 14px !important;
+    font-size: 0.72rem !important;
     font-weight: 800 !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 3px !important;
   }
 
   .card .meta .hora {
-    font-size: 19px !important;
+    font-size: 1.05rem !important;
     font-weight: 800 !important;
   }
 
-  /* Botões de Ação Rápidas de 1-Toque (Maps & WhatsApp) 150% */
+  /* ==== BOTÕES DE AÇÃO RÁPIDA (Maps & WhatsApp) ==== */
   .card-field-actions {
     flex-direction: column !important;
-    gap: 12px !important;
-    margin-top: 18px !important;
+    gap: 10px !important;
+    margin-top: 16px !important;
   }
 
   .quick-action-link {
     width: 100% !important;
     justify-content: center !important;
-    padding: 16px 22px !important;
-    font-size: 19px !important;
+    padding: 14px 20px !important;
+    font-size: 1rem !important;
     font-weight: 800 !important;
-    border-radius: 14px !important;
-    min-height: 56px !important;
+    border-radius: 12px !important;
+    min-height: 52px !important;
   }
 
-  /* Observações e ações de cartão */
+  /* ==== OBSERVAÇÕES ==== */
   .card .obs {
-    font-size: 17.5px !important;
+    font-size: 0.95rem !important;
     line-height: 1.5 !important;
+    padding-top: 12px !important;
+    margin-top: 14px !important;
   }
 
-  .card-actions select, .card-actions button {
-    font-size: 16.5px !important;
-    padding: 12px 20px !important;
+  /* ==== AÇÕES DO CARTÃO (select status, editar, excluir) ==== */
+  .card-actions {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin-top: 16px !important;
+  }
+
+  .card-actions select,
+  .card-actions button {
+    font-size: 0.9rem !important;
+    padding: 12px 18px !important;
     min-height: 48px !important;
     border-radius: 10px !important;
     font-weight: 700 !important;
+  }
+
+  /* ==== FORMULÁRIO DE NOVO AGENDAMENTO ==== */
+  .field label {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 1rem !important;
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  textarea#pasteBox {
+    font-size: 0.9rem !important;
+    padding: 14px !important;
+    min-height: 100px;
+    border-radius: 12px !important;
+  }
+
+  .btn {
+    font-size: 1rem !important;
+    padding: 14px 20px !important;
+    min-height: 50px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+  }
+
+  .btn-xs {
+    font-size: 0.7rem !important;
+    padding: 6px 12px !important;
+  }
+
+  /* ==== BRAND / HEADER ==== */
+  .brand h1 {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+  }
+
+  .brand span {
+    font-size: 0.7rem !important;
+  }
+
+  #formHint {
+    font-size: 0.8rem !important;
+    line-height: 1.5 !important;
+  }
+
+  #syncSection label {
+    font-size: 0.65rem !important;
+  }
+
+  #syncSection input {
+    font-size: 0.85rem !important;
+    padding: 10px 12px !important;
+  }
+
+  /* ==== EMPTY STATE ==== */
+  #empty {
+    font-size: 1rem !important;
+    padding: 50px 20px !important;
+  }
+}
+
+/* ============================================================
+   TELAS MUITO PEQUENAS (< 400px) — Ajuste Extra
+   ============================================================ */
+@media (max-width: 400px) {
+  html {
+    font-size: 19px !important;
+  }
+
+  #main {
+    padding: 14px 10px 110px;
+  }
+
+  .card {
+    padding: 18px 14px !important;
+  }
+
+  .chip {
+    padding: 10px 16px !important;
+    font-size: 0.85rem !important;
+    min-height: 44px !important;
   }
 }
