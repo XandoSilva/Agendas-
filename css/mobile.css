@@ -51,7 +51,7 @@
 
   /* ==== FONTE RAIZ ULTRA-GRANDE ==== */
   html {
-    font-size: 36px !important;
+    font-size: 29px !important;
   }
   body {
     -webkit-text-size-adjust: 100% !important;
@@ -100,7 +100,7 @@
   }
 
   #counter {
-    font-size: 1.4rem !important;
+    font-size: 0.85rem !important;
     font-weight: 800 !important;
   }
 
@@ -386,7 +386,7 @@
    ============================================================ */
 @media (max-width: 400px) {
   html {
-    font-size: 32px !important;
+    font-size: 26px !important;
   }
 
   #main {
