@@ -27,6 +27,9 @@ function handleToggleTheme() {
 }
 
 async function main() {
+  // Aba padrão de inicialização (foco total na Agenda em dispositivos móveis)
+  document.body.className = 'tab-agenda';
+
   // Inicializar Tema (localStorage ou preferência do sistema)
   const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   applyTheme(savedTheme);

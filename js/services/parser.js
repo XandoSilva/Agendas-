@@ -1,5 +1,5 @@
 /**
- * Módulo Parser de mensagens do Teams e planilhas CSV.
+ * Módulo Parser de mensagens do Teams (com suporte a HTML) e planilhas CSV.
  */
 
 export function uid() {
@@ -22,10 +22,22 @@ export function parseCSV(text) {
   return ret;
 }
 
+function cleanHtmlText(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.slice(0, 50000)
+    .replace(/<br\s*[\/]?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>');
+}
+
 export function extractDataSingle(raw) {
   if (!raw || !raw.trim()) return null;
-  // Limite de segurança de tamanho de string (50kb max)
-  const safeText = raw.slice(0, 50000);
+  const safeText = cleanHtmlText(raw);
   const cleanRaw = safeText.replace(/\*/g, '');
   const get = (regex) => { const m = cleanRaw.match(regex); return m ? m[1].trim() : ''; };
 
@@ -98,11 +110,12 @@ export function extractDataSingle(raw) {
 
 export function extractData(raw) {
   if (!raw || !raw.trim()) return [];
+  const safeRawText = cleanHtmlText(raw);
   const entries = [];
   let current = null;
   let currentTipo = 'Outro';
   
-  const lines = raw.slice(0, 50000).split('\n');
+  const lines = safeRawText.split('\n');
   for (let line of lines) {
     const cleanLine = line.trim().replace(/\*/g, '');
     if (!cleanLine) continue;
@@ -111,7 +124,8 @@ export function extractData(raw) {
     if (cleanLine.match(/VISTORIAS?/i)) currentTipo = 'Vistoria';
     if (cleanLine.match(/ATIVA[ÇC][ÃA]O/i)) currentTipo = 'Ativação';
     
-    const dataMatch = cleanLine.match(/📅\s*(\d{2})\/(\d{2})\/(\d{4})/);
+    const dataMatch = cleanLine.match(/📅\s*(\d{2})\/(\d{2})\/(\d{4})/)
+                   || cleanLine.match(/(\d{2})\/(\d{2})\/(\d{4})/);
     if (dataMatch) {
       if (current && (current.contrato || current.cliente)) entries.push(current);
       current = {
