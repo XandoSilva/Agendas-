@@ -35,6 +35,28 @@ function cleanHtmlText(raw) {
     .replace(/&gt;/gi, '>');
 }
 
+/**
+ * Normaliza telefone brasileiro para formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+ */
+function normalizePhone(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  // Remove tudo que não é dígito
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length < 10) return raw.trim(); // se não tem dígitos suficientes, retorna original
+  
+  // Pega os últimos 10 ou 11 dígitos (DDD + número)
+  const phone = digits.length >= 11 ? digits.slice(-11) : digits.slice(-10);
+  const ddd = phone.slice(0, 2);
+  const number = phone.slice(2);
+  
+  if (number.length === 9) {
+    return `(${ddd}) ${number.slice(0, 5)}-${number.slice(5)}`;
+  } else if (number.length === 8) {
+    return `(${ddd}) ${number.slice(0, 4)}-${number.slice(4)}`;
+  }
+  return raw.trim();
+}
+
 export function extractDataSingle(raw) {
   if (!raw || !raw.trim()) return null;
   const safeText = cleanHtmlText(raw);
@@ -91,8 +113,12 @@ export function extractDataSingle(raw) {
   if (hora) { hora = hora.replace(/H/gi, ':').replace(/:(?!\d)/g, ':00').toUpperCase(); }
 
   let contato = get(/CONTATO\s*:?\s*([^\n]+)/i);
-  const contatoM = cleanRaw.match(/(\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4})/);
-  if (!contato && contatoM) { contato = contatoM[1]; }
+  if (!contato) {
+    // Busca qualquer telefone no texto: (XX) XXXXX-XXXX, XX XXXXX-XXXX, etc.
+    const contatoM = cleanRaw.match(/(\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4})/);
+    if (contatoM) contato = contatoM[1];
+  }
+  contato = normalizePhone(contato);
 
   const obsBits = [];
   const osM = cleanRaw.match(/O\.?S\.?\s*(?:AUTORIZADA|APROVADA)?:?\s*([0-9]+)/i);
@@ -150,10 +176,10 @@ export function extractData(raw) {
       else if (cleanLine.match(/^Endere[çc]o:\s*(.+)/i)) current.endereco = cleanLine.match(/^Endere[çc]o:\s*(.+)/i)[1];
       else if (cleanLine.match(/^Acompanhamento.*?:\s*(.+)/i)) {
         const ac = cleanLine.match(/^Acompanhamento.*?:\s*(.+)/i)[1];
-        const fone = ac.match(/(\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4})/);
+        const fone = ac.match(/(\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4})/);
         if (fone) {
-          current.contato = fone[1];
-          current.acompanhante = ac.replace(fone[1], '').replace(/[\(\)\-]/g, '').trim().replace(/\|\s*$/, '').trim();
+          current.contato = normalizePhone(fone[1]);
+          current.acompanhante = ac.replace(fone[0], '').replace(/[\(\)\-|]/g, '').trim();
         } else {
           current.acompanhante = ac;
         }

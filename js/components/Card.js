@@ -15,7 +15,19 @@ export function createCardHTML(entry) {
   const safeEndereco = escapeHTML(entry.endereco || '');
   const safeHora = escapeHTML(entry.hora || '—');
   const safeAcompanhante = escapeHTML(entry.acompanhante || '—');
-  const safeContato = escapeHTML(entry.contato || '—');
+  // Normaliza telefone: extrai dígitos e formata como (XX) XXXXX-XXXX
+  const rawContato = entry.contato || '';
+  const contatoDigits = rawContato.replace(/\D/g, '');
+  let displayContato = rawContato || '—';
+  if (contatoDigits.length >= 10) {
+    const phone = contatoDigits.length >= 11 ? contatoDigits.slice(-11) : contatoDigits.slice(-10);
+    const ddd = phone.slice(0, 2);
+    const num = phone.slice(2);
+    displayContato = num.length === 9
+      ? `(${ddd}) ${num.slice(0, 5)}-${num.slice(5)}`
+      : `(${ddd}) ${num.slice(0, 4)}-${num.slice(4)}`;
+  }
+  const safeContato = escapeHTML(displayContato);
   const safeObs = escapeHTML(entry.obs || '');
 
   return `
