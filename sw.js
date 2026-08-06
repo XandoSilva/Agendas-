@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vistorias-v3';
+const CACHE_NAME = 'vistorias-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const ASSETS = [
   './js/components/Header.js',
   './js/components/Card.js',
   './js/components/Timeline.js',
+  './js/components/Calendar.js',
   './js/components/MobileNav.js',
   './js/components/SettingsModal.js',
   './js/components/Dashboard.js'
@@ -47,9 +48,14 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   
+  // Network-first: tenta rede, fallback para cache (offline)
   e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request);
-    })
+    fetch(e.request)
+      .then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });

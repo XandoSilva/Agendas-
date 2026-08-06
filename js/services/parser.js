@@ -96,7 +96,7 @@ export function extractDataSingle(raw) {
   let acompanhante = get(/QUEM ACOMPANHAR[ÁA](?:\s+A\s+EQUIPE\s+SER[ÁA])?:?\s*(.*?)(?=\n|T[ÉE]CNICO|CONFORME|OBS|$)/i);
   
   // --- Extração de datas (suporte a múltiplas: "13/08 E/OU 14/08") ---
-  const dataLineMatch = cleanRaw.match(/(?:PARA|DATA(?: DE ACESSO)?|DIA)\s*:?\s*([\d\/\.\s,EeOoUu]+?\d{1,2}[\/\.]\d{1,2})/i);
+  const dataLineMatch = cleanRaw.match(/(?:PARA|DATA(?: DE ACESSO)?|DIA)\s*:?\s*([^\n]*\d{1,2}[\/\.]\d{1,2})/i);
   const allDates = [];
 
   if (dataLineMatch) {
