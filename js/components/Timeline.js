@@ -4,6 +4,9 @@
 import { fmtDate } from '../utils/formatters.js';
 import { createCardHTML } from './Card.js';
 
+// Guarda referência para evitar registrar listener duplicado
+const delegatedContainers = new WeakSet();
+
 export function renderTimeline(containerEl, list, onCardAction) {
   if (!list || list.length === 0) {
     containerEl.innerHTML = '<div id="empty">Nenhum agendamento por aqui ainda. Cole uma mensagem do Teams ao lado ou clique em "+ Novo" para começar.</div>';
@@ -26,17 +29,24 @@ export function renderTimeline(containerEl, list, onCardAction) {
     `;
   }).join('');
 
-  // Event Delegation para status, edição e exclusão
-  containerEl.querySelectorAll('[data-action]').forEach(el => {
-    const action = el.getAttribute('data-action');
-    const id = el.getAttribute('data-id');
+  // Event Delegation única no container (registra só 1 vez)
+  if (!delegatedContainers.has(containerEl)) {
+    delegatedContainers.add(containerEl);
 
-    if (action === 'quick-status') {
-      el.addEventListener('change', (ev) => onCardAction('quick-status', id, ev.target.value));
-    } else if (action === 'edit') {
-      el.addEventListener('click', () => onCardAction('edit', id));
-    } else if (action === 'delete') {
-      el.addEventListener('click', () => onCardAction('delete', id));
-    }
-  });
+    containerEl.addEventListener('change', (ev) => {
+      const select = ev.target.closest('[data-action="quick-status"]');
+      if (select) {
+        onCardAction('quick-status', select.getAttribute('data-id'), select.value);
+      }
+    });
+
+    containerEl.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.getAttribute('data-action');
+      const id = btn.getAttribute('data-id');
+      if (action === 'edit') onCardAction('edit', id);
+      if (action === 'delete') onCardAction('delete', id);
+    });
+  }
 }

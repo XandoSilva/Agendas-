@@ -206,7 +206,7 @@ async function handleCardAction(action, id, value) {
     if (!e) return;
     e.status = value;
     await persistEntry({ id, data: { status: value } }, false, true, entries);
-    if (!isOnline()) render();
+    render();
   } else if (action === 'edit') {
     const e = entries.find(x => x.id === id);
     if (!e) return;
@@ -230,8 +230,8 @@ async function handleCardAction(action, id, value) {
     const target = entries.find(x => x.id === id);
     if (!target) return;
     entries = entries.filter(e => e.id !== id);
+    render();
     await persistEntry(target, true, false, entries);
-    if (!isOnline()) render();
   }
 }
 
@@ -289,7 +289,7 @@ async function handleSaveEntry(ev) {
 
   await persistEntry(entry, false, false, entries);
   clearForm();
-  if (!isOnline()) render();
+  render();
   
   // No mobile, volta para a agenda após salvar
   handleTabChange('agenda');
@@ -337,7 +337,7 @@ async function handleSyncMessages() {
       }
     }
 
-    if (!isOnline()) render();
+    render();
     alert(added > 0 ? `${added} novo(s) agendamento(s) sincronizado(s)!` : 'Nenhuma mensagem nova.');
   } catch (e) {
     console.error(e);
