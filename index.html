@@ -15,16 +15,27 @@
   <meta name="apple-mobile-web-app-title" content="Vistorias">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
 
-  <!-- Estilos CSS v10 -->
-  <link rel="stylesheet" href="./css/variables.css?v=10">
-  <link rel="stylesheet" href="./css/base.css?v=10">
-  <link rel="stylesheet" href="./css/components.css?v=10">
-  <link rel="stylesheet" href="./css/mobile.css?v=10">
+  <!-- Estilos CSS v14 -->
+  <link rel="stylesheet" href="./css/variables.css?v=14">
+  <link rel="stylesheet" href="./css/base.css?v=14">
+  <link rel="stylesheet" href="./css/components.css?v=14">
+  <link rel="stylesheet" href="./css/mobile.css?v=14">
 
   <!-- Supabase JS Client via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="tab-agenda">
+
+  <!-- Script de limpeza profunda de cachê - Forçado na v14 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.update();
+        }
+      });
+    }
+  </script>
 
   <div id="modalContainer"></div>
 
