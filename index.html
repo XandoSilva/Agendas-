@@ -15,11 +15,11 @@
   <meta name="apple-mobile-web-app-title" content="Vistorias">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
 
-  <!-- Estilos CSS v8 -->
-  <link rel="stylesheet" href="./css/variables.css?v=8">
-  <link rel="stylesheet" href="./css/base.css?v=8">
-  <link rel="stylesheet" href="./css/components.css?v=8">
-  <link rel="stylesheet" href="./css/mobile.css?v=8">
+  <!-- Estilos CSS v9 -->
+  <link rel="stylesheet" href="./css/variables.css?v=9">
+  <link rel="stylesheet" href="./css/base.css?v=9">
+  <link rel="stylesheet" href="./css/components.css?v=9">
+  <link rel="stylesheet" href="./css/mobile.css?v=9">
 
   <!-- Supabase JS Client via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -125,36 +125,42 @@
     <div id="main">
       <div id="dashboardContainer"></div>
 
-      <div id="calendarContainer"></div>
+      <div class="content-wrapper">
+        <div class="main-column">
+          <div id="toolbar">
+            <h2 id="counter">Agenda</h2>
+            <input id="search" placeholder="Buscar contrato ou cliente...">
+            
+            <div class="filter-group">
+              <span class="filter-label">Atividade:</span>
+              <button class="chip chip-tipo active" data-tipo="all">Todas</button>
+              <button class="chip chip-tipo" data-tipo="Vistoria">Vistorias</button>
+              <button class="chip chip-tipo" data-tipo="Passagem de Cabo">Passagem de Cabo</button>
+              <button class="chip chip-tipo" data-tipo="Ativação">Ativações</button>
+            </div>
 
-      <div id="toolbar">
-        <h2 id="counter">Agenda</h2>
-        <input id="search" placeholder="Buscar contrato ou cliente...">
-        
-        <div class="filter-group">
-          <span class="filter-label">Atividade:</span>
-          <button class="chip chip-tipo active" data-tipo="all">Todas</button>
-          <button class="chip chip-tipo" data-tipo="Vistoria">Vistorias</button>
-          <button class="chip chip-tipo" data-tipo="Passagem de Cabo">Passagem de Cabo</button>
-          <button class="chip chip-tipo" data-tipo="Ativação">Ativações</button>
+            <div class="filter-group">
+              <span class="filter-label">Status:</span>
+              <button class="chip chip-status active" data-status="all">Todos</button>
+              <button class="chip chip-status" data-status="Confirmada">Confirmada</button>
+              <button class="chip chip-status" data-status="Pendente">Pendente</button>
+              <button class="chip chip-status" data-status="Realizada">Realizada</button>
+              <button class="chip chip-status" data-status="Cancelada">Cancelada/Reagendada</button>
+            </div>
+          </div>
+          <div id="timeline"></div>
         </div>
 
-        <div class="filter-group">
-          <span class="filter-label">Status:</span>
-          <button class="chip chip-status active" data-status="all">Todos</button>
-          <button class="chip chip-status" data-status="Confirmada">Confirmada</button>
-          <button class="chip chip-status" data-status="Pendente">Pendente</button>
-          <button class="chip chip-status" data-status="Realizada">Realizada</button>
-          <button class="chip chip-status" data-status="Cancelada">Cancelada/Reagendada</button>
+        <div class="side-column">
+          <div id="calendarContainer"></div>
         </div>
       </div>
-      <div id="timeline"></div>
     </div>
   </div>
 
   <div id="mobileNavContainer"></div>
 
   <!-- JavaScript ES6 Modules -->
-  <script type="module" src="./js/main.js?v=8"></script>
+  <script type="module" src="./js/main.js?v=9"></script>
 </body>
 </html>

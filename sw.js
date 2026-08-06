@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vistorias-v4';
+const CACHE_NAME = 'vistorias-v5';
 const ASSETS = [
   './',
   './index.html',

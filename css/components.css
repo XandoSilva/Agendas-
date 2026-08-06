@@ -573,6 +573,24 @@ select.status-select:focus {
   text-align: center;
 }
 
+/* ---------- CALENDAR & TIMELINE LAYOUT ---------- */
+.content-wrapper {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+.main-column {
+  flex: 1;
+  min-width: 0;
+}
+.side-column {
+  width: 340px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+}
+
 /* ---------- CALENDÁRIO FILTRO ---------- */
 .cal-widget {
   background: var(--card-bg);

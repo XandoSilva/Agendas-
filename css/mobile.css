@@ -224,6 +224,15 @@
     font-size: 0.4rem !important;
     padding: 0.3rem !important;
   }
+  
+  /* Layout side-by-side no desktop, em coluna no mobile */
+  .content-wrapper {
+    flex-direction: column-reverse !important;
+  }
+  .side-column {
+    width: 100% !important;
+    position: static !important;
+  }
   /* ==== TIMELINE: CABEÇALHO DE DIA ==== */
   .day-header {
     font-size: 0.55rem !important;
