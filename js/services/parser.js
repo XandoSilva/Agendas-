@@ -95,15 +95,23 @@ export function extractDataSingle(raw) {
 
   let acompanhante = get(/QUEM ACOMPANHAR[ÁA](?:\s+A\s+EQUIPE\s+SER[ÁA])?:?\s*(.*?)(?=\n|T[ÉE]CNICO|CONFORME|OBS|$)/i);
   
-  let dataStr = get(/PARA\s+(\d{1,2}[\/\.]\d{1,2})/i)
-    || get(/DATA(?: DE ACESSO)?:?\s*(\d{1,2}[\/\.]\d{1,2})/i)
-    || get(/DIA\s+(\d{1,2}[\/\.]\d{1,2})/i);
-  let f_data = '';
-  if (dataStr) {
-    const [d, m] = dataStr.replace('.', '/').split('/');
-    const year = new Date().getFullYear();
-    f_data = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  // --- Extração de datas (suporte a múltiplas: "13/08 E/OU 14/08") ---
+  const dataLineMatch = cleanRaw.match(/(?:PARA|DATA(?: DE ACESSO)?|DIA)\s*:?\s*([\d\/\.\s,EeOoUu]+?\d{1,2}[\/\.]\d{1,2})/i);
+  const allDates = [];
+
+  if (dataLineMatch) {
+    const segment = dataLineMatch[1];
+    const dateTokens = segment.match(/\d{1,2}[\/\.]\d{1,2}/g);
+    if (dateTokens) {
+      const year = new Date().getFullYear();
+      for (const tok of dateTokens) {
+        const [d, m] = tok.replace('.', '/').split('/');
+        allDates.push(`${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
+      }
+    }
   }
+
+  let f_data = allDates.length > 0 ? allDates[0] : '';
 
   let hora = get(/HORA?:?\s*(\d{1,2}[:hH]\d{0,2}(?:\s*(?:[aàAÀ]s|-|e)\s*\d{1,2}[:hH]\d{0,2})?)/i) 
           || get(/(?:^|\s)[aàAÀ]S\s*(\d{1,2}[:hH]\d{0,2}(?:\s*(?:[aàAÀ]s|-|e)\s*\d{1,2}[:hH]\d{0,2})?)/i) 
@@ -131,7 +139,7 @@ export function extractDataSingle(raw) {
   const tecM = cleanRaw.match(/T[ÉE]CNICO(?:\s*DA\s*TERJ)?:?\s*([^\n,]+)/i);
   if (tecM) obsBits.push('Técnico: ' + tecM[1].trim());
 
-  return { tipo, status, data: f_data, hora, contrato, cliente, endereco, acompanhante, contato, obs: obsBits.join('\n') };
+  return { tipo, status, data: f_data, allDates, hora, contrato, cliente, endereco, acompanhante, contato, obs: obsBits.join('\n') };
 }
 
 export function extractData(raw) {
@@ -194,11 +202,21 @@ export function extractData(raw) {
   
   if (entries.length === 0) {
      const single = extractDataSingle(raw);
-     if (single && (single.contrato || single.cliente)) entries.push(single);
+     if (single && (single.contrato || single.cliente)) {
+       // Se há múltiplas datas (ex: "13/08 E/OU 14/08"), cria uma entrada por data
+       if (single.allDates && single.allDates.length > 1) {
+         for (const dt of single.allDates) {
+           entries.push({ ...single, data: dt });
+         }
+       } else {
+         entries.push(single);
+       }
+     }
   }
   
   entries.forEach(e => {
     if (Array.isArray(e.obs)) e.obs = e.obs.join('\n');
+    delete e.allDates; // propriedade interna, não precisa ir para o card
   });
   
   return entries;
