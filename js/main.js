@@ -252,20 +252,35 @@ async function handleCardAction(action, id, value) {
   }
 }
 
-function handleParsePaste() {
+async function handleParsePaste() {
   const raw = document.getElementById('pasteBox').value;
   const dataArr = extractData(raw);
   if (!dataArr || dataArr.length === 0) return;
 
   if (dataArr.length > 1) {
-    dataArr.forEach(async (data, index) => {
-      const entry = { id: uid() + index, sourceId: '', ...data };
-      entries.push(entry);
-      await persistEntry(entry, false, false, entries);
-    });
+    let added = 0;
+    for (let i = 0; i < dataArr.length; i++) {
+      const data = dataArr[i];
+      // Evita duplicatas verificando contrato, data e hora
+      const exists = entries.some(e => e.contrato === data.contrato && e.data === data.data && e.hora === data.hora);
+      
+      if (!exists) {
+        const entry = { id: uid() + i, sourceId: '', ...data };
+        entries.push(entry);
+        await persistEntry(entry, false, false, entries);
+        added++;
+      }
+    }
     render();
     clearForm();
-    alert(dataArr.length + ' agendamentos importados com sucesso!');
+    
+    if (added === dataArr.length) {
+      alert(`${added} agendamento(s) importado(s) com sucesso!`);
+    } else if (added > 0) {
+      alert(`${added} importado(s) com sucesso. (${dataArr.length - added} duplicado(s) ignorado(s))`);
+    } else {
+      alert(`Nenhum agendamento novo importado (já existem na agenda).`);
+    }
   } else {
     const parsed = dataArr[0];
     document.getElementById('f_id').value = '';
