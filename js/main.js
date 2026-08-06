@@ -1,18 +1,20 @@
 /**
  * Ponto de entrada principal da aplicação (Main Orchestrator)
  */
-import { initSupabase, fetchEntries, persistEntry, isOnline } from './services/api.js';
+import { initSupabase, fetchEntries, persistEntry } from './services/api.js';
 import { extractData, uid, parseCSV } from './services/parser.js';
 import { renderHeader, updateConnectionStatus } from './components/Header.js';
 import { renderTimeline } from './components/Timeline.js';
 import { renderMobileNav } from './components/MobileNav.js';
 import { renderSettingsModal, openSettingsModal } from './components/SettingsModal.js';
 import { renderDashboard } from './components/Dashboard.js';
+import { renderCalendar, getSelectedDate } from './components/Calendar.js';
 import { formatPhoneMask } from './utils/formatters.js';
 
 let entries = [];
 let currentTipoFilter = 'all';
 let currentStatusFilter = 'all';
+let currentDateFilter = null; // YYYY-MM-DD ou null (todos)
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -191,7 +193,22 @@ function render() {
 
   list.sort((a, b) => (a.data || '9999').localeCompare(b.data || '9999'));
 
-  // 3. Atualizar Dashboard de KPIs e Métricas (Sincronizado com os itens deduplicados da lista)
+  // 3. Calendário: renderizar com dots nas datas que têm atividades
+  const calEl = document.getElementById('calendarContainer');
+  if (calEl) {
+    const activeDates = [...new Set(list.map(e => e.data).filter(Boolean))];
+    renderCalendar(calEl, activeDates, (dateStr) => {
+      currentDateFilter = dateStr;
+      render();
+    });
+  }
+
+  // 4. Filtro por data selecionada no calendário
+  if (currentDateFilter) {
+    list = list.filter(e => e.data === currentDateFilter);
+  }
+
+  // 5. Atualizar Dashboard de KPIs e Métricas (Sincronizado com os itens deduplicados da lista)
   const dashEl = document.getElementById('dashboardContainer');
   if (dashEl) renderDashboard(dashEl, list);
 

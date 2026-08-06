@@ -180,6 +180,50 @@
     height: 8px !important;
   }
 
+  /* ==== CALENDÁRIO ==== */
+  .cal-widget {
+    border-radius: 0.4rem !important;
+    margin-bottom: 14px !important;
+  }
+  .cal-header {
+    padding: 0.35rem 0.4rem !important;
+  }
+  .cal-month-name {
+    font-size: 0.55rem !important;
+  }
+  .cal-year {
+    font-size: 0.38rem !important;
+  }
+  .cal-nav {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+    font-size: 0.45rem !important;
+    border-radius: 0.25rem !important;
+  }
+  .cal-dow {
+    font-size: 0.32rem !important;
+    padding: 0.2rem 0 !important;
+  }
+  .cal-grid {
+    padding: 0.15rem !important;
+    gap: 0.08rem !important;
+  }
+  .cal-cell {
+    font-size: 0.42rem !important;
+    border-radius: 0.2rem !important;
+  }
+  .cal-cell.cal-today {
+    border-width: 2px !important;
+  }
+  .cal-dot {
+    width: 0.15rem !important;
+    height: 0.15rem !important;
+    bottom: 0.08rem !important;
+  }
+  .cal-clear-filter {
+    font-size: 0.4rem !important;
+    padding: 0.3rem !important;
+  }
   /* ==== TIMELINE: CABEÇALHO DE DIA ==== */
   .day-header {
     font-size: 0.55rem !important;
