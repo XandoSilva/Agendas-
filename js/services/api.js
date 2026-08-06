@@ -75,3 +75,16 @@ export async function persistEntry(singleEntry, isDelete = false, isUpdate = fal
     }
   }
 }
+
+export async function uploadFile(bucket, filePath, file) {
+  if (!sbClient) throw new Error('Supabase não inicializado');
+  const { data, error } = await sbClient.storage.from(bucket).upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: true
+  });
+  if (error) throw error;
+  
+  const { data: publicData } = sbClient.storage.from(bucket).getPublicUrl(filePath);
+  return publicData.publicUrl;
+}
+

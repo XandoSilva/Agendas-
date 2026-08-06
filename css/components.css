@@ -527,6 +527,14 @@ textarea#pasteBox:focus {
 .quick-action-link.wa:hover {
   background: rgba(34, 197, 94, 0.16);
 }
+.quick-action-link.ppi {
+  color: var(--amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.08);
+}
+.quick-action-link.ppi:hover {
+  background: rgba(245, 158, 11, 0.16);
+}
 
 .card-actions {
   display: flex;

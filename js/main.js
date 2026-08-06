@@ -1,7 +1,7 @@
 /**
  * Ponto de entrada principal da aplicação (Main Orchestrator)
  */
-import { initSupabase, fetchEntries, persistEntry } from './services/api.js';
+import { initSupabase, fetchEntries, persistEntry, uploadFile } from './services/api.js';
 import { extractData, uid, parseCSV } from './services/parser.js';
 import { renderHeader, updateConnectionStatus } from './components/Header.js';
 import { renderTimeline } from './components/Timeline.js';
@@ -86,7 +86,22 @@ async function main() {
     });
   }
 
+  // Helper para alternar visibilidade do campo de arquivo
+  window.toggleFileInputVisibility = function(tipo) {
+    const fileContainer = document.getElementById('fileFieldContainer');
+    if (fileContainer) {
+      fileContainer.style.display = tipo === 'Passagem de Cabo' ? 'flex' : 'none';
+    }
+  };
+
   // Filtros de Tipo de Atividade
+  const fTipo = document.getElementById('f_tipo');
+  if (fTipo) {
+    fTipo.addEventListener('change', (e) => {
+      window.toggleFileInputVisibility(e.target.value);
+    });
+  }
+
   document.querySelectorAll('.chip-tipo').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.chip-tipo').forEach(c => c.classList.remove('active'));
@@ -240,6 +255,8 @@ async function handleCardAction(action, id, value) {
     document.getElementById('f_obs').value = e.obs;
     document.getElementById('f_source_id').value = e.sourceId || '';
     
+    if (window.toggleFileInputVisibility) window.toggleFileInputVisibility(e.tipo);
+    
     // Em mobile, alterna para a aba de formulário
     handleTabChange('novo');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -295,6 +312,8 @@ async function handleParsePaste() {
     document.getElementById('f_acompanhante').value = parsed.acompanhante;
     document.getElementById('f_contato').value = parsed.contato;
     document.getElementById('f_obs').value = parsed.obs;
+    
+    if (window.toggleFileInputVisibility) window.toggleFileInputVisibility(parsed.tipo);
   }
 }
 
@@ -316,6 +335,29 @@ async function handleSaveEntry(ev) {
     sourceId: document.getElementById('f_source_id').value,
   };
 
+  const fileInput = document.getElementById('f_ppi_file');
+  if (entry.tipo === 'Passagem de Cabo' && fileInput && fileInput.files.length > 0) {
+    try {
+      const file = fileInput.files[0];
+      const ext = file.name.split('.').pop();
+      const filePath = `ppi_${entry.id}_${Date.now()}.${ext}`;
+      const btn = ev.target.querySelector('button[type="submit"]');
+      const originalText = btn.innerText;
+      btn.innerText = 'Enviando PDF...';
+      btn.disabled = true;
+      
+      const publicUrl = await uploadFile('ppi_files', filePath, file);
+      entry.ppi_url = publicUrl;
+      
+      btn.innerText = originalText;
+      btn.disabled = false;
+    } catch (e) {
+      console.error('Erro ao enviar arquivo PPI:', e);
+      alert('Erro ao enviar o anexo. O bucket "ppi_files" foi criado no Supabase e está público?');
+      return; // Aborta salvar se o upload falhar
+    }
+  }
+
   const idx = entries.findIndex(e => e.id === id);
   if (idx >= 0) entries[idx] = entry; else entries.push(entry);
 
@@ -332,6 +374,9 @@ function clearForm() {
   document.getElementById('f_id').value = '';
   document.getElementById('f_source_id').value = '';
   document.getElementById('pasteBox').value = '';
+  const fileInput = document.getElementById('f_ppi_file');
+  if (fileInput) fileInput.value = '';
+  if (window.toggleFileInputVisibility) window.toggleFileInputVisibility('Vistoria');
 }
 
 async function handleSyncMessages() {

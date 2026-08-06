@@ -52,8 +52,9 @@ export function createCardHTML(entry) {
         <div><span>Contato</span>${safeContato}</div>
       </div>
       
-      ${entry.endereco || entry.contato ? `
+      ${entry.endereco || entry.contato || entry.ppi_url ? `
         <div class="card-field-actions">
+          ${entry.ppi_url ? `<a href="${escapeHTML(entry.ppi_url)}" target="_blank" rel="noopener" class="quick-action-link ppi">📄 Baixar PPI (PDF)</a>` : ''}
           ${entry.endereco ? `<a href="${mapsUrl}" target="_blank" rel="noopener" class="quick-action-link maps">🗺️ Abrir no Maps/Waze</a>` : ''}
           ${entry.contato ? `<a href="${waUrl}" target="_blank" rel="noopener" class="quick-action-link wa">💬 WhatsApp / Ligar</a>` : ''}
         </div>
