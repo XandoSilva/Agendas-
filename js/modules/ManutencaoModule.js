@@ -147,7 +147,27 @@ function processItems(items) {
       reader.onload = (event) => {
         const dataUrl = event.target.result;
         showOCRPreview(dataUrl);
-        performOCR(dataUrl);
+        
+        // Pre-processamento da imagem para melhorar OCR (Tesseract é ruim com fontes pequenas)
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const scale = 2.5; // Ampliar 2.5x melhora muito a precisão
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          
+          // Fundo branco (para evitar transparências ruins)
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Desenhar imagem redimensionada
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // Passar imagem processada para o OCR
+          performOCR(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.src = dataUrl;
       };
       reader.readAsDataURL(blob);
       break; // process only one image
