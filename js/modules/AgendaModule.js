@@ -5,7 +5,6 @@ import { initSupabase, fetchEntries, persistEntry, uploadFile } from './services
 import { extractData, uid, parseCSV } from './services/parser.js';
 import { renderHeader, updateConnectionStatus } from './components/Header.js';
 import { renderTimeline } from './components/Timeline.js';
-import { renderMobileNav } from './components/MobileNav.js';
 import { renderSettingsModal, openSettingsModal } from './components/SettingsModal.js';
 import { renderDashboard } from './components/Dashboard.js';
 import { renderCalendar, getSelectedDate } from './components/Calendar.js';
@@ -38,7 +37,6 @@ export async function initAgendaModule() {
 
   // Renderizar componentes estáticos de apoio
   renderHeader(document.getElementById('headerContainer'), openSettingsModal, handleToggleTheme);
-  renderMobileNav(document.getElementById('mobileNavContainer'), handleTabChange);
   renderSettingsModal(document.getElementById('modalContainer'), handleSaveSettings);
 
   // Event Listeners globais do formulário e ferramentas
@@ -151,12 +149,8 @@ export async function initAgendaModule() {
   }
 }
 
-function handleTabChange(tab) {
-  document.body.className = `tab-${tab}`;
-  if (tab === 'config') {
-    openSettingsModal();
-  }
-}
+// handleTabChange não é mais utilizado aqui pois app.js assumiu
+// function handleTabChange(tab) { ... }
 
 function handleSaveSettings(url, key) {
   if (!url || !key) {

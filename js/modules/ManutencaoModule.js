@@ -1,4 +1,4 @@
-import { saveRecord, getRecords, deleteRecord } from '../services/api.js';
+import { fetchEntries, persistEntry } from '../services/api.js';
 
 let manutencoes = [];
 const TABLE_NAME = 'manutencoes';
@@ -11,7 +11,17 @@ export async function initManutencaoModule() {
 }
 
 async function loadManutencoes() {
-  manutencoes = await getRecords(TABLE_NAME);
+  manutencoes = await fetchEntries(TABLE_NAME, (payload) => {
+    if (payload.eventType === 'INSERT') {
+      if (!manutencoes.some(m => m.id === payload.new.id)) manutencoes.push(payload.new);
+    } else if (payload.eventType === 'UPDATE') {
+      const idx = manutencoes.findIndex(m => m.id === payload.new.id);
+      if (idx >= 0) manutencoes[idx] = payload.new;
+    } else if (payload.eventType === 'DELETE') {
+      manutencoes = manutencoes.filter(m => m.id !== payload.old.id);
+    }
+    renderTimeline();
+  });
   // Sort newest first
   manutencoes.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 }
@@ -50,7 +60,7 @@ function setupListeners() {
       btn.disabled = true;
 
       try {
-        await saveRecord(TABLE_NAME, record);
+        await persistEntry(TABLE_NAME, record, false, false, manutencoes);
         
         // Update local state
         const idx = manutencoes.findIndex(m => m.id === record.id);
@@ -323,7 +333,7 @@ window.editManutencao = (id) => {
 window.deleteManutencao = async (id) => {
   if (confirm('Tem certeza que deseja excluir esta manutenção?')) {
     try {
-      await deleteRecord(TABLE_NAME, id);
+      await persistEntry(TABLE_NAME, { id }, true, false, manutencoes);
       manutencoes = manutencoes.filter(m => m.id !== id);
       renderTimeline();
     } catch(err) {
