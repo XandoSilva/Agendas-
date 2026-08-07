@@ -1,14 +1,14 @@
 /**
  * Ponto de entrada principal da aplicação (Main Orchestrator)
  */
-import { initSupabase, fetchEntries, persistEntry, uploadFile } from './services/api.js';
-import { extractData, uid, parseCSV } from './services/parser.js';
-import { renderHeader, updateConnectionStatus } from './components/Header.js';
-import { renderTimeline } from './components/Timeline.js';
-import { renderSettingsModal, openSettingsModal } from './components/SettingsModal.js';
-import { renderDashboard } from './components/Dashboard.js';
-import { renderCalendar, getSelectedDate } from './components/Calendar.js';
-import { formatPhoneMask } from './utils/formatters.js';
+import { initSupabase, fetchEntries, persistEntry, uploadFile } from '../services/api.js';
+import { extractData, uid, parseCSV } from '../services/parser.js';
+import { renderHeader, updateConnectionStatus } from '../components/Header.js';
+import { renderTimeline } from '../components/Timeline.js';
+import { renderSettingsModal, openSettingsModal } from '../components/SettingsModal.js';
+import { renderDashboard } from '../components/Dashboard.js';
+import { renderCalendar, getSelectedDate } from '../components/Calendar.js';
+import { formatPhoneMask } from '../utils/formatters.js';
 
 let entries = [];
 let currentTipoFilter = 'all';
