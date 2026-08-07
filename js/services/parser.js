@@ -118,7 +118,9 @@ export function extractDataSingle(raw) {
           || get(/HOR[ÁA]RIO:?\s*(\d{1,2}[:hH]?\d{0,2})/i);
   if (/EM HC|HOR[ÁA]RIO COMERCIAL/i.test(cleanRaw) && !hora) hora = 'Horário Comercial';
   
-  if (hora) { hora = hora.replace(/H/gi, ':').replace(/:(?!\d)/g, ':00').toUpperCase(); }
+  if (hora && hora.toLowerCase() !== 'horário comercial') { 
+    hora = hora.replace(/H/gi, ':').replace(/:(?!\d)/g, ':00').toUpperCase(); 
+  }
 
   let contato = get(/CONTATO\s*:?\s*([^\n]+)/i);
   if (!contato) {

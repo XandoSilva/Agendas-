@@ -278,8 +278,12 @@ async function handleParsePaste() {
     let added = 0;
     for (let i = 0; i < dataArr.length; i++) {
       const data = dataArr[i];
-      // Evita duplicatas verificando contrato, data e hora
-      const exists = entries.some(e => e.contrato === data.contrato && e.data === data.data && e.hora === data.hora);
+      // Evita duplicatas verificando contrato, data e hora ignorando case
+      const exists = entries.some(e => 
+        (e.contrato || '').toLowerCase() === (data.contrato || '').toLowerCase() && 
+        (e.data || '') === (data.data || '') && 
+        (e.hora || '').toLowerCase() === (data.hora || '').toLowerCase()
+      );
       
       if (!exists) {
         const entry = { id: uid() + i, sourceId: '', ...data };
