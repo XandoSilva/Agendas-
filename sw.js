@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vistorias-v9';
+const CACHE_NAME = 'vistorias-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -6,8 +6,11 @@ const ASSETS = [
   './css/variables.css',
   './css/base.css',
   './css/components.css',
+  './css/layout.css',
   './css/mobile.css',
-  './js/main.js',
+  './js/app.js',
+  './js/modules/AgendaModule.js',
+  './js/modules/ManutencaoModule.js',
   './js/utils/sanitizer.js',
   './js/utils/formatters.js',
   './js/services/api.js',
