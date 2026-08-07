@@ -152,20 +152,28 @@ function processItems(items) {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const scale = 2.5; // Ampliar 2.5x melhora muito a precisão
+          const scale = 2.0; // Ampliar 2x
           canvas.width = img.width * scale;
           canvas.height = img.height * scale;
           const ctx = canvas.getContext('2d');
           
-          // Fundo branco (para evitar transparências ruins)
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          // Desenhar imagem redimensionada
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           
+          // Binarização (Preto e Branco) para alto contraste
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          for (let j = 0; j < data.length; j += 4) {
+            const luminance = 0.299 * data[j] + 0.587 * data[j + 1] + 0.114 * data[j + 2];
+            // Se for claro, vira branco, se escuro, vira preto
+            const color = luminance > 160 ? 255 : 0;
+            data[j] = color;
+            data[j+1] = color;
+            data[j+2] = color;
+          }
+          ctx.putImageData(imageData, 0, 0);
+          
           // Passar imagem processada para o OCR
-          performOCR(canvas.toDataURL('image/jpeg', 0.9));
+          performOCR(canvas.toDataURL('image/jpeg', 1.0));
         };
         img.src = dataUrl;
       };
@@ -209,19 +217,26 @@ async function performOCR(imageSrc) {
   progressBar.style.width = '0%';
 
   try {
-    const result = await Tesseract.recognize(
-      imageSrc,
-      'por',
-      {
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            const pct = Math.round(m.progress * 100);
-            progressBar.style.width = pct + '%';
-            status.textContent = `Lendo texto... ${pct}%`;
-          }
+    status.textContent = "Iniciando motor OCR...";
+    const worker = await Tesseract.createWorker('por', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round(m.progress * 100);
+          progressBar.style.width = pct + '%';
+          status.textContent = `Lendo texto... ${pct}%`;
+        } else {
+          status.textContent = m.status;
         }
       }
-    );
+    });
+    
+    // PSM 11 = Sparse Text (Ideal para dashboards e formulários espalhados pela tela)
+    await worker.setParameters({
+      tessedit_pageseg_mode: '11',
+    });
+
+    const result = await worker.recognize(imageSrc);
+    await worker.terminate();
 
     status.textContent = "Leitura concluída!";
     setTimeout(() => { progressBarContainer.style.display = 'none'; }, 500);
