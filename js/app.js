@@ -43,6 +43,7 @@ function switchModule(moduleName) {
   }
 }
 
+window.handleTabChange = handleMobileTabChange;
 function handleMobileTabChange(tab) {
   if (tab === 'config') {
     // A configuração ainda fica no AgendaModule temporariamente ou modal global

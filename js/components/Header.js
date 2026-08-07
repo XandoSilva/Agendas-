@@ -19,26 +19,36 @@ export function renderHeader(containerEl, onOpenSettings, onToggleTheme) {
     </div>
   `;
 
-  document.getElementById('btnSettings').addEventListener('click', onOpenSettings);
-  document.getElementById('btnThemeToggle').addEventListener('click', onToggleTheme);
+  containerEl.querySelector('#btnSettings').addEventListener('click', onOpenSettings);
+  containerEl.querySelector('#btnThemeToggle').addEventListener('click', onToggleTheme);
 }
 
 export function updateConnectionStatus(type, label) {
-  const dot = document.getElementById('onlineDot');
-  const text = document.getElementById('connStatus');
-  if (!dot || !text) return;
+  const dots = document.querySelectorAll('#onlineDot, .dot');
+  const texts = document.querySelectorAll('#connStatus');
 
-  if (type === 'online') {
-    dot.style.background = 'var(--green)';
-    dot.style.boxShadow = '0 0 12px var(--green)';
-    text.textContent = label || 'Online (Supabase)';
-  } else if (type === 'error') {
-    dot.style.background = 'var(--coral)';
-    dot.style.boxShadow = '0 0 12px var(--coral)';
-    text.textContent = label || 'Erro de Conexão';
-  } else {
-    dot.style.background = 'var(--blue)';
-    dot.style.boxShadow = '0 0 12px var(--blue)';
-    text.textContent = label || 'Modo Local (localStorage)';
-  }
+  dots.forEach(dot => {
+    if (dot.id === 'onlineDot' || dot.classList.contains('dot')) {
+      if (type === 'online') {
+        dot.style.background = 'var(--green)';
+        dot.style.boxShadow = '0 0 12px var(--green)';
+      } else if (type === 'error') {
+        dot.style.background = 'var(--coral)';
+        dot.style.boxShadow = '0 0 12px var(--coral)';
+      } else {
+        dot.style.background = 'var(--blue)';
+        dot.style.boxShadow = '0 0 12px var(--blue)';
+      }
+    }
+  });
+
+  texts.forEach(text => {
+    if (type === 'online') {
+      text.textContent = label || 'Online (Supabase)';
+    } else if (type === 'error') {
+      text.textContent = label || 'Erro de Conexão';
+    } else {
+      text.textContent = label || 'Modo Local (localStorage)';
+    }
+  });
 }

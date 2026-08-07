@@ -34,20 +34,27 @@ export function isOnline() {
 export async function fetchEntries(tableName, onRealtimeUpdate) {
   const storageKey = `local_${tableName}`;
   if (sbClient) {
-    const { data, error } = await sbClient.from(tableName).select('*');
-    if (error) {
-      console.error(`Erro de permissão/busca Supabase em ${tableName}`, error);
-      alert(`Erro de permissão no Supabase. Verifique a tabela ${tableName} e políticas RLS.`);
-      return [];
-    }
+    try {
+      const { data, error } = await sbClient.from(tableName).select('*');
+      if (error) {
+        console.error(`Erro de permissão/busca Supabase em ${tableName}`, error);
+        alert(`Erro de permissão no Supabase. Verifique a tabela ${tableName} e políticas RLS.`);
+        return [];
+      }
 
-    if (onRealtimeUpdate) {
-      sbClient.channel(`public:${tableName}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, payload => {
-          onRealtimeUpdate(payload);
-        }).subscribe();
+      if (onRealtimeUpdate) {
+        sbClient.channel(`public:${tableName}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, payload => {
+            onRealtimeUpdate(payload);
+          }).subscribe();
+      }
+      return data || [];
+    } catch (e) {
+      console.error(`Falha na conexão Supabase para ${tableName}, usando localStorage`, e);
+      // Fallback para localStorage
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : [];
     }
-    return data || [];
   } else {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -62,12 +69,17 @@ export async function fetchEntries(tableName, onRealtimeUpdate) {
 export async function persistEntry(tableName, singleEntry, isDelete = false, isUpdate = false, allEntries = []) {
   const storageKey = `local_${tableName}`;
   if (sbClient) {
-    if (isDelete) {
-      await sbClient.from(tableName).delete().eq('id', singleEntry.id);
-    } else if (isUpdate) {
-      await sbClient.from(tableName).update(singleEntry.data).eq('id', singleEntry.id);
-    } else if (singleEntry) {
-      await sbClient.from(tableName).upsert(singleEntry);
+    try {
+      if (isDelete) {
+        await sbClient.from(tableName).delete().eq('id', singleEntry.id);
+      } else if (isUpdate) {
+        await sbClient.from(tableName).update(singleEntry.data).eq('id', singleEntry.id);
+      } else if (singleEntry) {
+        await sbClient.from(tableName).upsert(singleEntry);
+      }
+    } catch (e) {
+      console.error(`Erro de persistência Supabase em ${tableName}, salvando local`, e);
+      localStorage.setItem(storageKey, JSON.stringify(allEntries));
     }
   } else {
     try {

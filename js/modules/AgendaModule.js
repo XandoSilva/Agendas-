@@ -252,7 +252,7 @@ async function handleCardAction(action, id, value) {
     if (window.toggleFileInputVisibility) window.toggleFileInputVisibility(e.tipo);
     
     // Em mobile, alterna para a aba de formulário
-    handleTabChange('novo');
+    if (window.handleTabChange) window.handleTabChange('novo');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (action === 'delete') {
     const target = entries.find(x => x.id === id);
@@ -364,7 +364,7 @@ async function handleSaveEntry(ev) {
   render();
   
   // No mobile, volta para a agenda após salvar
-  handleTabChange('agenda');
+  if (window.handleTabChange) window.handleTabChange('agenda');
 }
 
 function clearForm() {
