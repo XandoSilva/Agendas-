@@ -245,25 +245,36 @@ async function performOCR(imageSrc) {
 
 function parseOCRText(text) {
   console.log("OCR Result Text:", text);
-  // Clean up excessive newlines
-  const cleanText = text.replace(/\n/g, ' ');
+  
+  // Normalizar múltiplos espaços e quebras de linha para uma linha única e limpa
+  const cleanText = text.replace(/\s+/g, ' ');
 
-  // Helper function to extract via Regex safely
+  // Helper para extração segura com regex
   const extract = (regex) => {
     const match = cleanText.match(regex);
     return match ? match[1].trim() : '';
   };
 
-  const protocolo = extract(/Protocolo:\s*(\d+)/i) || extract(/Protocolo.*?\s+(\d+)/i);
-  const contrato = extract(/Contrato:\s*([^\(Cliente]*)/i);
-  const cliente = extract(/(?:Cliente|Razão Social)[\s\/]*:\s*(.*?)(?=\s*Contato:)/i);
-  const contato = extract(/Contato:\s*(.*?)(?=\s*Endereço)/i);
-  const endereco = extract(/Endereço.*?(?:Serviço)?:\s*(.*?)(?=\s*Telefones?:)/i);
-  const telefones = extract(/Telefones?:\s*(.*?)(?=\s*Empreiteira)/i);
-  const empreiteira = extract(/Empreiteira.*?(?:Direcionada)?:\s*(.*?)(?=\s*Tipo de)/i);
-  const tipo = extract(/Tipo de Reclama(?:ç|c)(?:ã|a)o:\s*(.*?)(?=\s*Observa)/i);
-  const obs = extract(/Observa(?:ç|c)(?:ã|a)o do Despacho:\s*(.*?)(?=\s*(?:OBSERVAÇÃO|Descrição|Solicitação|📝))/i);
-  const descricao = extract(/Descrição:\s*(.*)/i) || extract(/Solicitação:\s*(.*)/i);
+  // Regras de extração baseadas no layout da imagem fornecida
+  const protocolo = extract(/Protocolo[:\s]+([A-Z0-9-]+)/i);
+  const contrato = extract(/Contrato[:\s]+(\d+)/i);
+  
+  // Pega tudo após Razão Social ou Nome Cliente até encontrar as próximas palavras chave
+  const cliente = extract(/(?:Razão Social|Nome Cliente)[:\s]+(.*?)(?=\s+Contato|\s+Telefone|\s+Nro|\s+End|\s+Status|$)/i);
+  
+  const contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+Telefone|\s+Nro|\s+End|$)/i);
+  
+  const endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+Área|\s+Descri[cç]ão|\s+Procedimentos|$)/i);
+  
+  const telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
+  
+  const empreiteira = extract(/EMPREITEIRA(?: DIRECIONADA)?[:\s]+(.*?)(?=\s+T[EÉ]CNICO|\s+TIPO|\s+OBSERVA[CÇ][ÃA]O|$)/i);
+  
+  const tipo = extract(/TIPO DE RECLAMA[CÇ][ÃA]O[:\s]+(.*?)(?=\s+OBSERVA[CÇ][ÃA]O|\s*$)/i);
+  
+  const obs = extract(/OBSERVA[CÇ][ÃA]O(?: DO DESPACHO)?[:\s]+(.*?)(?=\s*$)/i);
+  
+  const descricao = extract(/Descri[cç][ãa]o[:\s]+(.*?)(?=\s+Última|\s+Procedimentos|\s+EMPREITEIRA|$)/i);
 
   // Auto-fill form
   if (protocolo) document.getElementById('m_protocolo').value = protocolo;
