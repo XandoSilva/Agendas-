@@ -1,9 +1,9 @@
 /**
  * Módulo de API Realtime & Banco de Dados (Supabase + localStorage).
+ * Refatorado para suportar múltiplas tabelas (Módulos).
  */
 
 let sbClient = null;
-const STORAGE_KEY = 'agendamentos';
 
 const DEFAULT_SB_URL = 'https://cccyycqxasypvzwhcsok.supabase.co';
 const DEFAULT_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjY3l5Y3F4YXN5cHZ6d2hjc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2MjU1ODIsImV4cCI6MjEwMTIwMTU4Mn0.Hh4G0FGvVNchjXd7D0G_u-3OMYytusD_PbTs19Gcazw';
@@ -31,47 +31,49 @@ export function isOnline() {
   return Boolean(sbClient);
 }
 
-export async function fetchEntries(onRealtimeUpdate) {
+export async function fetchEntries(tableName, onRealtimeUpdate) {
+  const storageKey = `local_${tableName}`;
   if (sbClient) {
-    const { data, error } = await sbClient.from('agendamentos').select('*');
+    const { data, error } = await sbClient.from(tableName).select('*');
     if (error) {
-      console.error('Erro de permissão/busca Supabase', error);
-      alert('Erro de permissão no Supabase. Verifique a tabela agendamentos e políticas RLS.');
+      console.error(`Erro de permissão/busca Supabase em ${tableName}`, error);
+      alert(`Erro de permissão no Supabase. Verifique a tabela ${tableName} e políticas RLS.`);
       return [];
     }
 
     if (onRealtimeUpdate) {
-      sbClient.channel('public:agendamentos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
+      sbClient.channel(`public:${tableName}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, payload => {
           onRealtimeUpdate(payload);
         }).subscribe();
     }
     return data || [];
   } else {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
-      console.error('Falha ao carregar dados do localStorage', e);
+      console.error(`Falha ao carregar dados do localStorage (${storageKey})`, e);
       return [];
     }
   }
 }
 
-export async function persistEntry(singleEntry, isDelete = false, isUpdate = false, allEntries = []) {
+export async function persistEntry(tableName, singleEntry, isDelete = false, isUpdate = false, allEntries = []) {
+  const storageKey = `local_${tableName}`;
   if (sbClient) {
     if (isDelete) {
-      await sbClient.from('agendamentos').delete().eq('id', singleEntry.id);
+      await sbClient.from(tableName).delete().eq('id', singleEntry.id);
     } else if (isUpdate) {
-      await sbClient.from('agendamentos').update(singleEntry.data).eq('id', singleEntry.id);
+      await sbClient.from(tableName).update(singleEntry.data).eq('id', singleEntry.id);
     } else if (singleEntry) {
-      await sbClient.from('agendamentos').upsert(singleEntry);
+      await sbClient.from(tableName).upsert(singleEntry);
     }
   } else {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allEntries));
+      localStorage.setItem(storageKey, JSON.stringify(allEntries));
     } catch (e) {
-      console.error('Falha ao salvar no localStorage', e);
+      console.error(`Falha ao salvar no localStorage (${storageKey})`, e);
     }
   }
 }

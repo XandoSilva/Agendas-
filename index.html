@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google.com https://*.googleusercontent.com;">
-  <title>Agenda de Vistorias &amp; Passagens</title>
+  <title>Sistema de Operações - Agendas & Manutenção</title>
   
   <!-- PWA Meta Tags (iOS Safari & Android Chrome) -->
   <link rel="manifest" href="./manifest.json">
@@ -12,21 +12,24 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Vistorias">
+  <meta name="apple-mobile-web-app-title" content="Operações">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
 
-  <!-- Estilos CSS v14 -->
-  <link rel="stylesheet" href="./css/variables.css?v=14">
-  <link rel="stylesheet" href="./css/base.css?v=14">
-  <link rel="stylesheet" href="./css/components.css?v=14">
-  <link rel="stylesheet" href="./css/mobile.css?v=14">
+  <!-- Estilos CSS -->
+  <link rel="stylesheet" href="./css/variables.css?v=15">
+  <link rel="stylesheet" href="./css/base.css?v=15">
+  <link rel="stylesheet" href="./css/layout.css?v=15">
+  <link rel="stylesheet" href="./css/components.css?v=15">
+  <link rel="stylesheet" href="./css/mobile.css?v=15">
 
   <!-- Supabase JS Client via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Tesseract.js para OCR (Extração de texto de imagens) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body class="tab-agenda">
 
-  <!-- Script de limpeza profunda de cachê - Forçado na v14 -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -39,146 +42,296 @@
 
   <div id="modalContainer"></div>
 
-  <div id="app">
-    <!-- LEFT: intake panel -->
-    <div id="intake">
-      <div id="headerContainer"></div>
-
-      <div class="field">
-        <label>Colar mensagem do Teams</label>
-        <textarea id="pasteBox" placeholder="Cole aqui o bloco de mensagem recebido no grupo do Teams..."></textarea>
-      </div>
-      <div class="row">
-        <button class="btn btn-primary btn-block" id="btnParsePaste">Analisar mensagem</button>
+  <div class="app-layout">
+    
+    <!-- Sidebar Global (Desktop) -->
+    <aside class="global-sidebar">
+      <div class="sidebar-header">
+        <div class="dot" id="onlineDot"></div>
+        <div>
+          <h2>Sistema Operacional</h2>
+          <span id="connStatus" style="font-size: 11px; color: var(--muted-2);">Conectando...</span>
+        </div>
       </div>
       
-      <div id="syncSection" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
-        <label style="font-size:10.5px; text-transform:uppercase; color:var(--muted-2); font-weight:600; display:block; margin-bottom:4px;">Sincronização Automática (Teams)</label>
-        <input type="text" id="syncUrl" class="field" style="width:100%; background:#0D1524; border:1px solid var(--line); border-radius:6px; color:var(--text); padding:7px 9px; font-size:11.5px; font-family:var(--font-mono);" placeholder="Cole a URL do CSV (Google Sheets)">
-        <button type="button" class="btn btn-ghost btn-block" style="margin-top:8px;" id="btnSync">Sincronizar Mensagens</button>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-module="agenda">
+          <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+          Agenda Operacional
+        </button>
+        <button class="nav-item" data-module="manutencao">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          Manutenção
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="icon-btn" id="btnThemeToggle" title="Alternar Tema" style="padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--input-bg); color:var(--text);">🌙 Tema</button>
+        <button class="icon-btn" id="btnSettings" title="Configurações" style="padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--input-bg); color:var(--text);">⚙️ BD</button>
       </div>
+    </aside>
 
-      <div id="formHint" style="margin-top:14px;">Confira os campos abaixo — a extração automática pode errar em datas sem ano. <b>Ajuste antes de salvar.</b></div>
+    <!-- Módulo 1: Agenda (O #app antigo) -->
+    <div id="module-agenda" class="module-container active" style="display: flex; width: 100%;">
+      <!-- LEFT: intake panel -->
+      <div id="intake">
+        <div id="headerContainer"></div> <!-- Header Antigo Mobile -->
 
-      <form id="form">
-        <input type="hidden" id="f_id">
-        <input type="hidden" id="f_source_id">
-        <div class="field-row">
-          <div class="field">
-            <label>Tipo</label>
-            <select id="f_tipo">
-              <option>Vistoria</option>
-              <option>Passagem de Cabo</option>
-              <option>Ativação</option>
-              <option>Outro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Status</label>
-            <select id="f_status">
-              <option>Confirmada</option>
-              <option>Pendente</option>
-              <option>Realizada</option>
-              <option>Reagendada</option>
-              <option>Cancelada</option>
-            </select>
-          </div>
+        <div class="field">
+          <label>Colar mensagem do Teams</label>
+          <textarea id="pasteBox" placeholder="Cole aqui o bloco de mensagem recebido no grupo do Teams..."></textarea>
         </div>
-        <div class="field-row" id="fileFieldContainer" style="display: none;">
-          <div class="field">
-            <label>Anexar PPI (Projeto em PDF)</label>
-            <input type="file" id="f_ppi_file" accept=".pdf">
-            <div style="font-size: 10px; color: var(--muted-2); margin-top: 4px;">Tamanho máximo recomendado: 5MB</div>
-          </div>
+        <div class="row">
+          <button class="btn btn-primary btn-block" id="btnParsePaste">Analisar mensagem</button>
         </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Data</label>
-            <input type="date" id="f_data">
-            <div class="date-shortcuts">
-              <button type="button" class="btn-xs" id="btnDateToday">Hoje</button>
-              <button type="button" class="btn-xs" id="btnDateTomorrow">Amanhã</button>
-              <button type="button" class="btn-xs" id="btnDateMonday">Segunda</button>
+        
+        <div id="syncSection" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
+          <label style="font-size:10.5px; text-transform:uppercase; color:var(--muted-2); font-weight:600; display:block; margin-bottom:4px;">Sincronização Automática (Teams)</label>
+          <input type="text" id="syncUrl" class="field" style="width:100%; background:#0D1524; border:1px solid var(--line); border-radius:6px; color:var(--text); padding:7px 9px; font-size:11.5px; font-family:var(--font-mono);" placeholder="Cole a URL do CSV (Google Sheets)">
+          <button type="button" class="btn btn-ghost btn-block" style="margin-top:8px;" id="btnSync">Sincronizar Mensagens</button>
+        </div>
+
+        <div id="formHint" style="margin-top:14px;">Confira os campos abaixo — a extração automática pode errar em datas sem ano. <b>Ajuste antes de salvar.</b></div>
+
+        <form id="form">
+          <input type="hidden" id="f_id">
+          <input type="hidden" id="f_source_id">
+          <div class="field-row">
+            <div class="field">
+              <label>Tipo</label>
+              <select id="f_tipo">
+                <option>Vistoria</option>
+                <option>Passagem de Cabo</option>
+                <option>Ativação</option>
+                <option>Outro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select id="f_status">
+                <option>Confirmada</option>
+                <option>Pendente</option>
+                <option>Realizada</option>
+                <option>Reagendada</option>
+                <option>Cancelada</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row" id="fileFieldContainer" style="display: none;">
+            <div class="field">
+              <label>Anexar PPI (Projeto em PDF)</label>
+              <input type="file" id="f_ppi_file" accept=".pdf">
+              <div style="font-size: 10px; color: var(--muted-2); margin-top: 4px;">Tamanho máximo recomendado: 5MB</div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Data</label>
+              <input type="date" id="f_data">
+              <div class="date-shortcuts">
+                <button type="button" class="btn-xs" id="btnDateToday">Hoje</button>
+                <button type="button" class="btn-xs" id="btnDateTomorrow">Amanhã</button>
+                <button type="button" class="btn-xs" id="btnDateMonday">Segunda</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Horário</label>
+              <input type="text" id="f_hora" placeholder="ex: 10:00 ou HC">
             </div>
           </div>
           <div class="field">
-            <label>Horário</label>
-            <input type="text" id="f_hora" placeholder="ex: 10:00 ou HC">
-          </div>
-        </div>
-        <div class="field">
-          <label>Contrato</label>
-          <input type="text" id="f_contrato">
-        </div>
-        <div class="field">
-          <label>Cliente</label>
-          <input type="text" id="f_cliente">
-        </div>
-        <div class="field">
-          <label>Endereço</label>
-          <input type="text" id="f_endereco">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Acompanhante</label>
-            <input type="text" id="f_acompanhante" placeholder="nome">
+            <label>Contrato</label>
+            <input type="text" id="f_contrato">
           </div>
           <div class="field">
-            <label>Contato</label>
-            <input type="text" id="f_contato" placeholder="telefone">
+            <label>Cliente</label>
+            <input type="text" id="f_cliente">
+          </div>
+          <div class="field">
+            <label>Endereço</label>
+            <input type="text" id="f_endereco">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Acompanhante</label>
+              <input type="text" id="f_acompanhante" placeholder="nome">
+            </div>
+            <div class="field">
+              <label>Contato</label>
+              <input type="text" id="f_contato" placeholder="telefone">
+            </div>
+          </div>
+          <div class="field">
+            <label>Observações (empreiteira, OS, técnico...)</label>
+            <textarea id="f_obs" rows="3"></textarea>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-block">Salvar na agenda</button>
+            <button type="button" class="btn btn-ghost" id="btnClearForm">Limpar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT: timeline -->
+      <div id="main">
+        <div id="dashboardContainer"></div>
+
+        <div class="content-wrapper">
+          <div class="main-column">
+            <div id="toolbar">
+              <h2 id="counter">Agenda</h2>
+              <input id="search" placeholder="Buscar contrato ou cliente...">
+              
+              <div class="filter-group">
+                <span class="filter-label">Atividade:</span>
+                <button class="chip chip-tipo active" data-tipo="all">Todas</button>
+                <button class="chip chip-tipo" data-tipo="Vistoria">Vistorias</button>
+                <button class="chip chip-tipo" data-tipo="Passagem de Cabo">Passagem de Cabo</button>
+                <button class="chip chip-tipo" data-tipo="Ativação">Ativações</button>
+              </div>
+
+              <div class="filter-group">
+                <span class="filter-label">Status:</span>
+                <button class="chip chip-status active" data-status="all">Todos</button>
+                <button class="chip chip-status" data-status="Confirmada">Confirmada</button>
+                <button class="chip chip-status" data-status="Pendente">Pendente</button>
+                <button class="chip chip-status" data-status="Realizada">Realizada</button>
+                <button class="chip chip-status" data-status="Cancelada">Cancelada/Reagendada</button>
+              </div>
+            </div>
+            <div id="timeline"></div>
+          </div>
+
+          <div class="side-column">
+            <div id="calendarContainer"></div>
           </div>
         </div>
-        <div class="field">
-          <label>Observações (empreiteira, OS, técnico...)</label>
-          <textarea id="f_obs" rows="3"></textarea>
-        </div>
-        <div class="row" style="margin-top:8px;">
-          <button type="submit" class="btn btn-primary btn-block">Salvar na agenda</button>
-          <button type="button" class="btn btn-ghost" id="btnClearForm">Limpar</button>
-        </div>
-      </form>
-    </div>
+      </div>
+    </div> <!-- Fim Módulo Agenda -->
 
-    <!-- RIGHT: timeline -->
-    <div id="main">
-      <div id="dashboardContainer"></div>
 
-      <div class="content-wrapper">
-        <div class="main-column">
-          <div id="toolbar">
-            <h2 id="counter">Agenda</h2>
-            <input id="search" placeholder="Buscar contrato ou cliente...">
+    <!-- Módulo 2: Manutenção (Novo) -->
+    <div id="module-manutencao" class="module-container" style="display: none; width: 100%;">
+      <!-- LEFT: Form de Manutenção -->
+      <div id="intake-man">
+        <div style="margin-bottom: 14px;">
+          <h1 style="color:var(--text); font-size:20px; font-weight:600;">Nova Manutenção</h1>
+          <p style="color:var(--muted); font-size:13px; margin-top:4px;">Cole um print do sistema para auto-preenchimento.</p>
+        </div>
+
+        <div class="field" style="margin-bottom: 14px;">
+          <label>Colar Imagem do Sistema (OCR)</label>
+          <div id="imagePasteZone" tabindex="0" style="width: 100%; min-height: 80px; background: rgba(20, 184, 166, 0.05); border: 2px dashed var(--teal); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--teal); font-size: 13px; font-weight: 600; cursor: pointer; padding: 14px; text-align: center; transition: all 0.2s ease;">
+            <span id="ocrStatus">Clique, cole (Ctrl+V) ou solte uma imagem aqui</span>
+            <div id="ocrProgress" style="width: 100%; height: 4px; background: var(--line); border-radius: 4px; margin-top: 8px; overflow: hidden; display: none;">
+              <div id="ocrProgressBar" style="width: 0%; height: 100%; background: var(--teal); transition: width 0.1s linear;"></div>
+            </div>
+            <img id="ocrPreview" style="max-width: 100%; max-height: 120px; margin-top: 10px; border-radius: 4px; display: none; object-fit: contain;">
+          </div>
+        </div>
+
+        <form id="form-man">
+          <input type="hidden" id="m_id">
+          
+          <div class="field-row">
+            <div class="field">
+              <label>Protocolo</label>
+              <input type="text" id="m_protocolo" placeholder="Ex: 260806217">
+            </div>
+            <div class="field">
+              <label>Nº Contrato</label>
+              <input type="text" id="m_contrato">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Cliente / Razão Social</label>
+            <input type="text" id="m_cliente">
+          </div>
+          
+          <div class="field-row">
+            <div class="field">
+              <label>Contato</label>
+              <input type="text" id="m_contato">
+            </div>
+            <div class="field">
+              <label>Telefones</label>
+              <input type="text" id="m_telefones">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Endereço do Serviço</label>
+            <input type="text" id="m_endereco">
+          </div>
+
+          <div class="field">
+            <label>Empreiteira Direcionada</label>
+            <input type="text" id="m_empreiteira">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Tipo de Reclamação</label>
+              <input type="text" id="m_tipo_reclamacao" placeholder="Ex: LINK DOWN">
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select id="m_status">
+                <option>Pendente</option>
+                <option>Em Andamento</option>
+                <option>Concluído</option>
+                <option>Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Observação do Despacho</label>
+            <input type="text" id="m_obs_despacho">
+          </div>
+
+          <div class="field">
+            <label>Descrição (Obs/Solicitação)</label>
+            <textarea id="m_descricao" rows="3"></textarea>
+          </div>
+          
+          <div class="row" style="margin-top:16px;">
+            <button type="submit" class="btn btn-primary btn-block">Salvar Manutenção</button>
+            <button type="button" class="btn btn-ghost" id="btnClearFormMan">Limpar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT: Timeline de Manutenção -->
+      <div id="main-man">
+        <div class="content-wrapper">
+          <div class="main-column" style="width: 100%;">
+            <div id="toolbar-man" style="display: flex; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line);">
+              <h2 id="counter-man" style="color:var(--text); font-size:20px; font-weight:600;">Manutenções (0)</h2>
+              <div class="filter-group" style="margin-left: auto;">
+                <span class="filter-label">Status:</span>
+                <button class="chip chip-status-man active" data-status="all">Todos</button>
+                <button class="chip chip-status-man" data-status="Pendente">Pendentes</button>
+                <button class="chip chip-status-man" data-status="Em Andamento">Em Andamento</button>
+                <button class="chip chip-status-man" data-status="Concluído">Concluídos</button>
+              </div>
+            </div>
             
-            <div class="filter-group">
-              <span class="filter-label">Atividade:</span>
-              <button class="chip chip-tipo active" data-tipo="all">Todas</button>
-              <button class="chip chip-tipo" data-tipo="Vistoria">Vistorias</button>
-              <button class="chip chip-tipo" data-tipo="Passagem de Cabo">Passagem de Cabo</button>
-              <button class="chip chip-tipo" data-tipo="Ativação">Ativações</button>
-            </div>
-
-            <div class="filter-group">
-              <span class="filter-label">Status:</span>
-              <button class="chip chip-status active" data-status="all">Todos</button>
-              <button class="chip chip-status" data-status="Confirmada">Confirmada</button>
-              <button class="chip chip-status" data-status="Pendente">Pendente</button>
-              <button class="chip chip-status" data-status="Realizada">Realizada</button>
-              <button class="chip chip-status" data-status="Cancelada">Cancelada/Reagendada</button>
+            <!-- Grid estilo Kanban ou Timeline simples -->
+            <div id="timeline-man" style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+              <!-- Cards de manutenção entram aqui -->
             </div>
           </div>
-          <div id="timeline"></div>
-        </div>
-
-        <div class="side-column">
-          <div id="calendarContainer"></div>
         </div>
       </div>
-    </div>
+    </div> <!-- Fim Módulo Manutenção -->
+
   </div>
 
   <div id="mobileNavContainer"></div>
 
-  <!-- JavaScript ES6 Modules -->
-  <script type="module" src="./js/main.js?v=10"></script>
+  <!-- JavaScript App Shell -->
+  <script type="module" src="./js/app.js?v=15"></script>
 </body>
 </html>

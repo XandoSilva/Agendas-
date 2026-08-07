@@ -71,7 +71,7 @@
 }
 
 /* ---------- LEFT: intake panel ---------- */
-#intake {
+#intake, #intake-man {
   background: var(--panel);
   border-right: 1px solid var(--line);
   padding: 20px;
@@ -242,17 +242,17 @@ textarea#pasteBox:focus {
 }
 
 /* ---------- RIGHT: timeline ---------- */
-#main {
+#main, #main-man {
   padding: 26px 32px 80px;
 }
-#toolbar {
+#toolbar, #toolbar-man {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 22px;
 }
-#toolbar h2 {
+#toolbar h2, #toolbar-man h2 {
   font-family: var(--font-display);
   font-size: 22px;
   margin: 0;
@@ -317,11 +317,11 @@ textarea#pasteBox:focus {
   border-color: var(--teal);
 }
 
-#timeline {
+#timeline, #timeline-man {
   position: relative;
   padding-left: 26px;
 }
-#timeline::before {
+#timeline::before, #timeline-man::before {
   content: '';
   position: absolute;
   left: 5px;

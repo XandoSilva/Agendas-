@@ -65,7 +65,7 @@
     overflow-x: hidden;
   }
 
-  #intake {
+  #intake, #intake-man {
     position: relative;
     height: auto;
     border-right: none;
@@ -74,7 +74,7 @@
     padding: 20px 14px;
   }
 
-  #main {
+  #main, #main-man {
     padding: 14px 10px 110px;
     min-width: 0;
     overflow-x: hidden;
@@ -84,11 +84,17 @@
     display: grid;
   }
 
-  /* Abas do App no Celular */
+  /* Abas do App no Celular (Agenda) */
   body.tab-agenda #intake { display: none !important; }
   body.tab-agenda #main { display: block !important; }
   body.tab-novo #intake { display: flex !important; }
   body.tab-novo #main { display: none !important; }
+
+  /* Abas do App no Celular (Manutencao) */
+  body.tab-manutencao-lista #intake-man { display: none !important; }
+  body.tab-manutencao-lista #main-man { display: block !important; }
+  body.tab-manutencao-novo #intake-man { display: flex !important; }
+  body.tab-manutencao-novo #main-man { display: none !important; }
 
   /* ==== TOOLBAR: TÍTULO + BUSCA ==== */
   #toolbar {
@@ -451,7 +457,7 @@
     font-size: 26px !important;
   }
 
-  #main {
+  #main, #main-man {
     padding: 10px 8px 110px;
   }
 

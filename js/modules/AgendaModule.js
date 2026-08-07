@@ -28,7 +28,7 @@ function handleToggleTheme() {
   renderHeader(document.getElementById('headerContainer'), openSettingsModal, handleToggleTheme);
 }
 
-async function main() {
+export async function initAgendaModule() {
   // Aba padrão de inicialização (foco total na Agenda em dispositivos móveis)
   document.body.className = 'tab-agenda';
 
@@ -129,7 +129,7 @@ async function main() {
   document.getElementById('syncUrl').value = localStorage.getItem('agendamentos_sync_url') || '';
 
   // Buscar agendamentos iniciais com subscrição Realtime
-  entries = await fetchEntries((payload) => {
+  entries = await fetchEntries('agendamentos', (payload) => {
     if (payload.eventType === 'INSERT') {
       if (!entries.some(e => e.id === payload.new.id)) entries.push(payload.new);
     } else if (payload.eventType === 'UPDATE') {
@@ -237,7 +237,7 @@ async function handleCardAction(action, id, value) {
     const e = entries.find(x => x.id === id);
     if (!e) return;
     e.status = value;
-    await persistEntry({ id, data: { status: value } }, false, true, entries);
+    await persistEntry('agendamentos', { id, data: { status: value } }, false, true, entries);
     render();
   } else if (action === 'edit') {
     const e = entries.find(x => x.id === id);
@@ -265,7 +265,7 @@ async function handleCardAction(action, id, value) {
     if (!target) return;
     entries = entries.filter(e => e.id !== id);
     render();
-    await persistEntry(target, true, false, entries);
+    await persistEntry('agendamentos', target, true, false, entries);
   }
 }
 
@@ -288,7 +288,7 @@ async function handleParsePaste() {
       if (!exists) {
         const entry = { id: uid() + i, sourceId: '', ...data };
         entries.push(entry);
-        await persistEntry(entry, false, false, entries);
+        await persistEntry('agendamentos', entry, false, false, entries);
         added++;
       }
     }
@@ -365,7 +365,7 @@ async function handleSaveEntry(ev) {
   const idx = entries.findIndex(e => e.id === id);
   if (idx >= 0) entries[idx] = entry; else entries.push(entry);
 
-  await persistEntry(entry, false, false, entries);
+  await persistEntry('agendamentos', entry, false, false, entries);
   clearForm();
   render();
   
@@ -411,7 +411,7 @@ async function handleSyncMessages() {
           if (data && (data.contrato || data.cliente || data.endereco)) {
             const entry = { id: uid() + j, sourceId: idMsg, ...data };
             entries.push(entry);
-            await persistEntry(entry, false, false, entries);
+            await persistEntry('agendamentos', entry, false, false, entries);
             added++;
           }
         }
@@ -428,5 +428,4 @@ async function handleSyncMessages() {
   }
 }
 
-// Inicializar aplicativo
-window.addEventListener('DOMContentLoaded', main);
+
