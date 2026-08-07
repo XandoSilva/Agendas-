@@ -146,9 +146,8 @@ function processItems(items) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target.result;
-        showOCRPreview(dataUrl);
         
-        // Pre-processamento da imagem para melhorar OCR (Tesseract é ruim com fontes pequenas)
+        // Pre-processamento da imagem para melhorar OCR
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -157,23 +156,23 @@ function processItems(items) {
           canvas.height = img.height * scale;
           const ctx = canvas.getContext('2d');
           
+          // Fundo branco
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Suavização
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           
-          // Binarização (Preto e Branco) para alto contraste
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imageData.data;
-          for (let j = 0; j < data.length; j += 4) {
-            const luminance = 0.299 * data[j] + 0.587 * data[j + 1] + 0.114 * data[j + 2];
-            // Se for claro, vira branco, se escuro, vira preto
-            const color = luminance > 160 ? 255 : 0;
-            data[j] = color;
-            data[j+1] = color;
-            data[j+2] = color;
-          }
-          ctx.putImageData(imageData, 0, 0);
+          const processedUrl = canvas.toDataURL('image/jpeg', 1.0);
+          
+          // MOSTRAR A IMAGEM PROCESSADA NO PREVIEW
+          showOCRPreview(processedUrl);
           
           // Passar imagem processada para o OCR
-          performOCR(canvas.toDataURL('image/jpeg', 1.0));
+          performOCR(processedUrl);
         };
         img.src = dataUrl;
       };
@@ -218,25 +217,19 @@ async function performOCR(imageSrc) {
 
   try {
     status.textContent = "Iniciando motor OCR...";
-    const worker = await Tesseract.createWorker('por', 1, {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          const pct = Math.round(m.progress * 100);
-          progressBar.style.width = pct + '%';
-          status.textContent = `Lendo texto... ${pct}%`;
-        } else {
-          status.textContent = m.status;
+    const result = await Tesseract.recognize(
+      imageSrc,
+      'por',
+      {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            const pct = Math.round(m.progress * 100);
+            progressBar.style.width = pct + '%';
+            status.textContent = `Lendo texto... ${pct}%`;
+          }
         }
       }
-    });
-    
-    // PSM 11 = Sparse Text (Ideal para dashboards e formulários espalhados pela tela)
-    await worker.setParameters({
-      tessedit_pageseg_mode: '11',
-    });
-
-    const result = await worker.recognize(imageSrc);
-    await worker.terminate();
+    );
 
     status.textContent = "Leitura concluída!";
     setTimeout(() => { progressBarContainer.style.display = 'none'; }, 500);
