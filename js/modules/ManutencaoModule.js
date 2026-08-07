@@ -208,10 +208,9 @@ async function performOCR(imageSrc) {
 
     parseOCRText(result.data.text);
   } catch (err) {
-    console.error("OCR Error:", err);
-    // Extrai a mensagem de erro para o usuário (pode ser problema de CSP ou rede)
-    const errMsg = err.message || err.toString();
-    status.textContent = "Falha ao ler a imagem. " + errMsg;
+    console.error("OCR Error Detalhado:", err);
+    const errMsg = err.message ? err.message : JSON.stringify(err);
+    status.textContent = "Erro OCR (Nova Versão): " + errMsg;
     progressBarContainer.style.display = 'none';
   }
 }

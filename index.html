@@ -31,10 +31,11 @@
 <body class="tab-agenda">
 
   <script>
+    // Remove Service Workers antigos para não travar o cache durante o desenvolvimento
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
         for(let registration of registrations) {
-          registration.update();
+          registration.unregister();
         }
       });
     }
@@ -332,6 +333,6 @@
   <div id="mobileNavContainer"></div>
 
   <!-- JavaScript App Shell -->
-  <script type="module" src="./js/app.js?v=16"></script>
+  <script type="module" src="./js/app.js?v=20"></script>
 </body>
 </html>
