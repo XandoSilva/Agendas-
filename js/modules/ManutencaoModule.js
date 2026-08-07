@@ -247,7 +247,13 @@ function parseOCRText(text) {
   if (empreiteira) document.getElementById('m_empreiteira').value = empreiteira;
   if (tipo) document.getElementById('m_tipo_reclamacao').value = tipo;
   if (obs) document.getElementById('m_obs_despacho').value = obs;
-  if (descricao) document.getElementById('m_descricao').value = descricao;
+  
+  if (descricao) {
+    document.getElementById('m_descricao').value = descricao;
+  } else if (!protocolo && !cliente && !contrato) {
+    // Fallback: se não achou quase nada, joga o texto bruto na descrição para vermos o que o OCR leu
+    document.getElementById('m_descricao').value = "--- OCR RAW TEXT ---\n" + text;
+  }
   
   // Highlight to user that fields were filled
   const form = document.getElementById('form-man');
