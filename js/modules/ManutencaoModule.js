@@ -341,19 +341,19 @@ function renderTimeline() {
         </div>
       </div>
       
-      ${safeEndereco ? \`<div class="endereco">📍 \${safeEndereco}</div>\` : ''}
+      ${safeEndereco ? `<div class="endereco">📍 ${safeEndereco}</div>` : ''}
       
       <div class="meta">
-        <div><span>Criado em</span><span class="hora">\${formattedDate}</span></div>
-        <div><span>Empreiteira</span>\${safeEmpreiteira}</div>
-        <div><span>Contato</span>\${safeContato}</div>
+        <div><span>Criado em</span><span class="hora">${formattedDate}</span></div>
+        <div><span>Empreiteira</span>${safeEmpreiteira}</div>
+        <div><span>Contato</span>${safeContato}</div>
       </div>
       
-      ${safeObs ? \`<div class="obs">\${safeObs}</div>\` : ''}
+      ${safeObs ? `<div class="obs">${safeObs}</div>` : ''}
       
       <div class="card-actions">
-        <button class="icon-btn" onclick="window.editManutencao('\${m.id}')">Editar</button>
-        <button class="icon-btn" onclick="window.deleteManutencao('\${m.id}')">Excluir</button>
+        <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
+        <button class="icon-btn" onclick="window.deleteManutencao('${m.id}')">Excluir</button>
       </div>
     `;
     container.appendChild(card);
