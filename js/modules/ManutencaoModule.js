@@ -357,9 +357,9 @@ function renderTimeline() {
       ${safeEndereco ? `<div class="endereco">📍 ${safeEndereco}</div>` : ''}
       
       <div class="meta">
-        <div><span>Criado em</span><span class="hora">${formattedDate}</span></div>
-        <div><span>Empreiteira</span>${safeEmpreiteira}</div>
-        <div><span>Contato</span>${safeContato}</div>
+        <div style="flex-basis: 100%;"><span>Criado em</span><span class="hora">${formattedDate}</span></div>
+        <div style="flex: 1; min-width: 150px;"><span>Cliente</span>${safeCliente}</div>
+        <div style="flex: 1; min-width: 120px;"><span>Contato</span>${safeContato}</div>
       </div>
       
       ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
