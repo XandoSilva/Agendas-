@@ -9,18 +9,23 @@
   --muted: #94A3B8;
   --muted-2: #64748B;
   
-  --amber: #F59E0B;
-  --teal: #14B8A6;
+  --amber: #F5923E; /* Vero Orange */
+  --teal: #C22F5B;  /* Vero Magenta */
   --coral: #F43F5E;
   --violet: #8B5CF6;
   --blue: #38BDF8;
   --green: #22C55E;
 
+  --vero-magenta: #C22F5B;
+  --vero-orange: #F5923E;
+  --vero-magenta-dark: #A3224B;
+  --vero-bg-light: #FEF4F4;
+
   --input-bg: #0F172A;
   --meta-bg: #0F172A;
   --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  --font-display: 'Space Grotesk', 'Segoe UI', -apple-system, sans-serif;
-  --font-body: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  --font-display: 'Montserrat', 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'Montserrat', 'Inter', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Consolas', monospace;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -36,12 +41,17 @@
   --muted: #64748B;
   --muted-2: #94A3B8;
   
-  --amber: #D97706;
-  --teal: #0D9488;
+  --amber: #F5923E; /* Vero Orange */
+  --teal: #C22F5B;  /* Vero Magenta */
   --coral: #E11D48;
   --violet: #7C3AED;
   --blue: #0284C7;
   --green: #16A34A;
+
+  --vero-magenta: #C22F5B;
+  --vero-orange: #F5923E;
+  --vero-magenta-dark: #A3224B;
+  --vero-bg-light: #FEF4F4;
 
   --input-bg: #F8FAFC;
   --meta-bg: #F1F5F9;

@@ -1,0 +1,333 @@
+/* css/login.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+body.login-page {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  font-family: 'Montserrat', sans-serif;
+  overflow: hidden;
+  background-color: var(--vero-bg-light, #FEF4F4);
+}
+
+.login-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.login-left {
+  flex: 1.1;
+  background: var(--vero-magenta, #C22F5B);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem;
+  color: white;
+}
+
+/* Background image overlay */
+.login-left::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=2000');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+.login-left > * {
+  position: relative;
+  z-index: 10;
+}
+
+/* Graphic circles */
+.circle-top-right {
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  z-index: 1;
+}
+
+.circle-top-right::after {
+  content: '';
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  width: 60px;
+  height: 60px;
+  background: var(--vero-magenta-dark, #A3224B);
+  border-radius: 50%;
+}
+
+.circle-center {
+  position: absolute;
+  top: 45%;
+  right: 15%;
+  width: 120px;
+  height: 120px;
+  background: var(--vero-orange, #F5923E);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.circle-center::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid white;
+}
+
+.circle-bottom-left {
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 400px;
+  height: 400px;
+  background: var(--vero-orange, #F5923E);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.circle-bottom-left::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 430px;
+  height: 430px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+
+/* Typography on Left */
+.login-welcome {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.login-headline {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  max-width: 500px;
+}
+
+.login-highlight {
+  background-color: var(--vero-orange, #F5923E);
+  padding: 0 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin: 0.2rem 0;
+}
+
+.login-footer-logo {
+  margin-top: auto;
+}
+.login-footer-logo .logo-text {
+  font-size: 3.5rem;
+  font-weight: 400;
+  letter-spacing: -2px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.login-footer-logo .logo-text span {
+  font-weight: 700;
+}
+.login-footer-logo .logo-tagline {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+  margin-top: -10px;
+  padding-left: 5px;
+}
+
+/* Right Column */
+.login-right {
+  flex: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Decorative background waves/curves on right */
+.login-right::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  background: radial-gradient(circle at 100% 100%, rgba(245, 146, 62, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 0% 50%, rgba(194, 47, 91, 0.03) 0%, transparent 40%);
+  z-index: 0;
+}
+
+.login-card {
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  padding: 3rem 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-logo-simetra {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.brand-logo-simetra h1 {
+  font-size: 2.8rem;
+  color: var(--vero-magenta, #C22F5B);
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+.brand-logo-simetra p {
+  color: var(--vero-orange, #F5923E);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+  margin-top: -5px;
+}
+
+.login-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  color: #333;
+}
+
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+  border-color: var(--vero-magenta, #C22F5B);
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #E2E8F0;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+input:checked + .slider {
+  background-color: var(--vero-orange, #F5923E);
+}
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.btn-login {
+  background: var(--vero-magenta, #C22F5B);
+  color: white;
+  border: none;
+  padding: 1rem;
+  width: 100%;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-login:hover {
+  opacity: 0.9;
+}
+
+/* Responsiveness */
+@media (max-width: 900px) {
+  .login-split {
+    flex-direction: column;
+  }
+  .login-left {
+    flex: none;
+    padding: 2rem;
+    align-items: center;
+    text-align: center;
+  }
+  .login-headline {
+    font-size: 2.2rem;
+  }
+  .login-footer-logo {
+    margin-top: 2rem;
+  }
+  .circle-top-right, .circle-center, .circle-bottom-left {
+    display: none;
+  }
+  .login-right {
+    padding: 2rem;
+    background: var(--vero-bg-light, #FEF4F4);
+  }
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+}
