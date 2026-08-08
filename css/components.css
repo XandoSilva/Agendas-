@@ -243,6 +243,9 @@ textarea#pasteBox:focus {
 
 /* ---------- RIGHT: timeline ---------- */
 #main, #main-man {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
   padding: 26px 32px 80px;
 }
 #toolbar, #toolbar-man {
