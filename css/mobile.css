@@ -72,6 +72,8 @@
     border-bottom: 2px solid var(--line);
     overflow-y: visible;
     padding: 20px 14px;
+    width: 100%;
+    min-width: 0;
   }
 
   #main, #main-man {
