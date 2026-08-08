@@ -320,6 +320,16 @@ function renderTimeline() {
     const safeTipo = m.tipo_reclamacao || 'Manutenção';
     let rawCliente = m.cliente || 'Cliente não informado';
     rawCliente = rawCliente.replace(/^[\d\.\-\/]+\s*-\s*/, '');
+    
+    let reincidenciaHtml = '';
+    const reinMatch = rawCliente.match(/REINCID[EÊ]NCIA:\s*(.*)/i);
+    if (reinMatch) {
+      const numMatch = reinMatch[1].match(/\d+/);
+      const qty = numMatch ? numMatch[0] : (/[|Il\\]\\[]/.test(reinMatch[1]) ? '1' : '1');
+      reincidenciaHtml = `<div class="reincidencia">Reincidências 30 dias: ${qty}</div>`;
+      rawCliente = rawCliente.replace(/\s*REINCID[EÊ]NCIA:.*/i, '').trim();
+    }
+    
     const safeCliente = rawCliente;
     const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
     const safeEndereco = m.endereco || '';
@@ -339,6 +349,7 @@ function renderTimeline() {
       <div class="card-top">
         <div>
           <div class="cliente">${safeCliente}</div>
+          ${reincidenciaHtml}
           <div class="contrato">${safeContrato}</div>
         </div>
       </div>

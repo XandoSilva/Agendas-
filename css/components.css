@@ -468,10 +468,15 @@ textarea#pasteBox:focus {
   text-transform: uppercase;
 }
 .contrato {
-  font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-top: 4px;
+}
+.reincidencia {
+  font-size: 12px;
+  color: var(--coral);
+  font-weight: 600;
+  margin-top: 4px;
 }
 .endereco {
   font-size: 13px;

@@ -12,6 +12,16 @@ export function createCardHTML(entry) {
   const safeTipo = escapeHTML(entry.tipo);
   let rawCliente = entry.cliente || 'Cliente não informado';
   rawCliente = rawCliente.replace(/^[\d\.\-\/]+\s*-\s*/, '');
+  
+  let reincidenciaHtml = '';
+  const reinMatch = rawCliente.match(/REINCID[EÊ]NCIA:\s*(.*)/i);
+  if (reinMatch) {
+    const numMatch = reinMatch[1].match(/\d+/);
+    const qty = numMatch ? numMatch[0] : (/[|Il\\]\\[]/.test(reinMatch[1]) ? '1' : '1');
+    reincidenciaHtml = `<div class="reincidencia">Reincidências 30 dias: ${qty}</div>`;
+    rawCliente = rawCliente.replace(/\s*REINCID[EÊ]NCIA:.*/i, '').trim();
+  }
+  
   const safeCliente = escapeHTML(rawCliente);
   const safeContrato = escapeHTML(entry.contrato || '—');
   const safeEndereco = escapeHTML(entry.endereco || '');
@@ -42,6 +52,7 @@ export function createCardHTML(entry) {
       <div class="card-top">
         <div>
           <div class="cliente">${safeCliente}</div>
+          ${reincidenciaHtml}
           <div class="contrato">Contrato ${safeContrato}</div>
         </div>
       </div>
