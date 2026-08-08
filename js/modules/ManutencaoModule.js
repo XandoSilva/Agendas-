@@ -349,6 +349,11 @@ function renderTimeline() {
         <div><span>Contato</span>${safeContato}</div>
       </div>
       
+      ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
+        ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
+        ${safeContato !== '—' ? `<button class="btn-action wpp-btn" onclick="window.open('https://wa.me/55${safeContato.replace(/\\D/g, '')}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
+      </div>` : ''}
+
       ${safeObs ? `<div class="obs">${safeObs}</div>` : ''}
       
       <div class="card-actions">

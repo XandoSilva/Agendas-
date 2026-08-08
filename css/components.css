@@ -393,8 +393,10 @@ textarea#pasteBox:focus {
 .card.st-Confirmada { border-left-color: var(--teal); }
 .card.st-Pendente { border-left-color: var(--amber); }
 .card.st-Realizada { border-left-color: var(--green); }
-.card.st-Cancelada { border-left-color: var(--coral); opacity: .7; }
+.card.st-Cancelada, .card.st-Cancelado { border-left-color: var(--coral); opacity: .7; }
 .card.st-Reagendada { border-left-color: var(--muted-2); opacity: .7; }
+.card.st-EmAndamento { border-left-color: #60a5fa; }
+.card.st-Concluído { border-left-color: var(--green); }
 
 .card-top {
   display: flex;
