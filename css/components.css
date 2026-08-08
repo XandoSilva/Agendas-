@@ -447,6 +447,7 @@ textarea#pasteBox:focus {
   font-weight: 700;
   color: var(--text);
   margin: 2px 0 4px;
+  text-transform: uppercase;
 }
 .contrato {
   font-family: var(--font-mono);
@@ -459,6 +460,7 @@ textarea#pasteBox:focus {
   color: var(--text-secondary);
   line-height: 1.45;
   margin-bottom: 12px;
+  text-transform: uppercase;
 }
 .meta {
   display: flex;
@@ -470,6 +472,7 @@ textarea#pasteBox:focus {
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid var(--line);
+  text-transform: uppercase;
 }
 .meta div span {
   display: block;
