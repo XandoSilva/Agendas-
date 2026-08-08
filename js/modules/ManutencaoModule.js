@@ -318,7 +318,9 @@ function renderTimeline() {
     const safeStatus = m.status || 'Pendente';
     const statusClass = safeStatus.replace(/\s+/g, '');
     const safeTipo = m.tipo_reclamacao || 'Manutenção';
-    const safeCliente = m.cliente || 'Cliente não informado';
+    let rawCliente = m.cliente || 'Cliente não informado';
+    rawCliente = rawCliente.replace(/^[\d\.\-\/]+\s*-\s*/, '');
+    const safeCliente = rawCliente;
     const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
     const safeEndereco = m.endereco || '';
     const safeEmpreiteira = m.empreiteira || '—';

@@ -10,7 +10,9 @@ export function createCardHTML(entry) {
   const safeId = escapeHTML(entry.id);
   const safeStatus = escapeHTML(entry.status);
   const safeTipo = escapeHTML(entry.tipo);
-  const safeCliente = escapeHTML(entry.cliente || 'Cliente não informado');
+  let rawCliente = entry.cliente || 'Cliente não informado';
+  rawCliente = rawCliente.replace(/^[\d\.\-\/]+\s*-\s*/, '');
+  const safeCliente = escapeHTML(rawCliente);
   const safeContrato = escapeHTML(entry.contrato || '—');
   const safeEndereco = escapeHTML(entry.endereco || '');
   const safeHora = escapeHTML(entry.hora || '—');
