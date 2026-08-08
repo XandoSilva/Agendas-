@@ -3,7 +3,7 @@
  * Gerencia a troca de Módulos (Agenda / Manutenção) e inicializa os módulos.
  */
 
-import { initAgendaModule } from './modules/AgendaModule.js';
+import { initAgendaModule, setAgendaContext } from './modules/AgendaModule.js';
 import { initManutencaoModule } from './modules/ManutencaoModule.js';
 import { renderMobileNav } from './components/MobileNav.js';
 
@@ -12,6 +12,11 @@ let currentModule = 'agenda'; // 'agenda' | 'manutencao'
 function switchModule(moduleName) {
   currentModule = moduleName;
 
+  let containerId = moduleName;
+  if (moduleName.startsWith('agenda-')) {
+    containerId = 'agenda';
+  }
+
   // Esconder todos
   document.querySelectorAll('.module-container').forEach(el => {
     el.classList.remove('active');
@@ -19,7 +24,7 @@ function switchModule(moduleName) {
   });
 
   // Mostrar ativo
-  const activeModule = document.getElementById(`module-${moduleName}`);
+  const activeModule = document.getElementById(`module-${containerId}`);
   if (activeModule) {
     activeModule.classList.add('active');
     activeModule.style.display = 'flex';
@@ -34,9 +39,13 @@ function switchModule(moduleName) {
     }
   });
 
+  if (moduleName === 'agenda-vistoria') setAgendaContext('Vistoria');
+  if (moduleName === 'agenda-infra') setAgendaContext('Passagem de Cabo');
+  if (moduleName === 'agenda-ativacao') setAgendaContext('Ativação');
+
   // Atualizar layout Mobile
   if (window.innerWidth <= 1024) {
-    document.body.className = moduleName === 'agenda' ? 'tab-agenda' : 'tab-manutencao-lista';
+    document.body.className = moduleName.startsWith('agenda') ? 'tab-agenda' : 'tab-manutencao-lista';
     renderMobileNav(document.getElementById('mobileNavContainer'), handleMobileTabChange, currentModule);
   } else {
     document.body.className = '';
@@ -52,19 +61,19 @@ function handleMobileTabChange(tab) {
     return;
   }
 
-  // Se clicou em Agenda no menu inferior
-  if (tab === 'agenda') {
-    switchModule('agenda');
-    document.body.className = 'tab-agenda';
-  } 
   // Se clicou em Manutencao
-  else if (tab === 'manutencao') {
+  if (tab === 'manutencao') {
     switchModule('manutencao');
     document.body.className = 'tab-manutencao-lista';
   }
+  // Se clicou em Agenda (vistoria, infra, ativacao)
+  else if (tab.startsWith('agenda-')) {
+    switchModule(tab);
+    document.body.className = 'tab-agenda';
+  }
   // Se clicou em Novo
   else if (tab === 'novo') {
-    if (currentModule === 'agenda') {
+    if (currentModule.startsWith('agenda')) {
       document.body.className = 'tab-novo';
     } else {
       document.body.className = 'tab-manutencao-novo';
@@ -89,7 +98,7 @@ async function startApp() {
   await initManutencaoModule();
 
   // Forçar o estado inicial
-  switchModule('agenda');
+  switchModule('agenda-vistoria');
 }
 
 window.addEventListener('DOMContentLoaded', startApp);

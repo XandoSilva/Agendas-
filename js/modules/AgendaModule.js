@@ -92,7 +92,6 @@ export async function initAgendaModule() {
     }
   };
 
-  // Filtros de Tipo de Atividade
   const fTipo = document.getElementById('f_tipo');
   if (fTipo) {
     fTipo.addEventListener('change', (e) => {
@@ -100,14 +99,7 @@ export async function initAgendaModule() {
     });
   }
 
-  document.querySelectorAll('.chip-tipo').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.chip-tipo').forEach(c => c.classList.remove('active'));
-      e.target.classList.add('active');
-      currentTipoFilter = e.target.getAttribute('data-tipo');
-      render();
-    });
-  });
+  // O filtro de Tipo de Atividade agora é controlado via navegação global (setAgendaContext)
 
   // Filtros de Status
   document.querySelectorAll('.chip-status').forEach(btn => {
@@ -422,4 +414,16 @@ async function handleSyncMessages() {
   }
 }
 
-
+export function setAgendaContext(tipo) {
+  currentTipoFilter = tipo;
+  const fTipo = document.getElementById('f_tipo');
+  if (fTipo) {
+    fTipo.value = tipo;
+    if (window.toggleFileInputVisibility) {
+      window.toggleFileInputVisibility(tipo);
+    }
+  }
+  if (entries.length > 0) {
+    render();
+  }
+}

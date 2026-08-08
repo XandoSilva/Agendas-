@@ -35,10 +35,32 @@ export function renderMobileNav(containerEl, onTabChange, currentModule) {
       const tab = btn.getAttribute('data-tab');
       
       if (tab === 'config') {
-        // Ao invés de config normal, vamos alternar módulo por conveniência (ou você pode injetar isso no Modal de Settings).
-        // Aqui, um atalho rápido:
-        const nextModule = isManut ? 'agenda' : 'manutencao';
-        onTabChange(nextModule);
+        const sheet = document.createElement('div');
+        sheet.className = 'module-action-sheet-overlay';
+        sheet.innerHTML = `
+          <div class="module-action-sheet">
+            <h3>Selecione o Módulo</h3>
+            <button data-mod="agenda-vistoria">Agenda: Vistoria</button>
+            <button data-mod="agenda-infra">Agenda: Infra</button>
+            <button data-mod="agenda-ativacao">Agenda: Ativação</button>
+            <button data-mod="manutencao">Manutenção</button>
+            <button class="cancel">Cancelar</button>
+          </div>
+        `;
+        document.body.appendChild(sheet);
+
+        sheet.addEventListener('click', (e) => {
+          if (e.target === sheet || e.target.classList.contains('cancel')) {
+            sheet.remove();
+          }
+        });
+
+        sheet.querySelectorAll('button[data-mod]').forEach(b => {
+          b.addEventListener('click', () => {
+            onTabChange(b.getAttribute('data-mod'));
+            sheet.remove();
+          });
+        });
         return;
       }
 
