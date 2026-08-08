@@ -436,7 +436,7 @@ textarea#pasteBox:focus {
   color: var(--green);
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
-.tag-status.st-Cancelada {
+.tag-status.st-Cancelada, .tag-status.st-Cancelado {
   background: rgba(244, 63, 94, 0.12);
   color: var(--coral);
   border: 1px solid rgba(244, 63, 94, 0.3);
@@ -445,6 +445,16 @@ textarea#pasteBox:focus {
   background: rgba(148, 163, 184, 0.12);
   color: var(--muted);
   border: 1px solid rgba(148, 163, 184, 0.3);
+}
+.tag-status.st-EmAndamento {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa; /* blue-400 */
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.tag-status.st-Concluído {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .cliente {

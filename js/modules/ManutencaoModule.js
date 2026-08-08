@@ -315,37 +315,45 @@ function renderTimeline() {
     const dateObj = m.created_at ? new Date(m.created_at) : new Date();
     const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-    let statusColor = 'var(--text)';
-    if (m.status === 'Pendente') statusColor = 'orange';
-    if (m.status === 'Em Andamento') statusColor = 'blue';
-    if (m.status === 'Concluído') statusColor = 'green';
-    if (m.status === 'Cancelado') statusColor = 'red';
+    const safeStatus = m.status || 'Pendente';
+    const statusClass = safeStatus.replace(/\s+/g, '');
+    const safeTipo = m.tipo_reclamacao || 'Manutenção';
+    const safeCliente = m.cliente || 'Cliente não informado';
+    const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
+    const safeEndereco = m.endereco || '';
+    const safeEmpreiteira = m.empreiteira || '—';
+    const safeContato = m.telefones || m.contato || '—';
+    const safeObs = m.descricao || m.obs_despacho || '';
 
     const card = document.createElement('div');
-    card.className = 'timeline-card';
-    card.style.display = 'flex';
-    card.style.flexDirection = 'column';
-    card.style.gap = '8px';
+    card.className = `card st-${statusClass}`;
     
     card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-        <strong style="color:var(--text); font-size:15px;">Prot: ${m.protocolo || 'N/A'}</strong>
-        <span style="font-size:11px; color:${statusColor}; border:1px solid ${statusColor}; padding:2px 6px; border-radius:12px;">${m.status}</span>
+      <div class="tag-row">
+        <span class="tag tag-tipo">${safeTipo}</span>
+        <span class="tag tag-status st-${statusClass}">${safeStatus}</span>
       </div>
-      <div style="font-size:13px; color:var(--muted);">
-        <div><b>Cliente:</b> ${m.cliente || '-'}</div>
-        <div><b>Tipo:</b> ${m.tipo_reclamacao || '-'}</div>
-        <div><b>Empreiteira:</b> ${m.empreiteira || '-'}</div>
-      </div>
-      <div style="font-size:12px; color:var(--text); margin-top:4px;">
-        ${m.descricao || m.obs_despacho || 'Sem descrição.'}
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-        <span style="font-size:11px; color:var(--muted);">${formattedDate}</span>
+      
+      <div class="card-top">
         <div>
-          <button class="btn btn-ghost" style="padding:4px 8px; font-size:12px;" onclick="window.editManutencao('${m.id}')">Editar</button>
-          <button class="btn btn-ghost" style="padding:4px 8px; font-size:12px; color:red;" onclick="window.deleteManutencao('${m.id}')">Excluir</button>
+          <div class="cliente">${safeCliente}</div>
+          <div class="contrato">${safeContrato}</div>
         </div>
+      </div>
+      
+      ${safeEndereco ? \`<div class="endereco">📍 \${safeEndereco}</div>\` : ''}
+      
+      <div class="meta">
+        <div><span>Criado em</span><span class="hora">\${formattedDate}</span></div>
+        <div><span>Empreiteira</span>\${safeEmpreiteira}</div>
+        <div><span>Contato</span>\${safeContato}</div>
+      </div>
+      
+      ${safeObs ? \`<div class="obs">\${safeObs}</div>\` : ''}
+      
+      <div class="card-actions">
+        <button class="icon-btn" onclick="window.editManutencao('\${m.id}')">Editar</button>
+        <button class="icon-btn" onclick="window.deleteManutencao('\${m.id}')">Excluir</button>
       </div>
     `;
     container.appendChild(card);
