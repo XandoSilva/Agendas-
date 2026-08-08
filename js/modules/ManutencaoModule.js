@@ -348,26 +348,25 @@ function renderTimeline() {
       
       <div class="card-top">
         <div>
-          <div class="cliente">${safeCliente}</div>
-          ${reincidenciaHtml}
           <div class="contrato">${safeContrato}</div>
         </div>
       </div>
       
       ${safeEndereco ? `<div class="endereco">📍 ${safeEndereco}</div>` : ''}
       
-      <div class="meta">
-        <div><span>Criado em</span><span class="hora">${formattedDate}</span></div>
-        <div><span>Empreiteira</span>${safeEmpreiteira}</div>
-        <div><span>Contato</span>${safeContato}</div>
+      <div class="manutencao-details">
+        <div><strong>Criado em:</strong> ${formattedDate}</div>
+        <div><strong>Empreiteira / técnico:</strong> ${safeEmpreiteira}</div>
+        <div><strong>Cliente:</strong> ${safeCliente}</div>
+        ${reincidenciaHtml}
+        <div><strong>Contato:</strong> ${safeContato}</div>
+        ${safeObs ? `<div><strong>Observação da falha:</strong> ${safeObs}</div>` : ''}
       </div>
       
       ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
         ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
         ${safeContato !== '—' ? `<button class="btn-action wpp-btn" onclick="window.open('https://wa.me/55${safeContato.replace(/\\D/g, '')}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
       </div>` : ''}
-
-      ${safeObs ? `<div class="obs">${safeObs}</div>` : ''}
       
       <div class="card-actions">
         <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
