@@ -1,4 +1,5 @@
 import { fetchEntries, persistEntry } from '../services/api.js';
+import { escapeHTML } from '../utils/sanitizer.js';
 
 let manutencoes = [];
 const TABLE_NAME = 'manutencoes';
