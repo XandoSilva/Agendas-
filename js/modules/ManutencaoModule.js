@@ -272,7 +272,13 @@ function parseOCRText(text) {
   
   const telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
   
-  const empreiteira = extract(/EMPREITEIRA(?: DIRECIONADA)?[:\s]+(.*?)(?=\s+T[EÉ]CNICO|\s+TIPO|\s+OBSERVA[CÇ][ÃA]O|$)/i);
+  const procRegex = extract(/EMPREITEIRA PARA OS[:\s]+(.*?)(?=\s+Atividade|\s+AGENDAMENTO|\s+MATERIAIS|$)/i);
+  let empreiteira = extract(/EMPREITEIRA(?: DIRECIONADA)?[:\s]+(.*?)(?=\s+T[EÉ]CNICO|\s+TIPO|\s+OBSERVA[CÇ][ÃA]O|$)/i);
+  if (procRegex) {
+    empreiteira = procRegex + (empreiteira ? ' - ' + empreiteira : '');
+  }
+
+  const registradoEm = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
   
   const tipo = extract(/TIPO DE RECLAMA[CÇ][ÃA]O[:\s]+(.*?)(?=\s+OBSERVA[CÇ][ÃA]O|\s*$)/i);
   
@@ -291,8 +297,13 @@ function parseOCRText(text) {
   if (tipo) document.getElementById('m_tipo_reclamacao').value = tipo;
   if (obs) document.getElementById('m_obs_despacho').value = obs;
   
-  if (descricao) {
-    document.getElementById('m_descricao').value = descricao;
+  let finalDescricao = descricao;
+  if (registradoEm) {
+    finalDescricao = `Registrado Em: ${registradoEm}\n` + (finalDescricao || '');
+  }
+
+  if (finalDescricao) {
+    document.getElementById('m_descricao').value = finalDescricao;
   } else if (!protocolo && !cliente && !contrato) {
     // Fallback: se não achou quase nada, joga o texto bruto na descrição para vermos o que o OCR leu
     document.getElementById('m_descricao').value = "--- OCR RAW TEXT ---\n" + text;
@@ -353,18 +364,24 @@ function renderTimeline() {
       
       <div class="card-top">
         <div>
-          <div class="cliente">${safeCliente}</div>
+          <div class="cliente" style="font-size:14.5px; margin-bottom: 2px;">👤 ${safeCliente}</div>
           ${reincidenciaHtml}
-          <div class="contrato">${safeContrato}</div>
         </div>
       </div>
       
-      ${safeEndereco ? `<div class="endereco">📍 ${safeEndereco}</div>` : ''}
-      
-      <ul class="meta-list">
-        <li><span>Criado em</span> <span class="hora">${formattedDate}</span></li>
-        <li><span>Contato Local</span> <b>${safeContato}</b></li>
+      <ul class="meta-list" style="margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px;">
+        <li style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 4px;">
+          <span>Protocolo: <b>${m.protocolo || '—'}</b></span>
+          <span>Nro. Contrato: <b>${m.contrato || '—'}</b></span>
+        </li>
+        <li style="flex-direction: row; justify-content: space-between; align-items: center;">
+          <span>Registrado Em (Sis): <span class="hora">${formattedDate}</span></span>
+          <span style="text-align: right;">Contato Local: <b>${safeContato}</b></span>
+        </li>
       </ul>
+      
+      ${safeEndereco ? `<div class="endereco">📍 End. do Serviço: ${safeEndereco}</div>` : ''}
+      ${safeEmpreiteira !== '—' ? `<div class="endereco" style="color:var(--amber); margin-top:6px; font-weight:500;">🛠️ Empreiteira / OS: ${safeEmpreiteira}</div>` : ''}
       
       ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
         ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
