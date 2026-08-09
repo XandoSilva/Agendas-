@@ -284,12 +284,16 @@ function parseOCRText(text) {
   const telMatch = cleanText.match(/(?:Telefones?|Tel\.?)\s*[12]?[:\s]+(.*?(?=Endere[cç]o|End\.|End |$))/i);
   if (telMatch && telMatch[1]) {
     let rawTels = telMatch[1];
+    
+    // Cortar lixo se o OCR tiver puxado colunas do lado (ex: "Status:", "Origem Prot:", "Nro Contrato")
+    rawTels = rawTels.split(/\b(?:Status|Origem|Nro\.|Nro|Contrato)\b/i)[0];
+    
     // Substitui o rótulo do segundo telefone por uma barra (ex: "Tel. 2:")
     rawTels = rawTels.replace(/Tel\.?\s*[123]?[:\s]+/ig, ' / ');
     // Remove barra sobrando no final (caso o tel 2 esteja vazio)
     rawTels = rawTels.replace(/\s*\/\s*$/, '').trim();
     // Limpa lixo do final se tiver pego
-    rawTels = rawTels.replace(/[\s\|\-\.,]+$/, '').trim();
+    rawTels = rawTels.replace(/[\s\|\-\.,=]+$/, '').trim();
     
     if (rawTels) telefones = rawTels;
   }
