@@ -66,15 +66,15 @@ function setupListeners() {
       btn.disabled = true;
 
       try {
-        await persistEntry(TABLE_NAME, record, false, false, manutencoes);
-        
-        // Update local state
+        // Update local state FIRST so localStorage backup gets the new record
         const idx = manutencoes.findIndex(m => m.id === record.id);
         if (idx > -1) {
           manutencoes[idx] = { ...manutencoes[idx], ...record };
         } else {
           manutencoes.unshift(record);
         }
+
+        await persistEntry(TABLE_NAME, record, false, false, manutencoes);
         
         form.reset();
         idInput.value = '';

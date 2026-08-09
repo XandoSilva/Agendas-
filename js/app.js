@@ -5,9 +5,10 @@
 
 import { initAgendaModule, setAgendaContext } from './modules/AgendaModule.js';
 import { initManutencaoModule } from './modules/ManutencaoModule.js';
+import { initRelatoriosModule } from './modules/RelatoriosModule.js';
 import { renderMobileNav } from './components/MobileNav.js';
 
-let currentModule = 'agenda'; // 'agenda' | 'manutencao'
+let currentModule = 'agenda'; // 'agenda' | 'manutencao' | 'relatorios'
 
 function switchModule(moduleName) {
   currentModule = moduleName;
@@ -45,7 +46,13 @@ function switchModule(moduleName) {
 
   // Atualizar layout Mobile
   if (window.innerWidth <= 1024) {
-    document.body.className = moduleName.startsWith('agenda') ? 'tab-agenda' : 'tab-manutencao-lista';
+    if (moduleName.startsWith('agenda')) {
+      document.body.className = 'tab-agenda';
+    } else if (moduleName === 'relatorios') {
+      document.body.className = 'tab-relatorios';
+    } else {
+      document.body.className = 'tab-manutencao-lista';
+    }
     renderMobileNav(document.getElementById('mobileNavContainer'), handleMobileTabChange, currentModule);
   } else {
     document.body.className = '';
@@ -66,6 +73,11 @@ function handleMobileTabChange(tab) {
     switchModule('manutencao');
     document.body.className = 'tab-manutencao-lista';
   }
+  // Se clicou em Relatorios
+  else if (tab === 'relatorios') {
+    switchModule('relatorios');
+    document.body.className = 'tab-relatorios';
+  }
   // Se clicou em Agenda (vistoria, infra, ativacao)
   else if (tab.startsWith('agenda-')) {
     switchModule(tab);
@@ -75,7 +87,7 @@ function handleMobileTabChange(tab) {
   else if (tab === 'novo') {
     if (currentModule.startsWith('agenda')) {
       document.body.className = 'tab-novo';
-    } else {
+    } else if (currentModule === 'manutencao') {
       document.body.className = 'tab-manutencao-novo';
     }
   }
@@ -107,6 +119,7 @@ async function startApp() {
   // Inicializar módulos
   await initAgendaModule();
   await initManutencaoModule();
+  await initRelatoriosModule();
 
   // Forçar o estado inicial
   switchModule('agenda-vistoria');
