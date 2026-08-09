@@ -212,12 +212,12 @@ function exportarPlanilhaDetalhada() {
   });
 
   // Usa o SheetJS (XLSX) global para criar o arquivo excel
-  if (typeof XLSX !== 'undefined') {
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Manutenções");
+  if (window.XLSX) {
+    const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+    const workbook = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(workbook, worksheet, "Manutenções");
     
-    XLSX.writeFile(workbook, `planilha_detalhada_manutencoes_${mesFiltro}.xlsx`, { compression: true });
+    window.XLSX.writeFile(workbook, `planilha_detalhada_manutencoes_${mesFiltro}.xlsx`, { compression: true });
   } else {
     alert("Erro: Biblioteca de exportação (SheetJS) não carregada.");
   }
