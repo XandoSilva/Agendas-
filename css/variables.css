@@ -31,29 +31,29 @@
 }
 
 [data-theme="light"] {
-  --bg: #F1F5F9;
+  --bg: #F5F7FA; /* Lighter background for the app */
   --panel: #FFFFFF;
   --panel-2: #F8FAFC;
   --card-bg: #FFFFFF;
   --line: #E2E8F0;
-  --text: #0F172A;
-  --text-secondary: #334155;
-  --muted: #64748B;
-  --muted-2: #94A3B8;
+  --text: #333333;
+  --text-secondary: #555555;
+  --muted: #888888;
+  --muted-2: #AAAAAA;
   
-  --amber: #F5923E; /* Vero Orange */
-  --teal: #C22F5B;  /* Vero Magenta */
+  --amber: #FF5722; /* More vibrant orange for Simetra */
+  --teal: #D81B60;  /* Bright Magenta */
   --coral: #E11D48;
   --violet: #7C3AED;
   --blue: #0284C7;
   --green: #16A34A;
 
-  --vero-magenta: #C22F5B;
-  --vero-orange: #F5923E;
+  --vero-magenta: #D81B60; /* Simetra Magenta */
+  --vero-orange: #FF5722;
   --vero-magenta-dark: #A3224B;
-  --vero-bg-light: #FEF4F4;
+  --vero-bg-light: #FFF3E0; /* Peach background for alternating rows */
 
   --input-bg: #F8FAFC;
-  --meta-bg: #F1F5F9;
-  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --meta-bg: #F4F6F8;
+  --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }

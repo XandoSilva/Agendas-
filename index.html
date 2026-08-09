@@ -30,7 +30,7 @@
   <!-- Tesseract.js para OCR (Extração de texto de imagens) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
-<body class="tab-agenda">
+<body class="tab-agenda" data-theme="light">
 
   <script>
     // Remove Service Workers antigos para não travar o cache durante o desenvolvimento
@@ -47,17 +47,37 @@
 
   <div class="app-layout">
     
-    <!-- Sidebar Global (Desktop) -->
-    <aside class="global-sidebar">
-      <div class="sidebar-header">
-        <div class="dot" id="onlineDot"></div>
-        <div>
-          <h2>Sistema Operacional</h2>
-          <span id="connStatus" style="font-size: 11px; color: var(--muted-2);">Conectando...</span>
+    <!-- Top Header -->
+    <header class="global-header">
+      <div class="header-user-info">
+        <div class="header-avatar">👤</div>
+        <div class="header-details">
+          <div class="header-name">NOME: ALESSANDRO DA SILVA SOUZA [IP: 192.168.192.11]</div>
+          <div class="header-role">PERFIL DE ACESSO: OPERAÇÕES - DIRETORIA</div>
+          <div class="header-canal">CANAL: AMERICANET</div>
         </div>
       </div>
-      
-      <nav class="nav-menu">
+      <div class="header-branding">
+        <div class="header-online-users">28 <span style="font-size:10px;font-weight:400;display:block;">Usuários Online</span></div>
+        <div class="header-logo">
+          <h2>Simetra</h2>
+          <span>Sistema de Gestão Vero</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <!-- Sidebar Global (Desktop) -->
+      <aside class="global-sidebar">
+        <div class="sidebar-header" style="display:none;">
+          <div class="dot" id="onlineDot"></div>
+          <div>
+            <h2>Sistema Operacional</h2>
+            <span id="connStatus" style="font-size: 11px; color: var(--muted-2);">Conectando...</span>
+          </div>
+        </div>
+        
+        <nav class="nav-menu">
         <button class="nav-item active" data-module="agenda-vistoria">
           <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
           Agenda: Vistoria
@@ -330,9 +350,10 @@
           </div>
         </div>
       </div>
+      </div>
     </div> <!-- Fim Módulo Manutenção -->
-
-  </div>
+    </div> <!-- Fim App Body -->
+  </div> <!-- Fim App Layout -->
 
   <div id="mobileNavContainer"></div>
 

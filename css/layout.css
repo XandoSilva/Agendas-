@@ -2,16 +2,93 @@
 
 .app-layout {
   display: flex;
+  flex-direction: column; /* Changed to column for the top header */
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   background-color: var(--bg);
 }
 
+.global-header {
+  height: 54px;
+  background-color: var(--vero-magenta, #C22F5B);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  color: #fff;
+  z-index: 101;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.header-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-avatar {
+  background: rgba(255,255,255,0.2);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 18px;
+}
+.header-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.header-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.header-role, .header-canal {
+  font-size: 9px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.header-online-users {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+.header-logo {
+  text-align: right;
+}
+.header-logo h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.header-logo span {
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 .global-sidebar {
   width: 240px;
-  background-color: var(--card-bg);
-  border-right: 1px solid var(--line);
+  background-color: #2C2C2C; /* Forced dark theme to match print */
+  color: #FFFFFF;
+  border-right: 1px solid rgba(255,255,255,0.1);
   display: flex;
   flex-direction: column;
   padding: 16px 0;
@@ -52,26 +129,29 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  color: var(--muted);
+  padding: 10px 16px;
+  border-radius: 4px;
+  color: #CCCCCC;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
   background: transparent;
   border: none;
   text-align: left;
+  border-left: 3px solid transparent;
 }
 
 .nav-item:hover {
   background: rgba(255,255,255,0.05);
-  color: var(--text);
+  color: #FFFFFF;
 }
 
 .nav-item.active {
-  background: var(--primary);
-  color: #fff;
+  background: rgba(255,255,255,0.1);
+  color: #FFFFFF;
+  border-left-color: var(--vero-orange, #F5923E);
+  font-weight: 600;
 }
 
 .nav-item svg {
