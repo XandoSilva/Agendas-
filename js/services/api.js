@@ -31,38 +31,51 @@ export function isOnline() {
   return Boolean(sbClient);
 }
 
+const activeChannels = {};
+
 export async function fetchEntries(tableName, onRealtimeUpdate) {
   const storageKey = `local_${tableName}`;
+  let localData = [];
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) localData = JSON.parse(raw);
+  } catch (e) {
+    console.error(`Falha ao carregar dados do localStorage (${storageKey})`, e);
+  }
+
   if (sbClient) {
     try {
       const { data, error } = await sbClient.from(tableName).select('*');
       if (error) {
         console.error(`Erro Supabase em ${tableName}. Tentando carregar local...`, error);
-        const raw = localStorage.getItem(storageKey);
-        return raw ? JSON.parse(raw) : [];
+        return localData;
       }
 
+      // Merge remote data with local data (offline-first approach)
+      let merged = [...(data || [])];
+      localData.forEach(localItem => {
+        if (!merged.find(m => m.id === localItem.id)) {
+          merged.push(localItem);
+        }
+      });
+
       if (onRealtimeUpdate) {
-        sbClient.channel(`public:${tableName}`)
-          .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, payload => {
-            onRealtimeUpdate(payload);
-          }).subscribe();
+        if (!activeChannels[tableName]) {
+          activeChannels[tableName] = [];
+          sbClient.channel(`public:${tableName}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, payload => {
+              activeChannels[tableName].forEach(cb => cb(payload));
+            }).subscribe();
+        }
+        activeChannels[tableName].push(onRealtimeUpdate);
       }
-      return data || [];
+      return merged;
     } catch (e) {
       console.error(`Falha na conexão Supabase para ${tableName}, usando localStorage`, e);
-      // Fallback para localStorage
-      const raw = localStorage.getItem(storageKey);
-      return raw ? JSON.parse(raw) : [];
+      return localData;
     }
   } else {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      console.error(`Falha ao carregar dados do localStorage (${storageKey})`, e);
-      return [];
-    }
+    return localData;
   }
 }
 
