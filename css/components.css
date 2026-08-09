@@ -513,7 +513,7 @@ textarea#pasteBox:focus {
   color: var(--amber);
   font-weight: 700;
 }
-.obs {
+.editable-field {
   margin-top: 12px;
   font-size: 12.5px;
   color: var(--text-secondary);
@@ -523,8 +523,8 @@ textarea#pasteBox:focus {
   border: 1px solid var(--line);
   white-space: pre-wrap;
 }
-.obs::before {
-  content: "Observações";
+.editable-field::before {
+  content: attr(data-label);
   display: block;
   color: var(--muted);
   font-size: 9.5px;
@@ -533,12 +533,12 @@ textarea#pasteBox:focus {
   margin-bottom: 6px;
   font-weight: 600;
 }
-.obs:empty:not(:focus)::after {
-  content: "Nenhuma observação registrada.";
+.editable-field:empty:not(:focus)::after {
+  content: attr(data-empty);
   color: var(--muted);
   font-style: italic;
 }
-.obs[contenteditable="true"]:focus {
+.editable-field[contenteditable="true"]:focus {
   outline: none;
   border-color: var(--teal);
   background: var(--input-bg);

@@ -73,7 +73,7 @@ export function createCardHTML(entry) {
         </div>
       ` : ''}
       
-      <div class="obs" contenteditable="true" data-id="${safeId}" onblur="window.saveObs(this.getAttribute('data-id'), this.innerText)">${safeObs}</div>
+      <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação registrada." contenteditable="true" data-id="${safeId}" data-field="obs" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${safeObs}</div>
       
       <div class="card-actions">
         <select class="status-select" data-id="${safeId}" data-action="quick-status">

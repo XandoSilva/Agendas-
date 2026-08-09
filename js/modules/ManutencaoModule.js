@@ -35,7 +35,10 @@ function setupListeners() {
       e.preventDefault();
       const idInput = document.getElementById('m_id');
       
+      const existingRecord = manutencoes.find(m => m.id === idInput.value) || {};
+      
       const record = {
+        ...existingRecord,
         id: idInput.value || 'man-' + Date.now(),
         protocolo: document.getElementById('m_protocolo').value,
         contrato: document.getElementById('m_contrato').value,
@@ -366,7 +369,11 @@ function renderTimeline() {
         ${safeContato !== '—' ? `<button class="btn-action wpp-btn" onclick="window.open('https://wa.me/55${safeContato.replace(/\\D/g, '')}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
       </div>` : ''}
 
-      <div class="obs" contenteditable="true" data-id="${m.id}" onblur="window.saveObs(this.getAttribute('data-id'), this.innerText)">${safeObs}</div>
+      <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="true" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
+      <div class="editable-field" data-label="Equipe Designada" data-empty="Equipe não informada." contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</div>
+      <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="true" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
+      <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="true" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
+      <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="true" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
       
       <div class="card-actions">
         <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
@@ -413,19 +420,19 @@ window.deleteManutencao = async (id) => {
   }
 };
 
-window.saveObs = async (id, val) => {
+window.saveField = async (id, fieldName, val) => {
   const record = manutencoes.find(m => m.id === id);
-  if (!record || record.descricao === val) return;
+  if (!record || record[fieldName] === val) return;
 
-  const oldVal = record.descricao;
-  record.descricao = val;
+  const oldVal = record[fieldName];
+  record[fieldName] = val;
   
   try {
-    await persistEntry(TABLE_NAME, { id, descricao: val }, false, false, manutencoes);
+    await persistEntry(TABLE_NAME, { id, data: { [fieldName]: val } }, false, true, manutencoes);
   } catch (err) {
-    console.error("Erro ao salvar observação", err);
-    record.descricao = oldVal; // revert
-    alert('Erro ao salvar a observação');
+    console.error("Erro ao salvar " + fieldName, err);
+    record[fieldName] = oldVal; // revert
+    alert('Erro ao salvar o campo');
     renderTimeline();
   }
 };

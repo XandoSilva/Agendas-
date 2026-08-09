@@ -255,19 +255,19 @@ async function handleCardAction(action, id, value) {
   }
 }
 
-window.saveObs = async (id, val) => {
+window.saveField = async (id, fieldName, val) => {
   const record = entries.find(m => m.id === id);
-  if (!record || record.obs === val) return;
+  if (!record || record[fieldName] === val) return;
 
-  const oldVal = record.obs;
-  record.obs = val;
+  const oldVal = record[fieldName];
+  record[fieldName] = val;
   
   try {
-    await persistEntry('agendamentos', { id, data: { obs: val } }, false, true, entries);
+    await persistEntry('agendamentos', { id, data: { [fieldName]: val } }, false, true, entries);
   } catch (err) {
-    console.error("Erro ao salvar observação", err);
-    record.obs = oldVal; // revert
-    alert('Erro ao salvar a observação');
+    console.error("Erro ao salvar " + fieldName, err);
+    record[fieldName] = oldVal; // revert
+    alert('Erro ao salvar o campo');
     render();
   }
 };
@@ -326,7 +326,9 @@ async function handleParsePaste() {
 async function handleSaveEntry(ev) {
   ev.preventDefault();
   const id = document.getElementById('f_id').value || uid();
+  const existingRecord = entries.find(e => e.id === id) || {};
   const entry = {
+    ...existingRecord,
     id,
     tipo: document.getElementById('f_tipo').value,
     status: document.getElementById('f_status').value,
@@ -340,6 +342,7 @@ async function handleSaveEntry(ev) {
     obs: document.getElementById('f_obs').value,
     sourceId: document.getElementById('f_source_id').value,
   };
+
 
   const fileInput = document.getElementById('f_ppi_file');
   if (entry.tipo === 'Passagem de Cabo' && fileInput && fileInput.files.length > 0) {
