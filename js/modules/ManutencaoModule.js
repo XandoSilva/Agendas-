@@ -280,11 +280,16 @@ function parseOCRText(text) {
     endereco = endereco.replace(/^\|\s*/, '').replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
   }
   
-  let telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
-  const telSection = cleanText.match(/Telefones?.*?(?=Endere[cç]o|End\.|End |$)/i);
+  let telefones = '';
+  const telSection = cleanText.match(/(?:Telefone|Tel\.?)\s*[12]?.*?(?=Endere[cç]o|End\.|End |$)/i);
   if (telSection) {
-    const nums = telSection[0].match(/\d{8,11}/g);
-    if (nums) telefones = nums.join(' / ');
+    // Busca padrões de telefone como (11) 97382-079 ou 11999999999
+    const foneMatches = telSection[0].match(/(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]?\d{3,4}/g);
+    if (foneMatches) telefones = foneMatches.join(' / ');
+  }
+  if (!telefones) {
+    let fallback = extract(/(?:Telefone|Tel\.?)\s*[12]?[:\s]+([()0-9\-\s]+)/i);
+    if (fallback && fallback.replace(/\D/g, '').length >= 8) telefones = fallback.trim();
   }
   
   let empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
