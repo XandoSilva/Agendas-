@@ -533,6 +533,59 @@ textarea#pasteBox:focus {
   margin-bottom: 6px;
   font-weight: 600;
 }
+
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+.info-list li {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.info-list b {
+  color: var(--text-main);
+  font-weight: 600;
+}
+.info-list .editable-inline {
+  display: inline-block;
+  min-width: 60px;
+  border-bottom: 1px dashed var(--muted);
+  outline: none;
+  color: var(--text-main);
+}
+.info-list .editable-inline:focus {
+  border-bottom: 1px solid var(--accent);
+}
+
+.unified-fields-box {
+  background: var(--meta-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+.unified-fields-box .box-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.unified-fields-box .editable-field {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.unified-fields-box .editable-field:last-child {
+  margin-bottom: 0;
+}
+
 .editable-field:empty:not(:focus)::after {
   content: attr(data-empty);
   color: var(--muted);

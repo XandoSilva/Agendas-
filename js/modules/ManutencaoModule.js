@@ -362,26 +362,18 @@ function renderTimeline() {
         <span class="tag tag-status st-${statusClass}">${safeStatus}</span>
       </div>
       
-      <div class="card-top">
-        <div>
-          <div class="cliente" style="font-size:14.5px; margin-bottom: 2px;">👤 ${safeCliente}</div>
-          ${reincidenciaHtml}
-        </div>
-      </div>
-      
-      <ul class="meta-list" style="margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px;">
-        <li style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 4px;">
-          <span>Protocolo: <b>${m.protocolo || '—'}</b></span>
-          <span>Nro. Contrato: <b>${m.contrato || '—'}</b></span>
-        </li>
-        <li style="flex-direction: row; justify-content: space-between; align-items: center;">
-          <span>Registrado Em (Sis): <span class="hora">${formattedDate}</span></span>
-          <span style="text-align: right;">Contato Local: <b>${safeContato}</b></span>
-        </li>
+      <ul class="info-list">
+        <li>👤 <b>${safeCliente}</b></li>
+        <li>📄 Contrato: <b>${m.contrato || '—'}</b></li>
+        ${reincidenciaHtml ? `<li>🔄 ${reincidenciaHtml.replace(/<[^>]*>?/gm, '')}</li>` : ''}
+        <li>📌 Protocolo: <b>${m.protocolo || '—'}</b></li>
+        <li>🕒 Registrado Em: <b>${formattedDate}</b></li>
+        <li>🛠️ Empreiteira Fila: <b>${safeEmpreiteira}</b></li>
+        <li>📞 Contato Local: <b>${safeContato}</b> <span style="float:right;">Telefone: <b>${m.telefones || '—'}</b></span></li>
+        <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
+        <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
+        <li>👷 Equipe designada: <span class="editable-inline" contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
       </ul>
-      
-      ${safeEndereco ? `<div class="endereco">📍 End. do Serviço: ${safeEndereco}</div>` : ''}
-      ${safeEmpreiteira !== '—' ? `<div class="endereco" style="color:var(--amber); margin-top:6px; font-weight:500;">🛠️ Empreiteira / OS: ${safeEmpreiteira}</div>` : ''}
       
       ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
         ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
@@ -389,10 +381,13 @@ function renderTimeline() {
       </div>` : ''}
 
       <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="true" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
-      <div class="editable-field" data-label="Equipe Designada" data-empty="Equipe não informada." contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</div>
-      <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="true" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
-      <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="true" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
-      <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="true" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
+      
+      <div class="unified-fields-box">
+        <div class="box-title">Execução e Resolução</div>
+        <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="true" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
+        <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="true" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
+        <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="true" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
+      </div>
       
       <div class="card-actions">
         <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
