@@ -388,6 +388,10 @@ function renderTimeline() {
     let combinedContato = [contatoNome, contatoTel].filter(Boolean).join(' - ');
     const safeContato = escapeHTML(combinedContato || '—');
     
+    // Isola apenas o primeiro telefone, impedindo que múltiplos números ou números no nome se misturem
+    let wppNumber = contatoTel.split('/')[0].replace(/\D/g, '');
+    if (!wppNumber) wppNumber = safeContato.replace(/\D/g, ''); // fallback
+    
     const safeObs = escapeHTML(m.descricao || m.obs_despacho || '');
 
     const card = document.createElement('div');
@@ -413,9 +417,9 @@ function renderTimeline() {
         <li>👷 Equipe designada: <span class="editable-inline" contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
       </ul>
       
-      ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
+      ${safeEndereco || wppNumber ? `<div class="card-field-actions">
         ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
-        ${safeContato !== '—' ? `<button class="btn-action wpp-btn" onclick="window.open('https://wa.me/55${safeContato.replace(/\\D/g, '')}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
+        ${wppNumber ? `<button class="btn-action wpp-btn" onclick="window.open('https://api.whatsapp.com/send?phone=55${wppNumber}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
       </div>` : ''}
 
       <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="true" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
