@@ -227,14 +227,13 @@ function exportarPlanilhaDetalhada() {
   if (window.XLSX) {
     exportarAgora();
   } else {
-    alert("Baixando biblioteca do Excel pela primeira vez, aguarde um segundo e o download começará automaticamente...");
     const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.src = './js/libs/xlsx.full.min.js';
     script.onload = () => {
       exportarAgora();
     };
     script.onerror = () => {
-      alert("Erro ao baixar biblioteca. Verifique sua conexão com a internet ou adblock/antivírus.");
+      alert("Erro ao ler arquivo local da biblioteca do Excel. Tente atualizar a página.");
     };
     document.head.appendChild(script);
   }
