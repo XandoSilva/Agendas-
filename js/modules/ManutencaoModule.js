@@ -49,6 +49,8 @@ function setupListeners() {
         telefones: document.getElementById('m_telefones').value,
         empreiteira: document.getElementById('m_empreiteira').value,
         tipo_reclamacao: document.getElementById('m_tipo_reclamacao').value,
+        tipo_atendimento: document.getElementById('m_tipo_atendimento') ? document.getElementById('m_tipo_atendimento').value : '',
+        equipe_designada: document.getElementById('m_equipe') ? document.getElementById('m_equipe').value : '',
         obs_despacho: document.getElementById('m_obs_despacho').value,
         descricao: document.getElementById('m_descricao').value,
         status: document.getElementById('m_status').value,
@@ -407,6 +409,7 @@ function renderTimeline() {
         <li>📞 Contato Local: <b>${safeContato}</b></li>
         <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
         <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
+        <li>💼 Atendimento: <b>${escapeHTML(m.tipo_atendimento || '—')}</b></li>
         <li>👷 Equipe designada: <span class="editable-inline" contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
       </ul>
       
@@ -446,6 +449,8 @@ window.editManutencao = (id) => {
   document.getElementById('m_telefones').value = record.telefones || '';
   document.getElementById('m_empreiteira').value = record.empreiteira || '';
   document.getElementById('m_tipo_reclamacao').value = record.tipo_reclamacao || '';
+  if(document.getElementById('m_tipo_atendimento')) document.getElementById('m_tipo_atendimento').value = record.tipo_atendimento || '';
+  if(document.getElementById('m_equipe')) document.getElementById('m_equipe').value = record.equipe_designada || '';
   document.getElementById('m_obs_despacho').value = record.obs_despacho || '';
   document.getElementById('m_descricao').value = record.descricao || '';
   document.getElementById('m_status').value = record.status || 'Pendente';
