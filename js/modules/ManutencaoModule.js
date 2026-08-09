@@ -281,15 +281,17 @@ function parseOCRText(text) {
   }
   
   let telefones = '';
-  const telSection = cleanText.match(/(?:Telefone|Tel\.?)\s*[12]?.*?(?=Endere[cç]o|End\.|End |$)/i);
-  if (telSection) {
-    // Busca padrões de telefone como (11) 97382-079 ou 11999999999
-    const foneMatches = telSection[0].match(/(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]?\d{3,4}/g);
-    if (foneMatches) telefones = foneMatches.join(' / ');
-  }
-  if (!telefones) {
-    let fallback = extract(/(?:Telefone|Tel\.?)\s*[12]?[:\s]+([()0-9\-\s]+)/i);
-    if (fallback && fallback.replace(/\D/g, '').length >= 8) telefones = fallback.trim();
+  const telMatch = cleanText.match(/(?:Telefones?|Tel\.?)\s*[12]?[:\s]+(.*?(?=Endere[cç]o|End\.|End |$))/i);
+  if (telMatch && telMatch[1]) {
+    let rawTels = telMatch[1];
+    // Substitui o rótulo do segundo telefone por uma barra (ex: "Tel. 2:")
+    rawTels = rawTels.replace(/Tel\.?\s*[123]?[:\s]+/ig, ' / ');
+    // Remove barra sobrando no final (caso o tel 2 esteja vazio)
+    rawTels = rawTels.replace(/\s*\/\s*$/, '').trim();
+    // Limpa lixo do final se tiver pego
+    rawTels = rawTels.replace(/[\s\|\-\.,]+$/, '').trim();
+    
+    if (rawTels) telefones = rawTels;
   }
   
   let empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
