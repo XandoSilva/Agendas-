@@ -211,14 +211,31 @@ function exportarPlanilhaDetalhada() {
     };
   });
 
-  // Usa o SheetJS (XLSX) global para criar o arquivo excel
+  const exportarAgora = () => {
+    if (window.XLSX) {
+      const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+      const workbook = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(workbook, worksheet, "Manutenções");
+      
+      window.XLSX.writeFile(workbook, `planilha_detalhada_manutencoes_${mesFiltro}.xlsx`, { compression: true });
+    } else {
+      alert("Erro crítico: A biblioteca de Excel não conseguiu carregar.");
+    }
+  };
+
+  // Verifica se a biblioteca já existe, se não injeta dinamicamente (ignora cache do HTML)
   if (window.XLSX) {
-    const worksheet = window.XLSX.utils.json_to_sheet(exportData);
-    const workbook = window.XLSX.utils.book_new();
-    window.XLSX.utils.book_append_sheet(workbook, worksheet, "Manutenções");
-    
-    window.XLSX.writeFile(workbook, `planilha_detalhada_manutencoes_${mesFiltro}.xlsx`, { compression: true });
+    exportarAgora();
   } else {
-    alert("Erro: Biblioteca de exportação (SheetJS) não carregada.");
+    alert("Baixando biblioteca do Excel pela primeira vez, aguarde um segundo e o download começará automaticamente...");
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = () => {
+      exportarAgora();
+    };
+    script.onerror = () => {
+      alert("Erro ao baixar biblioteca. Verifique sua conexão com a internet ou adblock/antivírus.");
+    };
+    document.head.appendChild(script);
   }
 }
