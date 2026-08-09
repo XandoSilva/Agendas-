@@ -110,6 +110,43 @@ function setupListeners() {
   }
 }
 
+function exportToCSV() {
+  if (manutencoes.length === 0) {
+    alert('Nenhuma manutenção para exportar.');
+    return;
+  }
+
+  const headers = ['Protocolo', 'Contrato', 'Cliente', 'Contato', 'Telefones', 'Endereço', 'Empreiteira', 'Tipo Reclamação', 'Atendimento', 'Equipe', 'Status', 'Obs Despacho', 'Descrição', 'Criado Em'];
+  const rows = manutencoes.map(m => [
+    m.protocolo || '',
+    m.contrato || '',
+    m.cliente || '',
+    m.contato || '',
+    m.telefones || '',
+    m.endereco || '',
+    m.empreiteira || '',
+    m.tipo_reclamacao || '',
+    m.tipo_atendimento || '',
+    m.equipe_designada || '',
+    m.status || '',
+    m.obs_despacho || '',
+    m.descricao || '',
+    m.created_at || ''
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `manutencoes_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 /**
  * OCR setup
  */
