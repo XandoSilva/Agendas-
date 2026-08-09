@@ -343,7 +343,8 @@ function parseOCRText(text) {
   const contrato = extract(/Contrato[:\s]+(\d+)/i);
   
   // Procura por Razão Social ou Nome Cliente, parando nas próximas chaves
-  let cliente = extract(/Raz[ãa]o Social[:\s]+(.*?)(?=\s+(?:Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
+  // Usamos Raz[ãa]o Soc.*? para lidar com o OCR lendo "Razão Sociat"
+  let cliente = extract(/Raz[ãa]o\s*Soc.*?[:\s]+(.*?)(?=\s+(?:Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
   if (!cliente) {
     cliente = extract(/Nome Cliente[:\s]+(.*?)(?=\s+(?:Atendente|Reincid[eê]ncia|Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
   }
@@ -365,7 +366,7 @@ function parseOCRText(text) {
   
   let telefones = extract(/(?:Telefones?|Tel\.?\s*1)[:\s]+(.*?)(?=\s+(?:Tel\.\s*2|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
   if (telefones) {
-    telefones = telefones.replace(/[\s\|\-\.,=]+$/, '').trim();
+    telefones = telefones.replace(/[\s\|\-\.,=]+$/, '').replace(/^1:\s*/, '').trim();
   }
   
   let empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
@@ -386,6 +387,17 @@ function parseOCRText(text) {
     tipo = extract(/Atividade[:\s]+(.*?)(?=\s+(?:Descri[cç][ãa]o|Pescri[cç][ãa]o|Detalhes|Procedimentos|Última|$))/i);
     if (tipo && tipo.includes('-')) {
       tipo = tipo.substring(tipo.indexOf('-') + 1).trim();
+    }
+  }
+
+  // Inteligência artificial simples: se a atividade for apenas "DESPACHO PENDENTE", vamos tentar achar o problema real na descrição
+  if (tipo && tipo.toUpperCase().includes('DESPACHO PENDENTE')) {
+    const keywords = ['LINK OFFLINE', 'LINK DOWN', 'LENTIDÃO', 'ROMPIMENTO', 'FALHA', 'PERDA DE PACOTE', 'SEM CONEXÃO', 'FIBRA ROMPIDA', 'SEM SINAL'];
+    for (let kw of keywords) {
+      if (cleanText.toUpperCase().includes(kw)) {
+        tipo = kw;
+        break;
+      }
     }
   }
 
