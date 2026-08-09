@@ -287,7 +287,13 @@ function parseOCRText(text) {
     if (nums) telefones = nums.join(' / ');
   }
   
-  const empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
+  let empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
+  if (empreiteira) {
+    // Corta tudo que vier depois de um dois-pontos (ex: "ENDEREÇO: R. ASSUNCAO...")
+    empreiteira = empreiteira.split(':')[0].trim();
+    // Se a leitura do OCR puxou a palavra ENDEREÇO no final da empreiteira, corta fora
+    empreiteira = empreiteira.replace(/\s*ENDERE[CÇ]O$/i, '').trim();
+  }
 
   const registradoEm = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
   
