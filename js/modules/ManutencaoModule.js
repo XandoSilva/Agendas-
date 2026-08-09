@@ -272,12 +272,12 @@ function parseOCRText(text) {
   
   let contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+Telefone|\s+Nro|\s+End|$)/i);
   if (contato) {
-    contato = contato.replace(/\(Nome\):?\s*\|?/ig, '').replace(/^\|\s*/, '').trim();
+    contato = contato.replace(/\(Nome\):?\s*\|?/ig, '').replace(/^[\s\|\[\]]+/, '').trim();
   }
   
   let endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+Área|\s+Descri[cç]ão|\s+Procedimentos|$)/i);
   if (endereco) {
-    endereco = endereco.replace(/^\|\s*/, '').replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
+    endereco = endereco.replace(/^[\s\|\[\]]+/, '').replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
   }
   
   let telefones = '';
