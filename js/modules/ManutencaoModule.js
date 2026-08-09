@@ -272,13 +272,7 @@ function parseOCRText(text) {
   
   const telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
   
-  const procRegex = extract(/EMPREITEIRA PARA OS[:\s]+(.*?)(?=\s+Atividade|\s+AGENDAMENTO|\s+MATERIAIS|$)/i);
-  let empreiteira = extract(/Fila:\s*(.*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|$)/i) 
-                 || extract(/EMPREITEIRA(?: DIRECIONADA)?[:\s]+(.*?)(?=\s+T[EÉ]CNICO|\s+TIPO|\s+OBSERVA[CÇ][ÃA]O|$)/i);
-  
-  if (procRegex && !empreiteira) {
-    empreiteira = procRegex;
-  }
+  const empreiteira = extract(/FILA[:\s]+(.*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
 
   const registradoEm = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
   
