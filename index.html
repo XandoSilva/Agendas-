@@ -344,8 +344,9 @@
       <div id="main-man">
         <div class="content-wrapper">
           <div class="main-column" style="width: 100%;">
-            <div id="toolbar-man" style="display: flex; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line);">
-              <h2 id="counter-man" style="color:var(--text); font-size:20px; font-weight:600;">Manutenções (0)</h2>
+            <div id="toolbar-man" style="display: flex; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); align-items: center;">
+              <h2 id="counter-man" style="color:var(--text); font-size:20px; font-weight:600; margin: 0;">Manutenções (0)</h2>
+              <button class="btn btn-ghost" id="btnExportCSV" style="padding: 4px 12px; font-size: 13px; border: 1px solid var(--line);">📥 Exportar CSV</button>
               <div class="filter-group" style="margin-left: auto;">
                 <span class="filter-label">Status:</span>
                 <button class="chip chip-status-man active" data-status="all">Todos</button>

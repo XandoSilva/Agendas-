@@ -37,9 +37,9 @@ export async function fetchEntries(tableName, onRealtimeUpdate) {
     try {
       const { data, error } = await sbClient.from(tableName).select('*');
       if (error) {
-        console.error(`Erro de permissão/busca Supabase em ${tableName}`, error);
-        alert(`Erro de permissão no Supabase. Verifique a tabela ${tableName} e políticas RLS.`);
-        return [];
+        console.error(`Erro Supabase em ${tableName}. Tentando carregar local...`, error);
+        const raw = localStorage.getItem(storageKey);
+        return raw ? JSON.parse(raw) : [];
       }
 
       if (onRealtimeUpdate) {
@@ -68,24 +68,29 @@ export async function fetchEntries(tableName, onRealtimeUpdate) {
 
 export async function persistEntry(tableName, singleEntry, isDelete = false, isUpdate = false, allEntries = []) {
   const storageKey = `local_${tableName}`;
+  
+  // SEMPRE SALVA LOCAL COMO BACKUP INDEPENDENTE DO SUPABASE
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(allEntries));
+  } catch (e) {
+    console.error(`Falha ao salvar backup local (${storageKey})`, e);
+  }
+
   if (sbClient) {
     try {
+      let res;
       if (isDelete) {
-        await sbClient.from(tableName).delete().eq('id', singleEntry.id);
+        res = await sbClient.from(tableName).delete().eq('id', singleEntry.id);
       } else if (isUpdate) {
-        await sbClient.from(tableName).update(singleEntry.data).eq('id', singleEntry.id);
+        res = await sbClient.from(tableName).update(singleEntry.data).eq('id', singleEntry.id);
       } else if (singleEntry) {
-        await sbClient.from(tableName).upsert(singleEntry);
+        res = await sbClient.from(tableName).upsert(singleEntry);
+      }
+      if (res && res.error) {
+        console.warn(`Aviso: Falha ao salvar no banco online (${tableName})`, res.error);
       }
     } catch (e) {
-      console.error(`Erro de persistência Supabase em ${tableName}, salvando local`, e);
-      localStorage.setItem(storageKey, JSON.stringify(allEntries));
-    }
-  } else {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(allEntries));
-    } catch (e) {
-      console.error(`Falha ao salvar no localStorage (${storageKey})`, e);
+      console.error(`Erro de persistência Supabase em ${tableName}`, e);
     }
   }
 }

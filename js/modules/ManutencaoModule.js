@@ -103,6 +103,11 @@ function setupListeners() {
       clearOCRPreview();
     });
   }
+
+  const btnExport = document.getElementById('btnExportCSV');
+  if (btnExport) {
+    btnExport.addEventListener('click', exportToCSV);
+  }
 }
 
 /**
