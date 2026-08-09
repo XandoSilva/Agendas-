@@ -158,10 +158,8 @@ function handlePaste(e) {
   }
 
   if (hasImage) {
-    // Se for imagem, a gente processa e evita colar na tela/input
-    if (e.target && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-    }
+    // SEMPRE prevenir o paste nativo — senão o navegador insere a imagem gigante no contenteditable
+    e.preventDefault();
     processItems(items);
   } else {
     // Não é imagem
