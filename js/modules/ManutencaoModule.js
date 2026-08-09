@@ -383,11 +383,15 @@ function parseOCRText(text) {
   
   let tipo = extract(/TIPO DE RECLAMA[CÇ][ÃA]O[:\s]+(.*?)(?=\s+OBSERVA[CÇ][ÃA]O|\s*$)/i);
   if (!tipo) {
-    tipo = extract(/Atividade[:\s]+(.*?)(?=\s+Descri[cç][ãa]o|$)/i);
+    tipo = extract(/Atividade[:\s]+(.*?)(?=\s+(?:Descri[cç][ãa]o|Pescri[cç][ãa]o|Detalhes|Procedimentos|Última|$))/i);
     if (tipo && tipo.includes('-')) {
       tipo = tipo.substring(tipo.indexOf('-') + 1).trim();
     }
   }
+
+  // Trava de segurança para impedir que falhas do OCR coloquem textos gigantes nos campos curtos
+  if (tipo && tipo.length > 80) tipo = tipo.substring(0, 80) + '...';
+  if (cliente && cliente.length > 80) cliente = cliente.substring(0, 80) + '...';
   
   const obs = extract(/OBSERVA[CÇ][ÃA]O(?: DO DESPACHO)?[:\s]+(.*?)(?=\s*$)/i);
   

@@ -90,6 +90,17 @@ async function startApp() {
     });
   });
 
+  // Configurar Toggle Sidebar
+  const btnToggleSidebar = document.getElementById('toggleSidebar');
+  if (btnToggleSidebar) {
+    btnToggleSidebar.addEventListener('click', () => {
+      const sidebar = document.querySelector('.global-sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+      }
+    });
+  }
+
   // Renderizar o Mobile Nav inicial
   renderMobileNav(document.getElementById('mobileNavContainer'), handleMobileTabChange, currentModule);
 
