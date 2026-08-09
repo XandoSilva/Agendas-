@@ -304,42 +304,33 @@ function parseOCRText(text) {
   };
 
   // Regras de extração baseadas no layout da imagem fornecida
-  const protocolo = extract(/Protocolo[:\s]+([A-Z0-9-]+)/i);
+  const protocolo = extract(/Protoco?lo[:\s]+([A-Z0-9-]+)/i);
   const contrato = extract(/Contrato[:\s]+(\d+)/i);
   
-  // Pega tudo após Razão Social ou Nome Cliente até encontrar as próximas palavras chave
-  let cliente = extract(/(?:Razão Social|Nome Cliente)[:\s]+(.*?)(?=\s+Contato|\s+Telefone|\s+Nro|\s+End|\s+Status|$)/i);
+  // Procura por Razão Social ou Nome Cliente, parando nas próximas chaves
+  let cliente = extract(/Raz[ãa]o Social[:\s]+(.*?)(?=\s+(?:Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
+  if (!cliente) {
+    cliente = extract(/Nome Cliente[:\s]+(.*?)(?=\s+(?:Atendente|Reincid[eê]ncia|Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
+  }
   if (cliente) {
     if (cliente.includes('-')) cliente = cliente.substring(cliente.indexOf('-') + 1).trim();
     cliente = cliente.replace(/lacre\]\s*\|\s*NOS ULTIMOS 30 DIAS/ig, '').trim();
+    cliente = cliente.replace(/Reincid[eê]ncia.*?dias/ig, '').trim();
   }
   
-  let contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+Telefone|\s+Nro|\s+End|$)/i);
+  let contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+(?:Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
   if (contato) {
     contato = contato.replace(/\(Nome\):?\s*\|?/ig, '').replace(/^[\s\|\[\]]+/, '').trim();
   }
   
-  let endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+Área|\s+Descri[cç]ão|\s+Procedimentos|$)/i);
+  let endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+(?:CEP|Área|Motivo|Sub|Atividade|Descri[cç]ão|Procedimentos|$))/i);
   if (endereco) {
     endereco = endereco.replace(/^[\s\|\[\]]+/, '').replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
   }
   
-  let telefones = '';
-  const telMatch = cleanText.match(/(?:Telefones?|Tel\.?)\s*[12]?[:\s]+(.*?(?=Endere[cç]o|End\.|End |$))/i);
-  if (telMatch && telMatch[1]) {
-    let rawTels = telMatch[1];
-    
-    // Cortar lixo se o OCR tiver puxado colunas do lado (ex: "Status:", "Origem Prot:", "Nro Contrato")
-    rawTels = rawTels.split(/\b(?:Status|Origem|Nro\.|Nro|Contrato)\b/i)[0];
-    
-    // Substitui o rótulo do segundo telefone por uma barra (ex: "Tel. 2:")
-    rawTels = rawTels.replace(/Tel\.?\s*[123]?[:\s]+/ig, ' / ');
-    // Remove barra sobrando no final (caso o tel 2 esteja vazio)
-    rawTels = rawTels.replace(/\s*\/\s*$/, '').trim();
-    // Limpa lixo do final se tiver pego
-    rawTels = rawTels.replace(/[\s\|\-\.,=]+$/, '').trim();
-    
-    if (rawTels) telefones = rawTels;
+  let telefones = extract(/(?:Telefones?|Tel\.?\s*1)[:\s]+(.*?)(?=\s+(?:Tel\.\s*2|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
+  if (telefones) {
+    telefones = telefones.replace(/[\s\|\-\.,=]+$/, '').trim();
   }
   
   let empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
@@ -355,11 +346,17 @@ function parseOCRText(text) {
 
   const registradoEm = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
   
-  const tipo = extract(/TIPO DE RECLAMA[CÇ][ÃA]O[:\s]+(.*?)(?=\s+OBSERVA[CÇ][ÃA]O|\s*$)/i);
+  let tipo = extract(/TIPO DE RECLAMA[CÇ][ÃA]O[:\s]+(.*?)(?=\s+OBSERVA[CÇ][ÃA]O|\s*$)/i);
+  if (!tipo) {
+    tipo = extract(/Atividade[:\s]+(.*?)(?=\s+Descri[cç][ãa]o|$)/i);
+    if (tipo && tipo.includes('-')) {
+      tipo = tipo.substring(tipo.indexOf('-') + 1).trim();
+    }
+  }
   
   const obs = extract(/OBSERVA[CÇ][ÃA]O(?: DO DESPACHO)?[:\s]+(.*?)(?=\s*$)/i);
   
-  const descricao = extract(/Descri[cç][ãa]o[:\s]+(.*?)(?=\s+Última|\s+Procedimentos|\s+EMPREITEIRA|$)/i);
+  let descricao = extract(/Descri[cç][ãa]o[:\s]+(.*?)(?=\s+Última|\s+Procedimentos|\s+EMPREITEIRA|$)/i);
 
   // Auto-fill form
   if (protocolo) document.getElementById('m_protocolo').value = protocolo;
