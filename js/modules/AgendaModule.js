@@ -255,6 +255,22 @@ async function handleCardAction(action, id, value) {
   }
 }
 
+window.saveObs = async (id, val) => {
+  const record = entries.find(m => m.id === id);
+  if (!record || record.obs === val) return;
+
+  const oldVal = record.obs;
+  record.obs = val;
+  
+  try {
+    await persistEntry('agendamentos', { id, data: { obs: val } }, false, true, entries);
+  } catch (err) {
+    console.error("Erro ao salvar observação", err);
+    record.obs = oldVal; // revert
+    alert('Erro ao salvar a observação');
+    render();
+  }
+};
 async function handleParsePaste() {
   const raw = document.getElementById('pasteBox').value;
   const dataArr = extractData(raw);

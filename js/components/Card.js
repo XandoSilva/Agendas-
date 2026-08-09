@@ -59,11 +59,11 @@ export function createCardHTML(entry) {
       
       ${safeEndereco ? `<div class="endereco">📍 ${safeEndereco}</div>` : ''}
       
-      <div class="meta">
-        <div><span>Horário</span><span class="hora">${safeHora}</span></div>
-        <div><span>Acompanha</span>${safeAcompanhante}</div>
-        <div><span>Contato</span>${safeContato}</div>
-      </div>
+      <ul class="meta-list">
+        <li><span>Horário</span> <span class="hora">${safeHora}</span></li>
+        <li><span>Acompanha</span> <b>${safeAcompanhante}</b></li>
+        <li><span>Contato Local</span> <b>${safeContato}</b></li>
+      </ul>
       
       ${entry.endereco || entry.contato || entry.ppi_url ? `
         <div class="card-field-actions">
@@ -73,7 +73,7 @@ export function createCardHTML(entry) {
         </div>
       ` : ''}
       
-      <div class="obs">${safeObs || '<span style="color:var(--muted);font-style:italic;">Nenhuma observação registrada.</span>'}</div>
+      <div class="obs" contenteditable="true" data-id="${safeId}" onblur="window.saveObs(this.getAttribute('data-id'), this.innerText)">${safeObs}</div>
       
       <div class="card-actions">
         <select class="status-select" data-id="${safeId}" data-action="quick-status">

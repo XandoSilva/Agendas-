@@ -486,16 +486,21 @@ textarea#pasteBox:focus {
   align-items: center;
   gap: 4px;
 }
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+.meta-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
   font-size: 12px;
   color: var(--text);
-  text-transform: uppercase;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-.meta div span {
+.meta-list li {
+  display: flex;
+  flex-direction: column;
+}
+.meta-list li span {
   display: block;
   color: var(--muted);
   font-size: 9.5px;
@@ -527,6 +532,16 @@ textarea#pasteBox:focus {
   letter-spacing: .5px;
   margin-bottom: 6px;
   font-weight: 600;
+}
+.obs:empty:not(:focus)::after {
+  content: "Nenhuma observação registrada.";
+  color: var(--muted);
+  font-style: italic;
+}
+.obs[contenteditable="true"]:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: var(--input-bg);
 }
 
 /* Quick Actions Mobile & Field */

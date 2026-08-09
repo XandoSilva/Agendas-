@@ -356,18 +356,17 @@ function renderTimeline() {
       
       ${safeEndereco ? `<div class="endereco">📍 ${safeEndereco}</div>` : ''}
       
-      <div class="meta">
-        <div style="flex-basis: 100%;"><span>Criado em</span><span class="hora">${formattedDate}</span></div>
-        <div style="flex: 1; min-width: 150px;"><span>Cliente</span>${safeCliente}</div>
-        <div style="flex: 1; min-width: 120px;"><span>Contato</span>${safeContato}</div>
-      </div>
+      <ul class="meta-list">
+        <li><span>Criado em</span> <span class="hora">${formattedDate}</span></li>
+        <li><span>Contato Local</span> <b>${[m.contato, m.telefones].filter(Boolean).join(' - ') || '—'}</b></li>
+      </ul>
       
       ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">
         ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
         ${safeContato !== '—' ? `<button class="btn-action wpp-btn" onclick="window.open('https://wa.me/55${safeContato.replace(/\\D/g, '')}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
       </div>` : ''}
 
-      <div class="obs">${safeObs || '<span style="color:var(--muted);font-style:italic;">Nenhuma observação registrada.</span>'}</div>
+      <div class="obs" contenteditable="true" data-id="${m.id}" onblur="window.saveObs(this.getAttribute('data-id'), this.innerText)">${safeObs}</div>
       
       <div class="card-actions">
         <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
@@ -411,5 +410,22 @@ window.deleteManutencao = async (id) => {
     } catch(err) {
       alert('Erro ao deletar manutenção');
     }
+  }
+};
+
+window.saveObs = async (id, val) => {
+  const record = manutencoes.find(m => m.id === id);
+  if (!record || record.descricao === val) return;
+
+  const oldVal = record.descricao;
+  record.descricao = val;
+  
+  try {
+    await persistEntry(TABLE_NAME, { id, descricao: val }, false, false, manutencoes);
+  } catch (err) {
+    console.error("Erro ao salvar observação", err);
+    record.descricao = oldVal; // revert
+    alert('Erro ao salvar a observação');
+    renderTimeline();
   }
 };
