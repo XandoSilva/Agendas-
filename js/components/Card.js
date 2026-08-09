@@ -11,7 +11,7 @@ export function createCardHTML(entry) {
   const safeStatus = escapeHTML(entry.status);
   const safeTipo = escapeHTML(entry.tipo);
   let rawCliente = entry.cliente || 'Cliente não informado';
-  rawCliente = rawCliente.replace(/^[\d\.\-\/]+\s*-\s*/, '');
+  rawCliente = rawCliente.replace(/^\s*[\d\.\-\/]+\s*[-.]?\s*/, '').trim();
   
   let reincidenciaHtml = '';
   const reinMatch = rawCliente.match(/REINCID[EÊ]NCIA:\s*(.*)/i);
@@ -29,8 +29,9 @@ export function createCardHTML(entry) {
   const safeAcompanhante = escapeHTML(entry.acompanhante || '—');
   // Normaliza telefone: extrai dígitos e formata como (XX) XXXXX-XXXX
   const rawContato = entry.contato || '';
-  const contatoDigits = rawContato.replace(/\D/g, '');
-  let displayContato = rawContato || '—';
+  const cleanContatoStr = rawContato.replace(/^\s*\(?Nome\)?\s*:\s*/i, '').trim();
+  const contatoDigits = cleanContatoStr.replace(/\D/g, '');
+  let displayContato = cleanContatoStr || '—';
   if (contatoDigits.length >= 10) {
     const phone = contatoDigits.length >= 11 ? contatoDigits.slice(-11) : contatoDigits.slice(-10);
     const ddd = phone.slice(0, 2);

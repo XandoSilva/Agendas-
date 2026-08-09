@@ -322,7 +322,7 @@ function renderTimeline() {
     const statusClass = safeStatus.replace(/\s+/g, '');
     const safeTipo = m.tipo_reclamacao || 'Manutenção';
     let rawCliente = m.cliente || 'Cliente não informado';
-    rawCliente = rawCliente.replace(/^[\d\.\-\/]+\s*-\s*/, '');
+    rawCliente = rawCliente.replace(/^\s*[\d\.\-\/]+\s*[-.]?\s*/, '').trim();
     
     let reincidenciaHtml = '';
     const reinMatch = rawCliente.match(/REINCID[EÊ]NCIA:\s*(.*)/i);
@@ -337,7 +337,8 @@ function renderTimeline() {
     const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
     const safeEndereco = m.endereco || '';
     const safeEmpreiteira = m.empreiteira || '—';
-    const safeContato = m.telefones || m.contato || '—';
+    let rawContato = m.telefones || m.contato || '—';
+    const safeContato = rawContato.replace(/^\s*\(?Nome\)?\s*:\s*/i, '').trim();
     const safeObs = m.descricao || m.obs_despacho || '';
 
     const card = document.createElement('div');
@@ -361,7 +362,7 @@ function renderTimeline() {
       
       <ul class="meta-list">
         <li><span>Criado em</span> <span class="hora">${formattedDate}</span></li>
-        <li><span>Contato Local</span> <b>${[m.contato, m.telefones].filter(Boolean).join(' - ') || '—'}</b></li>
+        <li><span>Contato Local</span> <b>${safeContato}</b></li>
       </ul>
       
       ${safeEndereco || safeContato !== '—' ? `<div class="card-field-actions">

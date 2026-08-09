@@ -141,6 +141,16 @@ export function extractDataSingle(raw) {
   const tecM = cleanRaw.match(/T[ÉE]CNICO(?:\s*DA\s*TERJ)?:?\s*([^\n,]+)/i);
   if (tecM) obsBits.push('Técnico: ' + tecM[1].trim());
 
+  // Clean up cliente: remove leading numbering like "1.", "1 -", "01 - " etc
+  if (cliente) {
+    cliente = cliente.replace(/^\s*[\d\.\-\/]+\s*[-.]?\s*/, '').trim();
+  }
+
+  // Clean up contato: remove leading "(nome):" or "nome:"
+  if (contato) {
+    contato = contato.replace(/^\s*\(?Nome\)?\s*:\s*/i, '').trim();
+  }
+
   return { tipo, status, data: f_data, allDates, hora, contrato, cliente, endereco, acompanhante, contato, obs: obsBits.join('\n') };
 }
 
