@@ -367,7 +367,7 @@ function renderTimeline() {
         ${safeContato !== '—' ? `<button class="btn-action wpp-btn" onclick="window.open('https://wa.me/55${safeContato.replace(/\\D/g, '')}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
       </div>` : ''}
 
-      ${safeObs ? `<div class="obs">${safeObs}</div>` : ''}
+      <div class="obs">${safeObs || '<span style="color:var(--muted);font-style:italic;">Nenhuma observação registrada.</span>'}</div>
       
       <div class="card-actions">
         <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>

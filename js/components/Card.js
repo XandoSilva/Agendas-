@@ -73,7 +73,7 @@ export function createCardHTML(entry) {
         </div>
       ` : ''}
       
-      ${safeObs ? `<div class="obs">${safeObs}</div>` : ''}
+      <div class="obs">${safeObs || '<span style="color:var(--muted);font-style:italic;">Nenhuma observação registrada.</span>'}</div>
       
       <div class="card-actions">
         <select class="status-select" data-id="${safeId}" data-action="quick-status">
