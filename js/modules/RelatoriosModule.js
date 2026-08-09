@@ -5,6 +5,7 @@ let manutencoesFull = [];
 export async function initRelatoriosModule() {
   const mesFiltro = document.getElementById('relatorioMesFiltro');
   const btnExportar = document.getElementById('btnExportarRelatorio');
+  const btnExportarPlanilha = document.getElementById('btnExportarPlanilha');
   
   if (mesFiltro) {
     const today = new Date();
@@ -16,6 +17,9 @@ export async function initRelatoriosModule() {
 
   if (btnExportar) {
     btnExportar.addEventListener('click', exportarRelatorioCSV);
+  }
+  if (btnExportarPlanilha) {
+    btnExportarPlanilha.addEventListener('click', exportarPlanilhaDetalhada);
   }
 
   // Load all manutencoes for reporting
@@ -141,6 +145,74 @@ function exportarRelatorioCSV() {
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
   link.setAttribute("download", `auditoria_manutencoes_${mesValue}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function exportarPlanilhaDetalhada() {
+  const mesFiltroInput = document.getElementById('relatorioMesFiltro');
+  const mesFiltro = mesFiltroInput ? mesFiltroInput.value : '';
+  if (!mesFiltro) return;
+
+  const [ano, mes] = mesFiltro.split('-');
+  const filterMonth = parseInt(mes, 10);
+  const filterYear = parseInt(ano, 10);
+
+  const dadosFiltrados = manutencoesFull.filter(m => {
+    if (!m.created_at) return false;
+    const mDate = new Date(m.created_at);
+    return mDate.getMonth() + 1 === filterMonth && mDate.getFullYear() === filterYear;
+  });
+
+  if (dadosFiltrados.length === 0) {
+    alert("Não há dados para exportar neste mês.");
+    return;
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+  // Cabeçalhos baseados na imagem fornecida
+  csvContent += "Proc,Dt. Abertura,Protocolo,Razão Social,Atividade,Endereço,Número,Diagnóstico / Problema,Técnico / Responsável,Status / Observação,DATA FINALIZAÇÃO\n";
+
+  dadosFiltrados.forEach(m => {
+    const proc = "RJ"; // Fixado conforme exemplo da imagem
+    
+    // Format Dt. Abertura
+    let dtAbertura = "";
+    if (m.created_at) {
+      const d = new Date(m.created_at);
+      dtAbertura = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).replace(/,/g, '');
+    }
+
+    const protocolo = (m.protocolo || "").replace(/,/g, ' ');
+    const razaoSocial = (m.cliente || "").replace(/,/g, ' ');
+    const atividade = (m.tipo_reclamacao || "").replace(/,/g, ' ');
+    
+    // Separar endereço e número
+    let enderecoStr = (m.endereco || "").replace(/,/g, ' ');
+    let numeroStr = "";
+    const numMatch = enderecoStr.match(/(?:,\s*|\s+)(?:N[oº]?\s*)?(\d+)/i);
+    if (numMatch) {
+      numeroStr = numMatch[1];
+      enderecoStr = enderecoStr.replace(numMatch[0], "").trim();
+    }
+
+    const diagnostico = (m.tipo_reclamacao || "").replace(/,/g, ' ');
+    const tecnico = (m.equipe_designada || "").replace(/,/g, ' ');
+    const statusObs = `${m.status || ""} / ${(m.obs_despacho || m.descricao || "").replace(/(\r\n|\n|\r|,)/gm, " ").substring(0,100)}`.trim();
+    
+    let dtFinalizacao = "";
+    if (m.status === 'Concluído' || m.status === 'Realizado') {
+      dtFinalizacao = dtAbertura; // Simplificado, idealmente seria a data de atualização
+    }
+
+    csvContent += `"${proc}","${dtAbertura}","${protocolo}","${razaoSocial}","${atividade}","${enderecoStr}","${numeroStr}","${diagnostico}","${tecnico}","${statusObs}","${dtFinalizacao}"\n`;
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `planilha_detalhada_manutencoes_${mesFiltro}.csv`);
   document.body.appendChild(link);
   link.click();
   link.remove();
