@@ -367,11 +367,15 @@ function renderTimeline() {
     
     const safeCliente = rawCliente;
     const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
-    const safeEndereco = m.endereco || '';
-    const safeEmpreiteira = m.empreiteira || '—';
-    let rawContato = m.telefones || m.contato || '—';
-    const safeContato = rawContato.replace(/^\s*\(?Nome\)?\s*:\s*/i, '').trim();
-    const safeObs = m.descricao || m.obs_despacho || '';
+    const safeEndereco = escapeHTML(m.endereco || '');
+    const safeEmpreiteira = escapeHTML(m.empreiteira || '—');
+    
+    let contatoNome = (m.contato || '').trim();
+    let contatoTel = (m.telefones || '').trim();
+    let combinedContato = [contatoNome, contatoTel].filter(Boolean).join(' - ');
+    const safeContato = escapeHTML(combinedContato || '—');
+    
+    const safeObs = escapeHTML(m.descricao || m.obs_despacho || '');
 
     const card = document.createElement('div');
     card.className = `card st-${statusClass}`;
@@ -384,13 +388,12 @@ function renderTimeline() {
       
       <ul class="info-list">
         <li>👤 <b>${safeCliente}</b></li>
-        <li>📄 Contrato: <b>${m.contrato || '—'}</b></li>
+        <li>📄 Contrato: <b>${escapeHTML(m.contrato || '—')}</b></li>
         ${reincidenciaHtml ? `<li>🔄 ${reincidenciaHtml.replace(/<[^>]*>?/gm, '')}</li>` : ''}
-        <li>📌 Protocolo: <b>${m.protocolo || '—'}</b></li>
+        <li>📌 Protocolo: <b>${escapeHTML(m.protocolo || '—')}</b></li>
         <li>🕒 Registrado Em: <b>${formattedDate}</b></li>
         <li>🛠️ Empreiteira: <b>${safeEmpreiteira}</b></li>
         <li>📞 Contato Local: <b>${safeContato}</b></li>
-        <li>📞 Contato: <b>${safeCliente}</b></li>
         <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
         <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
         <li>👷 Equipe designada: <span class="editable-inline" contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
