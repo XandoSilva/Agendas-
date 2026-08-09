@@ -176,6 +176,16 @@ function handlePaste(e) {
 }
 
 function processItems(items) {
+  const pasteZone = document.getElementById('imagePasteZone');
+  if (pasteZone) {
+    // Remove qualquer imagem ou texto que o navegador tenha colado nativamente no contenteditable
+    const statusEl = document.getElementById('ocrStatus');
+    const progressEl = document.getElementById('ocrProgress');
+    pasteZone.innerHTML = '';
+    if (statusEl) pasteZone.appendChild(statusEl);
+    if (progressEl) pasteZone.appendChild(progressEl);
+  }
+
   for (let i = 0; i < items.length; i++) {
     if (items[i].type.indexOf('image') !== -1) {
       const blob = items[i].getAsFile();
