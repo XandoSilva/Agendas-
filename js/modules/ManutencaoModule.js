@@ -317,7 +317,7 @@ async function performOCR(imageSrc) {
     status.textContent = "Leitura concluída!";
     setTimeout(() => { progressBarContainer.style.display = 'none'; }, 500);
 
-    parseOCRText(result.data.text);
+    await parseOCRText(result.data.text);
   } catch (err) {
     console.error("OCR Error Detalhado:", err);
     const errMsg = err.message ? err.message : JSON.stringify(err);
@@ -326,9 +326,80 @@ async function performOCR(imageSrc) {
   }
 }
 
-function parseOCRText(text) {
+async function parseOCRText(text) {
   console.log("OCR Result Text:", text);
   
+  // 1. Tentar Bulk Mode (Tabela)
+  const linhas = text.split('\n');
+  const registrosLote = [];
+
+  // Padrão de linha da tabela: Data Hora Protocolo ...
+  const bulkRowRegex = /^(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2})\s+(\d{8,15})\s+(.+)$/;
+
+  for (let linha of linhas) {
+    const limpa = linha.trim().replace(/\s+/g, ' ');
+    const match = limpa.match(bulkRowRegex);
+    if (match) {
+      const dataHora = match[1];
+      const protocolo = match[2];
+      const resto = match[3];
+
+      let cliente = resto;
+      let endereco = "";
+
+      const addressMatch = resto.match(/\s+(RUA|AVENIDA|AV\.|ESTRADA|RODOVIA|PRA[CÇ]A|ALAMEDA|ROD\.|R\.|AV)\s+/i);
+      if (addressMatch) {
+        const idx = addressMatch.index;
+        cliente = resto.substring(0, idx).trim();
+        endereco = resto.substring(idx).trim();
+      }
+
+      // Tenta converter para ISO Date (Considerando timezone BR)
+      let isoDate = new Date().toISOString();
+      try {
+        const [dataPart, horaPart] = dataHora.split(' ');
+        const [d, m, y] = dataPart.split('/');
+        const parsed = new Date(`${y}-${m}-${d}T${horaPart}-03:00`);
+        if (!isNaN(parsed.getTime())) isoDate = parsed.toISOString();
+      } catch (e) {}
+
+      registrosLote.push({
+        id: 'man_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+        created_at: isoDate,
+        protocolo: protocolo,
+        cliente: cliente,
+        endereco: endereco,
+        status: 'Pendente',
+        descricao: "Chamado importado em lote via OCR da tabela.",
+        equipe_designada: '',
+        empreiteira: '',
+        tipo_reclamacao: '',
+        obs_despacho: ''
+      });
+    }
+  }
+
+  if (registrosLote.length > 1) {
+    console.log("Modo lote ativado!", registrosLote);
+    
+    // Mostra estado visual enquanto salva
+    const status = document.getElementById('ocrStatus');
+    if (status) status.textContent = `Salvando ${registrosLote.length} registros...`;
+
+    // Processa de trás para frente para manter a ordem cronológica visual no unshift
+    for (let i = registrosLote.length - 1; i >= 0; i--) {
+      const record = registrosLote[i];
+      manutencoes.unshift(record);
+      await persistEntry(TABLE_NAME, record, false, false, manutencoes);
+    }
+    
+    renderTimeline();
+    clearOCRPreview();
+    alert(`Sucesso! ${registrosLote.length} manutenções foram importadas da tabela e criadas.\nElas estão listadas como 'Pendente'.\nClique em cada uma na lista para completar os dados (Equipe, Problema, Empreiteira, etc).`);
+    return;
+  }
+
+  // 2. Fallback para 1 ticket (Bloco de texto único)
   // Normalizar múltiplos espaços e quebras de linha para uma linha única e limpa
   const cleanText = text.replace(/\s+/g, ' ');
 
