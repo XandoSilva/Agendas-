@@ -82,7 +82,8 @@
   top: 0;
   height: 100vh;
   overflow-y: auto;
-  width: 100%;
+  width: 420px;
+  min-width: 420px;
   flex-shrink: 0;
 }
 
