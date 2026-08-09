@@ -243,7 +243,11 @@
 
         <div class="field" style="margin-bottom: 14px;">
           <label>Colar Imagem do Sistema (OCR)</label>
-          <div id="imagePasteZone" tabindex="0" style="width: 100%; min-height: 80px; background: rgba(20, 184, 166, 0.05); border: 2px dashed var(--teal); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--teal); font-size: 13px; font-weight: 600; cursor: pointer; padding: 14px; text-align: center; transition: all 0.2s ease; outline: none; overflow: hidden; position: relative;">
+          <style>
+            #imagePasteZone img:not(#ocrPreview) { display: none !important; }
+            #imagePasteZone * { pointer-events: none; }
+          </style>
+          <div id="imagePasteZone" contenteditable="true" style="width: 100%; min-height: 80px; background: rgba(20, 184, 166, 0.05); border: 2px dashed var(--teal); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--teal); font-size: 13px; font-weight: 600; cursor: text; padding: 14px; text-align: center; transition: all 0.2s ease; outline: none; overflow: hidden; position: relative;">
             <span id="ocrStatus">Clique, cole (Ctrl+V) ou solte uma imagem aqui</span>
             <div id="ocrProgress" style="width: 100%; height: 4px; background: var(--line); border-radius: 4px; margin-top: 8px; overflow: hidden; display: none;">
               <div id="ocrProgressBar" style="width: 0%; height: 100%; background: var(--teal); transition: width 0.1s linear;"></div>
