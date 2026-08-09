@@ -273,9 +273,11 @@ function parseOCRText(text) {
   const telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
   
   const procRegex = extract(/EMPREITEIRA PARA OS[:\s]+(.*?)(?=\s+Atividade|\s+AGENDAMENTO|\s+MATERIAIS|$)/i);
-  let empreiteira = extract(/EMPREITEIRA(?: DIRECIONADA)?[:\s]+(.*?)(?=\s+T[EÉ]CNICO|\s+TIPO|\s+OBSERVA[CÇ][ÃA]O|$)/i);
-  if (procRegex) {
-    empreiteira = procRegex + (empreiteira ? ' - ' + empreiteira : '');
+  let empreiteira = extract(/Fila:\s*(.*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|$)/i) 
+                 || extract(/EMPREITEIRA(?: DIRECIONADA)?[:\s]+(.*?)(?=\s+T[EÉ]CNICO|\s+TIPO|\s+OBSERVA[CÇ][ÃA]O|$)/i);
+  
+  if (procRegex && !empreiteira) {
+    empreiteira = procRegex;
   }
 
   const registradoEm = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
@@ -368,8 +370,9 @@ function renderTimeline() {
         ${reincidenciaHtml ? `<li>🔄 ${reincidenciaHtml.replace(/<[^>]*>?/gm, '')}</li>` : ''}
         <li>📌 Protocolo: <b>${m.protocolo || '—'}</b></li>
         <li>🕒 Registrado Em: <b>${formattedDate}</b></li>
-        <li>🛠️ Empreiteira Fila: <b>${safeEmpreiteira}</b></li>
-        <li>📞 Contato Local: <b>${safeContato}</b> <span style="float:right;">Telefone: <b>${m.telefones || '—'}</b></span></li>
+        <li>🛠️ Empreiteira: <b>${safeEmpreiteira}</b></li>
+        <li>📞 Contato Local: <b>${safeContato}</b></li>
+        <li>📞 Contato: <b>${safeCliente}</b></li>
         <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
         <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
         <li>👷 Equipe designada: <span class="editable-inline" contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
