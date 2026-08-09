@@ -146,8 +146,33 @@ function setupOCR() {
 }
 
 function handlePaste(e) {
+  if (!e.clipboardData) return;
   const items = e.clipboardData.items;
-  processItems(items);
+  let hasImage = false;
+  
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      hasImage = true;
+      break;
+    }
+  }
+
+  if (hasImage) {
+    // Se for imagem, a gente processa e evita colar na tela/input
+    if (e.target && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+    processItems(items);
+  } else {
+    // Não é imagem
+    const status = document.getElementById('ocrStatus');
+    if (status) {
+      status.textContent = "Nenhuma imagem encontrada na área de transferência.";
+      setTimeout(() => {
+        status.textContent = "Clique, cole (Ctrl+V) ou solte uma imagem aqui";
+      }, 3000);
+    }
+  }
 }
 
 function processItems(items) {
