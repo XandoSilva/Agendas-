@@ -425,6 +425,13 @@ function renderTimeline() {
       <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="true" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
       
       <div class="unified-fields-box">
+        <div class="box-title">Andamento do Atendimento</div>
+        <div class="editable-field" data-label="Em Deslocamento (Prev. Chegada)" data-empty="-" contenteditable="true" data-id="${m.id}" data-field="prev_chegada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_chegada || '')}</div>
+        <div class="editable-field" data-label="Em Atendimento (Prev. Testes)" data-empty="-" contenteditable="true" data-id="${m.id}" data-field="prev_testes" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_testes || '')}</div>
+        <div class="editable-field" data-label="Finalizado" data-empty="-" contenteditable="true" data-id="${m.id}" data-field="horario_finalizado" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.horario_finalizado || '')}</div>
+      </div>
+
+      <div class="unified-fields-box">
         <div class="box-title">Execução e Resolução</div>
         <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="true" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
         <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="true" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
