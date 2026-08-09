@@ -264,13 +264,28 @@ function parseOCRText(text) {
   const contrato = extract(/Contrato[:\s]+(\d+)/i);
   
   // Pega tudo após Razão Social ou Nome Cliente até encontrar as próximas palavras chave
-  const cliente = extract(/(?:Razão Social|Nome Cliente)[:\s]+(.*?)(?=\s+Contato|\s+Telefone|\s+Nro|\s+End|\s+Status|$)/i);
+  let cliente = extract(/(?:Razão Social|Nome Cliente)[:\s]+(.*?)(?=\s+Contato|\s+Telefone|\s+Nro|\s+End|\s+Status|$)/i);
+  if (cliente) {
+    if (cliente.includes('-')) cliente = cliente.substring(cliente.indexOf('-') + 1).trim();
+    cliente = cliente.replace(/lacre\]\s*\|\s*NOS ULTIMOS 30 DIAS/ig, '').trim();
+  }
   
-  const contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+Telefone|\s+Nro|\s+End|$)/i);
+  let contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+Telefone|\s+Nro|\s+End|$)/i);
+  if (contato) {
+    contato = contato.replace(/\(Nome\):?\s*\|?/ig, '').replace(/^\|\s*/, '').trim();
+  }
   
-  const endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+Área|\s+Descri[cç]ão|\s+Procedimentos|$)/i);
+  let endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+Área|\s+Descri[cç]ão|\s+Procedimentos|$)/i);
+  if (endereco) {
+    endereco = endereco.replace(/^\|\s*/, '').replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
+  }
   
-  const telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
+  let telefones = extract(/Telefone.*?(?:1|2|3)?[:\s]+([\d\s\-\(\)]+)/i);
+  const telSection = cleanText.match(/Telefones?.*?(?=Endere[cç]o|End\.|End |$)/i);
+  if (telSection) {
+    const nums = telSection[0].match(/\d{8,11}/g);
+    if (nums) telefones = nums.join(' / ');
+  }
   
   const empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
 
