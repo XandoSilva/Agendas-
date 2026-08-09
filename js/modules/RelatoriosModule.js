@@ -170,26 +170,18 @@ function exportarPlanilhaDetalhada() {
     return;
   }
 
-  let csvContent = "data:text/csv;charset=utf-8,";
-  // Cabeçalhos baseados na imagem fornecida
-  csvContent += "Proc,Dt. Abertura,Protocolo,Razão Social,Atividade,Endereço,Número,Diagnóstico / Problema,Técnico / Responsável,Status / Observação,DATA FINALIZAÇÃO\n";
-
-  dadosFiltrados.forEach(m => {
+  // Prepara os dados num array de objetos (JSON) para a planilha
+  const exportData = dadosFiltrados.map(m => {
     const proc = "RJ"; // Fixado conforme exemplo da imagem
     
-    // Format Dt. Abertura
     let dtAbertura = "";
     if (m.created_at) {
       const d = new Date(m.created_at);
       dtAbertura = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).replace(/,/g, '');
     }
 
-    const protocolo = (m.protocolo || "").replace(/,/g, ' ');
-    const razaoSocial = (m.cliente || "").replace(/,/g, ' ');
-    const atividade = (m.tipo_reclamacao || "").replace(/,/g, ' ');
-    
     // Separar endereço e número
-    let enderecoStr = (m.endereco || "").replace(/,/g, ' ');
+    let enderecoStr = (m.endereco || "").trim();
     let numeroStr = "";
     const numMatch = enderecoStr.match(/(?:,\s*|\s+)(?:N[oº]?\s*)?(\d+)/i);
     if (numMatch) {
@@ -197,23 +189,36 @@ function exportarPlanilhaDetalhada() {
       enderecoStr = enderecoStr.replace(numMatch[0], "").trim();
     }
 
-    const diagnostico = (m.tipo_reclamacao || "").replace(/,/g, ' ');
-    const tecnico = (m.equipe_designada || "").replace(/,/g, ' ');
-    const statusObs = `${m.status || ""} / ${(m.obs_despacho || m.descricao || "").replace(/(\r\n|\n|\r|,)/gm, " ").substring(0,100)}`.trim();
-    
     let dtFinalizacao = "";
     if (m.status === 'Concluído' || m.status === 'Realizado') {
-      dtFinalizacao = dtAbertura; // Simplificado, idealmente seria a data de atualização
+      dtFinalizacao = dtAbertura; // Idealmente seria a data de atualização real
     }
 
-    csvContent += `"${proc}","${dtAbertura}","${protocolo}","${razaoSocial}","${atividade}","${enderecoStr}","${numeroStr}","${diagnostico}","${tecnico}","${statusObs}","${dtFinalizacao}"\n`;
+    const statusObs = `${m.status || ""} / ${(m.obs_despacho || m.descricao || "").replace(/(\r\n|\n|\r)/gm, " ")}`.trim();
+
+    return {
+      "Proc": proc,
+      "Dt. Abertura": dtAbertura,
+      "Protocolo": m.protocolo || "",
+      "Razão Social": m.cliente || "",
+      "Atividade": m.tipo_reclamacao || "",
+      "Endereço": enderecoStr,
+      "Número": numeroStr,
+      "Diagnóstico / Problema": m.tipo_reclamacao || "",
+      "Técnico / Responsável": m.equipe_designada || "",
+      "Status / Observação": statusObs,
+      "DATA FINALIZAÇÃO": dtFinalizacao
+    };
   });
 
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `planilha_detalhada_manutencoes_${mesFiltro}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  // Usa o SheetJS (XLSX) global para criar o arquivo excel
+  if (typeof XLSX !== 'undefined') {
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Manutenções");
+    
+    XLSX.writeFile(workbook, `planilha_detalhada_manutencoes_${mesFiltro}.xlsx`, { compression: true });
+  } else {
+    alert("Erro: Biblioteca de exportação (SheetJS) não carregada.");
+  }
 }
