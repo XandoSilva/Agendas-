@@ -181,7 +181,9 @@ function processItems(items) {
     // Remove qualquer imagem ou texto que o navegador tenha colado nativamente no contenteditable
     const statusEl = document.getElementById('ocrStatus');
     const progressEl = document.getElementById('ocrProgress');
+    const previewEl = document.getElementById('ocrPreview');
     pasteZone.innerHTML = '';
+    if (previewEl) pasteZone.appendChild(previewEl);
     if (statusEl) pasteZone.appendChild(statusEl);
     if (progressEl) pasteZone.appendChild(progressEl);
   }
