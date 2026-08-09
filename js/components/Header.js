@@ -14,13 +14,11 @@ export function renderHeader(containerEl, onOpenSettings, onToggleTheme) {
         <h1>Painel de Agendamentos</h1>
         <span id="connStatus">vistorias &amp; passagens de cabo</span>
       </div>
-      <button class="icon-btn" id="btnThemeToggle" style="margin-left:auto; font-size:14px; padding:5px 9px; border:1px solid var(--line); background:var(--input-bg); color:var(--text);" title="${themeTitle}">${themeIcon}</button>
-      <button class="icon-btn" id="btnSettings" style="font-size:14px; padding:5px 9px; border:1px solid var(--line); background:var(--input-bg); color:var(--text);" title="Configurar Banco de Dados">⚙️</button>
+      </div>
     </div>
   `;
 
-  containerEl.querySelector('#btnSettings').addEventListener('click', onOpenSettings);
-  containerEl.querySelector('#btnThemeToggle').addEventListener('click', onToggleTheme);
+
 }
 
 export function updateConnectionStatus(type, label) {
