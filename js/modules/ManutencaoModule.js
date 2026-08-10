@@ -532,6 +532,11 @@ function renderTimeline() {
 
   container.innerHTML = '';
   
+  const counter = document.getElementById('counter-man');
+  if (counter) {
+    counter.textContent = `Manutenções (${manutencoes.length})`;
+  }
+
   if (manutencoes.length === 0) {
     container.innerHTML = '<p style="color:var(--muted); font-size:14px;">Nenhuma manutenção registrada.</p>';
     return;
