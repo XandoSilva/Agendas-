@@ -358,11 +358,13 @@ async function parseOCRText(text) {
 
   // Padrão de linha da tabela: Data Hora Protocolo ...
   const bulkRowRegex = /^(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2})\s+(\d{8,15})\s+(.+)$/;
+  let totalTabelaDetectados = 0;
 
   for (let linha of linhas) {
     const limpa = linha.trim().replace(/\s+/g, ' ');
     const match = limpa.match(bulkRowRegex);
     if (match) {
+      totalTabelaDetectados++;
       const dataHora = match[1];
       const protocolo = String(match[2]).trim();
       let resto = match[3];
@@ -416,7 +418,7 @@ async function parseOCRText(text) {
     }
   }
 
-  if (registrosLote.length > 1) {
+  if (registrosLote.length > 0) {
     console.log("Modo lote ativado!", registrosLote);
     
     // Mostra estado visual enquanto salva
@@ -433,6 +435,11 @@ async function parseOCRText(text) {
     renderTimeline();
     clearOCRPreview();
     alert(`Sucesso! ${registrosLote.length} manutenções foram importadas da tabela e criadas.\nElas estão listadas como 'Pendente'.\nClique em cada uma na lista para completar os dados (Equipe, Problema, Empreiteira, etc).`);
+    return;
+  } else if (totalTabelaDetectados > 0) {
+    // Detectou linhas de tabela, mas TODAS eram duplicadas
+    clearOCRPreview();
+    alert(`Aviso: Foram lidos ${totalTabelaDetectados} chamados na imagem, mas TODOS já constavam no sistema (duplicados).\nNenhum chamado novo foi adicionado.`);
     return;
   }
 
