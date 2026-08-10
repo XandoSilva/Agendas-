@@ -533,8 +533,16 @@ async function parseOCRText(text) {
   };
 
   // Regras de extração baseadas no layout da imagem fornecida
-  const protocolo = extract(/Protoco?lo[:\s]+([A-Z0-9-]+)/i);
-  const contrato = extract(/Contrato[:\s]+(\d+)/i);
+  let protocolo = extract(/Protoco?lo[:\s]+([A-Z0-9-]+)/i);
+  
+  // Validação: protocolo PRECISA ser numérico com pelo menos 6 dígitos
+  if (protocolo && !/^\d{6,}$/.test(protocolo.replace(/\D/g, ''))) {
+    protocolo = ''; // Descarta protocolos inválidos como "PREITEIRA"
+  }
+  // Limpa para manter só dígitos
+  if (protocolo) protocolo = protocolo.replace(/\D/g, '');
+  
+  const contrato = extract(/(?:Nro\.?\s*Contrato|Contrato)[:\s]+(\d+)/i);
   
   // Procura por Razão Social ou Nome Cliente, parando nas próximas chaves
   // Usamos Raz[ãa]o Soc.*? para lidar com o OCR lendo "Razão Sociat"
@@ -603,6 +611,21 @@ async function parseOCRText(text) {
   
   let descricao = extract(/Descri[cç][ãa]o[:\s]+(.*?)(?=\s+Última|\s+Procedimentos|\s+EMPREITEIRA|$)/i);
 
+  // VALIDAÇÃO FINAL: se não encontrou protocolo numérico válido, recusa a importação
+  if (!protocolo) {
+    clearOCRPreview();
+    alert('❌ Não foi possível identificar um protocolo numérico válido nesta imagem.\n\nEsta imagem pode ser uma tela diferente do sistema, ou o OCR não conseguiu ler o número do protocolo.\n\nCole uma imagem da tela de detalhes do chamado que contenha o campo "Protocolo" visível.');
+    return;
+  }
+
+  // Verificação de duplicidade para ticket único
+  const protLimpo = protocolo.trim();
+  if (manutencoes.find(m => String(m.protocolo || '').trim() === protLimpo)) {
+    clearOCRPreview();
+    alert(`⚠️ Este chamado (Protocolo ${protLimpo}) já está cadastrado no sistema.\nNenhum dado foi alterado.`);
+    return;
+  }
+
   // Auto-fill form
   if (protocolo) document.getElementById('m_protocolo').value = protocolo;
   if (contrato) document.getElementById('m_contrato').value = contrato;
@@ -621,9 +644,6 @@ async function parseOCRText(text) {
 
   if (finalDescricao) {
     document.getElementById('m_descricao').value = finalDescricao;
-  } else if (!protocolo && !cliente && !contrato) {
-    // Fallback: se não achou quase nada, joga o texto bruto na descrição para vermos o que o OCR leu
-    document.getElementById('m_descricao').value = "--- OCR RAW TEXT ---\n" + text;
   }
   
   // Highlight to user that fields were filled
