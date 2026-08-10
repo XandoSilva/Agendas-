@@ -23,8 +23,31 @@ async function loadManutencoes() {
     }
     renderTimeline();
   });
+
   // Sort newest first
   manutencoes.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  // Auto-cleanup: varre e exclui duplicatas legadas que ficaram salvas no Supabase
+  const vistos = new Set();
+  const paraDeletar = [];
+  manutencoes.forEach(m => {
+    if (m.protocolo) {
+      const p = String(m.protocolo).trim();
+      if (vistos.has(p)) {
+        paraDeletar.push(m.id);
+      } else {
+        vistos.add(p);
+      }
+    }
+  });
+
+  if (paraDeletar.length > 0) {
+    console.log("Limpando duplicatas ocultas do banco de dados...", paraDeletar);
+    manutencoes = manutencoes.filter(m => !paraDeletar.includes(m.id));
+    for (const id of paraDeletar) {
+      persistEntry(TABLE_NAME, { id }, true, false, manutencoes).catch(e => console.error(e));
+    }
+  }
 }
 
 function setupListeners() {
@@ -715,8 +738,20 @@ window.editManutencao = (id) => {
 window.deleteManutencao = async (id) => {
   if (confirm('Tem certeza que deseja excluir esta manutenção?')) {
     try {
-      manutencoes = manutencoes.filter(m => m.id !== id);
-      await persistEntry(TABLE_NAME, { id }, true, false, manutencoes);
+      const record = manutencoes.find(m => m.id === id);
+      if (record && record.protocolo) {
+        const p = String(record.protocolo).trim();
+        const toDelete = manutencoes.filter(m => String(m.protocolo || '').trim() === p);
+        
+        manutencoes = manutencoes.filter(m => String(m.protocolo || '').trim() !== p);
+        
+        for (const item of toDelete) {
+           await persistEntry(TABLE_NAME, { id: item.id }, true, false, manutencoes);
+        }
+      } else {
+        manutencoes = manutencoes.filter(m => m.id !== id);
+        await persistEntry(TABLE_NAME, { id }, true, false, manutencoes);
+      }
       renderTimeline();
     } catch(err) {
       alert('Erro ao deletar manutenção');
