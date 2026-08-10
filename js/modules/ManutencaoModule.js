@@ -27,12 +27,20 @@ async function loadManutencoes() {
   // Sort newest first
   manutencoes.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-  // Auto-cleanup: varre e exclui duplicatas legadas que ficaram salvas no Supabase
+  // Auto-cleanup: remove entradas com protocolo inválido (não-numérico) e duplicatas legadas
   const vistos = new Set();
   const paraDeletar = [];
   manutencoes.forEach(m => {
     if (m.protocolo) {
       const p = String(m.protocolo).trim();
+      
+      // Remove protocolos inválidos (não-numéricos ou muito curtos, ex: "PREITEIRA")
+      if (!/^\d{6,}$/.test(p)) {
+        paraDeletar.push(m.id);
+        return;
+      }
+      
+      // Remove duplicatas (mesmo protocolo)
       if (vistos.has(p)) {
         paraDeletar.push(m.id);
       } else {
