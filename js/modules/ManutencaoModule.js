@@ -61,7 +61,8 @@ function setupListeners() {
       }
 
       if (record.protocolo) {
-        const duplicado = manutencoes.find(m => m.protocolo === record.protocolo && m.id !== record.id);
+        const p1 = String(record.protocolo).trim();
+        const duplicado = manutencoes.find(m => String(m.protocolo || '').trim() === p1 && m.id !== record.id);
         if (duplicado) {
           alert('Erro: Já existe uma manutenção cadastrada com este protocolo.');
           return;
@@ -352,11 +353,11 @@ async function parseOCRText(text) {
     const match = limpa.match(bulkRowRegex);
     if (match) {
       const dataHora = match[1];
-      const protocolo = match[2];
+      const protocolo = String(match[2]).trim();
       const resto = match[3];
 
       // Ignora chamados que já foram cadastrados ou que estão duplicados no próprio lote
-      if (manutencoes.find(m => m.protocolo === protocolo) || registrosLote.find(r => r.protocolo === protocolo)) {
+      if (manutencoes.find(m => String(m.protocolo || '').trim() === protocolo) || registrosLote.find(r => String(r.protocolo || '').trim() === protocolo)) {
         continue;
       }
 
