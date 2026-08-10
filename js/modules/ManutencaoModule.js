@@ -365,7 +365,15 @@ async function parseOCRText(text) {
     if (match) {
       const dataHora = match[1];
       const protocolo = String(match[2]).trim();
-      const resto = match[3];
+      let resto = match[3];
+
+      let contrato = "";
+      // Procura número de 4 a 12 dígitos no início do restante da linha (Contrato)
+      const contratoMatch = resto.match(/^(\d{4,12})\s+(.+)/);
+      if (contratoMatch) {
+        contrato = contratoMatch[1];
+        resto = contratoMatch[2];
+      }
 
       // Ignora chamados que já foram cadastrados ou que estão duplicados no próprio lote
       if (manutencoes.find(m => String(m.protocolo || '').trim() === protocolo) || registrosLote.find(r => String(r.protocolo || '').trim() === protocolo)) {
@@ -395,6 +403,7 @@ async function parseOCRText(text) {
         id: 'man_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
         created_at: isoDate,
         protocolo: protocolo,
+        contrato: contrato,
         cliente: cliente,
         endereco: endereco,
         status: 'Pendente',
@@ -543,17 +552,32 @@ function renderTimeline() {
 
   container.innerHTML = '';
   
+  // Deduplicação visual para ocultar duplicatas legadas do banco (mesmo protocolo)
+  const vistos = new Set();
+  const unicos = [];
+  manutencoes.forEach(m => {
+    if (m.protocolo) {
+      const p = String(m.protocolo).trim();
+      if (!vistos.has(p)) {
+        vistos.add(p);
+        unicos.push(m);
+      }
+    } else {
+      unicos.push(m);
+    }
+  });
+
   const counter = document.getElementById('counter-man');
   if (counter) {
-    counter.textContent = `Manutenções (${manutencoes.length})`;
+    counter.textContent = `Manutenções (${unicos.length})`;
   }
 
-  if (manutencoes.length === 0) {
+  if (unicos.length === 0) {
     container.innerHTML = '<p style="color:var(--muted); font-size:14px;">Nenhuma manutenção registrada.</p>';
     return;
   }
 
-  manutencoes.forEach(m => {
+  unicos.forEach(m => {
     const dateObj = m.created_at ? new Date(m.created_at) : new Date();
     const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
