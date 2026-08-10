@@ -407,13 +407,17 @@ async function parseOCRText(text) {
   console.log("Linhas juntas para análise:", linhasJuntas);
 
   // Regex tolerante a erros de OCR em data/hora/protocolo
-  const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{2,4})\s+([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})\s+([A-Za-z0-9]{6,15})\s+(.+)$/;
+  // O [\s\-\u2014"\/|_.,:;>]* depois dos segundos engole lixo que o OCR insere entre horário e protocolo (—, ", /, etc)
+  const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{2,4})\s+([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})[\s\-\u2014"'\/|_.,:;>]*\s*([A-Za-z0-9]{6,15})\s+(.+)$/;
   let totalTabelaDetectados = 0;
   const linhasFalhas = [];
 
   for (let linha of linhasJuntas) {
     const limpa = linha.replace(/\s+/g, ' ').trim();
     if (limpa.length < 15) continue;
+    
+    // Pula a linha de cabeçalho da tabela
+    if (/protocolo/i.test(limpa) && /contrato|raz[ãa]o|abertura/i.test(limpa)) continue;
     
     const match = limpa.match(bulkRowRegex);
     if (match) {
