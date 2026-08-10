@@ -379,9 +379,10 @@ async function parseOCRText(text) {
   const linhas = text.split('\n');
   const registrosLote = [];
 
-  // Padrão de linha da tabela: Data Hora Protocolo ... (muito tolerante: aceita espaços a mais, letras no lugar de números, e separadores diversos)
+  // Padrão de linha da tabela
   const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{2})\s*[\/\|\-1lI]\s*([A-Za-z0-9]{2})\s*[\/\|\-1lI]\s*([A-Za-z0-9]{4})\s+([A-Za-z0-9]{2})\s*[:;.\s]\s*([A-Za-z0-9]{2})\s*[:;.\s]\s*([A-Za-z0-9]{2})\s+([A-Za-z0-9]{6,15})\s+(.+)$/;
   let totalTabelaDetectados = 0;
+  const linhasFalhas = [];
 
   function cleanNum(str) {
     return String(str).replace(/[Oo]/g, '0')
@@ -393,6 +394,8 @@ async function parseOCRText(text) {
 
   for (let linha of linhas) {
     const limpa = linha.trim().replace(/\s+/g, ' ');
+    if (limpa.length < 15) continue; // Pula linhas vazias ou muito curtas (cabeçalhos)
+    
     const match = limpa.match(bulkRowRegex);
     if (match) {
       totalTabelaDetectados++;
@@ -446,6 +449,8 @@ async function parseOCRText(text) {
         tipo_reclamacao: '',
         obs_despacho: ''
       });
+    } else {
+        linhasFalhas.push(limpa);
     }
   }
 
@@ -471,8 +476,10 @@ async function parseOCRText(text) {
     
     if (ignorados > 0) {
       msg += `\n\n(Aviso: ${ignorados} chamados foram ignorados pois já constavam no sistema)`;
-    } else {
-      msg += `\n\nClique em cada uma na lista para completar os dados (Equipe, Problema, Empreiteira, etc).`;
+    }
+    
+    if (linhasFalhas.length > 0) {
+      msg += `\n\nDEBUG - ${linhasFalhas.length} linhas não foram reconhecidas pelo robô:\n` + linhasFalhas.slice(0, 5).join('\n');
     }
     
     alert(msg);
