@@ -639,30 +639,31 @@ async function parseOCRText(text) {
   const existingTicket = manutencoes.find(m => String(m.protocolo || '').trim() === protLimpo);
 
   if (existingTicket) {
-    // Ticket já existe: preenchemos o formulário com os dados dele + OCR para preencher os buracos
-    document.getElementById('m_id').value = existingTicket.id || '';
-    
-    // Para cada campo, se o ticket já tem valor, mantém. Senão, usa o do OCR.
-    document.getElementById('m_protocolo').value = existingTicket.protocolo || protocolo || '';
-    document.getElementById('m_contrato').value = existingTicket.contrato || contrato || '';
-    document.getElementById('m_cliente').value = existingTicket.cliente || cliente || '';
-    document.getElementById('m_contato').value = existingTicket.contato || contato || '';
-    document.getElementById('m_endereco').value = existingTicket.endereco || endereco || '';
-    document.getElementById('m_telefones').value = existingTicket.telefones || telefones || '';
-    document.getElementById('m_empreiteira').value = existingTicket.empreiteira || empreiteira || '';
-    document.getElementById('m_tipo_reclamacao').value = existingTicket.reclamacao || tipo || '';
-    document.getElementById('m_obs_despacho').value = existingTicket.obs_despacho || obs || '';
-    
-    // O usuário pediu especificamente para não alterar o histórico de observações (descrição)
-    document.getElementById('m_descricao').value = existingTicket.descricao || '';
-    
-    // Avisa o usuário do que aconteceu
-    clearOCRPreview();
-    const form = document.getElementById('form-man');
-    form.style.boxShadow = '0 0 10px rgba(255, 165, 0, 0.8)'; // Laranja para indicar que é atualização
-    setTimeout(() => { form.style.boxShadow = 'none'; }, 1500);
-    
-    alert(`ℹ️ Chamado ${protLimpo} já existe.\nPreenchemos os campos vazios com os novos dados da imagem.\nAs observações antigas foram mantidas.\nRevise e clique no botão para salvar a atualização.`);
+    // Ticket já existe: Auto-atualiza preenchendo os buracos com dados do OCR
+    const mergedRecord = {
+      ...existingTicket,
+      protocolo: existingTicket.protocolo || protocolo || '',
+      contrato: existingTicket.contrato || contrato || '',
+      cliente: existingTicket.cliente || cliente || '',
+      contato: existingTicket.contato || contato || '',
+      endereco: existingTicket.endereco || endereco || '',
+      telefones: existingTicket.telefones || telefones || '',
+      empreiteira: existingTicket.empreiteira || empreiteira || '',
+      reclamacao: existingTicket.reclamacao || tipo || '',
+      obs_despacho: existingTicket.obs_despacho || obs || ''
+      // A descrição não é alterada para preservar o histórico original
+    };
+
+    // Salva silenciosamente e recarrega a tela
+    try {
+      await persistEntry('manutencoes', mergedRecord, false, true, manutencoes);
+      renderTimeline();
+      clearOCRPreview();
+      alert(`✅ Chamado ${protLimpo} atualizado automaticamente!\n\nAs informações que estavam em branco foram preenchidas com os dados da imagem.\nO histórico de observações original foi preservado.`);
+    } catch (e) {
+      console.error("Erro ao auto-atualizar ticket:", e);
+      alert(`⚠️ Erro ao atualizar o chamado ${protLimpo}.`);
+    }
     return;
   }
 
