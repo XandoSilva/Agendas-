@@ -379,8 +379,8 @@ async function parseOCRText(text) {
   const linhas = text.split('\n');
   const registrosLote = [];
 
-  // Padrão de linha da tabela: Data Hora Protocolo ...
-  const bulkRowRegex = /^(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2})\s+(\d{8,15})\s+(.+)$/;
+  // Padrão de linha da tabela: Data Hora Protocolo ... (tolerante a erros comuns do OCR como trocar / por |, 1, l, I ou espaço nos horários)
+  const bulkRowRegex = /(?:^|\s)(\d{2})[\/\|\-1lI](\d{2})[\/\|\-1lI](\d{4})\s+(\d{2})[:;.\s](\d{2})[:;.\s](\d{2})\s+(\d{6,15})\s+(.+)$/;
   let totalTabelaDetectados = 0;
 
   for (let linha of linhas) {
@@ -388,9 +388,9 @@ async function parseOCRText(text) {
     const match = limpa.match(bulkRowRegex);
     if (match) {
       totalTabelaDetectados++;
-      const dataHora = match[1];
-      const protocolo = String(match[2]).trim();
-      let resto = match[3];
+      const dataHora = `${match[1]}/${match[2]}/${match[3]} ${match[4]}:${match[5]}:${match[6]}`;
+      const protocolo = String(match[7]).trim();
+      let resto = match[8];
 
       let contrato = "";
       // Procura número de 4 a 12 dígitos no início do restante da linha (Contrato)
@@ -457,7 +457,17 @@ async function parseOCRText(text) {
     
     renderTimeline();
     clearOCRPreview();
-    alert(`Sucesso! ${registrosLote.length} manutenções foram importadas da tabela e criadas.\nElas estão listadas como 'Pendente'.\nClique em cada uma na lista para completar os dados (Equipe, Problema, Empreiteira, etc).`);
+    
+    let ignorados = totalTabelaDetectados - registrosLote.length;
+    let msg = `Sucesso! ${registrosLote.length} manutenções foram importadas da tabela e criadas.\nElas estão listadas como 'Pendente'.`;
+    
+    if (ignorados > 0) {
+      msg += `\n\n(Aviso: ${ignorados} chamados foram ignorados pois já constavam no sistema)`;
+    } else {
+      msg += `\n\nClique em cada uma na lista para completar os dados (Equipe, Problema, Empreiteira, etc).`;
+    }
+    
+    alert(msg);
     return;
   } else if (totalTabelaDetectados > 0) {
     // Detectou linhas de tabela, mas TODAS eram duplicadas

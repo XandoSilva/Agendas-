@@ -12,7 +12,7 @@ const text = `28/07/2026 21:24:42 280728205 59623 SUPERMERCADOS MUNDIAL LTDA
 06/08/2026 08:33:38 280808492 4311805 INFOBEADY TECNOLOGIA LTDA
 08/08/2026 13:21:25 2808081110 2898272 IBRANDS S.A.`;
 
-const regex = /(?:^|\s)(\d{2}[\/\|\-1lI]\d{2}[\/\|\-1lI]\d{4})\s+(\d{2}[:;.\s]\d{2}[:;.\s]\d{2})\s+(\d{6,15})\s+(.+)$/;
+const regex = /^(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2})\s+(\d{8,15})\s+(.+)$/;
 let count = 0;
 text.split('\n').forEach(line => {
   if (line.match(regex)) count++;
