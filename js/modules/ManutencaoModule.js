@@ -668,8 +668,8 @@ window.editManutencao = (id) => {
 window.deleteManutencao = async (id) => {
   if (confirm('Tem certeza que deseja excluir esta manutenção?')) {
     try {
-      await persistEntry(TABLE_NAME, { id }, true, false, manutencoes);
       manutencoes = manutencoes.filter(m => m.id !== id);
+      await persistEntry(TABLE_NAME, { id }, true, false, manutencoes);
       renderTimeline();
     } catch(err) {
       alert('Erro ao deletar manutenção');
