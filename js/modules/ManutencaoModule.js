@@ -101,6 +101,9 @@ function setupListeners() {
       form.reset();
       document.getElementById('m_id').value = '';
       clearOCRPreview();
+      
+      const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
+      inputs.forEach(input => input.disabled = false);
     });
   }
 
@@ -554,6 +557,9 @@ function renderTimeline() {
     if (!wppNumber) wppNumber = safeContato.replace(/\D/g, ''); // fallback
     
     const safeObs = escapeHTML(m.descricao || m.obs_despacho || '');
+    
+    const isConcluido = safeStatus === 'Concluído';
+    const editable = isConcluido ? 'false' : 'true';
 
     const card = document.createElement('div');
     card.className = `card st-${statusClass}`;
@@ -575,7 +581,7 @@ function renderTimeline() {
         <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
         <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
         <li>💼 Atendimento: <b>${escapeHTML(m.tipo_atendimento || '—')}</b></li>
-        <li>👷 Equipe designada: <span class="editable-inline" contenteditable="true" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
+        <li>👷 Equipe designada: <span class="editable-inline" contenteditable="${editable}" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
       </ul>
       
       ${safeEndereco || wppNumber ? `<div class="card-field-actions">
@@ -583,26 +589,27 @@ function renderTimeline() {
         ${wppNumber ? `<button class="btn-action wpp-btn" onclick="window.open('https://api.whatsapp.com/send?phone=55${wppNumber}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
       </div>` : ''}
 
-      <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="true" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
+      <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="${editable}" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
       
       <div class="unified-fields-box">
         <div class="box-title">Andamento do Atendimento</div>
-        <div class="editable-field" data-label="Em Deslocamento (Prev. Chegada)" data-empty="-" contenteditable="true" data-id="${m.id}" data-field="prev_chegada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_chegada || '')}</div>
-        <div class="editable-field" data-label="Em Atendimento (Prev. Testes)" data-empty="-" contenteditable="true" data-id="${m.id}" data-field="prev_testes" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_testes || '')}</div>
-        <div class="editable-field" data-label="Finalizado" data-empty="-" contenteditable="true" data-id="${m.id}" data-field="horario_finalizado" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.horario_finalizado || '')}</div>
+        <div class="editable-field" data-label="Em Deslocamento (Prev. Chegada)" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="prev_chegada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_chegada || '')}</div>
+        <div class="editable-field" data-label="Em Atendimento (Prev. Testes)" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="prev_testes" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_testes || '')}</div>
+        <div class="editable-field" data-label="Finalizado" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="horario_finalizado" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.horario_finalizado || '')}</div>
       </div>
 
       <div class="unified-fields-box">
         <div class="box-title">Execução e Resolução</div>
-        <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="true" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
-        <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="true" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
-        <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="true" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
+        <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="${editable}" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
+        <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="${editable}" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
+        <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="${editable}" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
       </div>
       
+      ${isConcluido ? '' : `
       <div class="card-actions">
         <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
         <button class="icon-btn" onclick="window.deleteManutencao('${m.id}')">Excluir</button>
-      </div>
+      </div>`}
     `;
     container.appendChild(card);
   });
@@ -611,6 +618,8 @@ function renderTimeline() {
 window.editManutencao = (id) => {
   const record = manutencoes.find(m => m.id === id);
   if (!record) return;
+
+  const isConcluido = record.status === 'Concluído';
 
   document.getElementById('m_id').value = record.id;
   document.getElementById('m_protocolo').value = record.protocolo || '';
@@ -626,6 +635,14 @@ window.editManutencao = (id) => {
   document.getElementById('m_obs_despacho').value = record.obs_despacho || '';
   document.getElementById('m_descricao').value = record.descricao || '';
   document.getElementById('m_status').value = record.status || 'Pendente';
+
+  const form = document.getElementById('form-man');
+  const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
+  inputs.forEach(input => input.disabled = isConcluido);
+
+  if (isConcluido) {
+    alert("Esta manutenção está Concluída e não pode mais ser alterada.");
+  }
 
   // Open form if mobile
   if (window.innerWidth <= 1024) {
@@ -649,6 +666,11 @@ window.deleteManutencao = async (id) => {
 window.saveField = async (id, fieldName, val) => {
   const record = manutencoes.find(m => m.id === id);
   if (!record || record[fieldName] === val) return;
+
+  if (record.status === 'Concluído') {
+    renderTimeline(); // reverse visually
+    return;
+  }
 
   const oldVal = record[fieldName];
   record[fieldName] = val;
