@@ -60,6 +60,14 @@ function setupListeners() {
         record.created_at = new Date().toISOString();
       }
 
+      if (record.protocolo) {
+        const duplicado = manutencoes.find(m => m.protocolo === record.protocolo && m.id !== record.id);
+        if (duplicado) {
+          alert('Erro: Já existe uma manutenção cadastrada com este protocolo.');
+          return;
+        }
+      }
+
       const btn = form.querySelector('button[type="submit"]');
       const originalText = btn.textContent;
       btn.textContent = 'Salvando...';
@@ -346,6 +354,11 @@ async function parseOCRText(text) {
       const dataHora = match[1];
       const protocolo = match[2];
       const resto = match[3];
+
+      // Ignora chamados que já foram cadastrados ou que estão duplicados no próprio lote
+      if (manutencoes.find(m => m.protocolo === protocolo) || registrosLote.find(r => r.protocolo === protocolo)) {
+        continue;
+      }
 
       let cliente = resto;
       let endereco = "";
