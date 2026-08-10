@@ -194,7 +194,14 @@ function setupOCR() {
   });
 }
 
+let isProcessingOCR = false;
+
 function handlePaste(e) {
+  if (isProcessingOCR) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
   if (!e.clipboardData) return;
   const items = e.clipboardData.items;
   let hasImage = false;
@@ -209,6 +216,7 @@ function handlePaste(e) {
   if (hasImage) {
     // SEMPRE prevenir o paste nativo — senão o navegador insere a imagem gigante no contenteditable
     e.preventDefault();
+    e.stopPropagation();
     processItems(items);
   } else {
     // Não é imagem
@@ -223,6 +231,7 @@ function handlePaste(e) {
 }
 
 function processItems(items) {
+  isProcessingOCR = true;
   const pasteZone = document.getElementById('imagePasteZone');
   if (pasteZone) {
     // Remove qualquer imagem ou texto que o navegador tenha colado nativamente no contenteditable
@@ -335,6 +344,8 @@ async function performOCR(imageSrc) {
     const errMsg = err.message ? err.message : JSON.stringify(err);
     status.textContent = "Erro OCR (Nova Versão): " + errMsg;
     progressBarContainer.style.display = 'none';
+  } finally {
+    isProcessingOCR = false;
   }
 }
 
