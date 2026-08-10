@@ -379,24 +379,32 @@ async function parseOCRText(text) {
   const linhas = text.split('\n');
   const registrosLote = [];
 
-  // Padrão de linha da tabela: Data Hora Protocolo ... (tolerante a erros comuns do OCR como trocar / por |, 1, l, I ou espaço nos horários)
-  const bulkRowRegex = /(?:^|\s)(\d{2})[\/\|\-1lI](\d{2})[\/\|\-1lI](\d{4})\s+(\d{2})[:;.\s](\d{2})[:;.\s](\d{2})\s+(\d{6,15})\s+(.+)$/;
+  // Padrão de linha da tabela: Data Hora Protocolo ... (muito tolerante: aceita espaços a mais, letras no lugar de números, e separadores diversos)
+  const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{2})\s*[\/\|\-1lI]\s*([A-Za-z0-9]{2})\s*[\/\|\-1lI]\s*([A-Za-z0-9]{4})\s+([A-Za-z0-9]{2})\s*[:;.\s]\s*([A-Za-z0-9]{2})\s*[:;.\s]\s*([A-Za-z0-9]{2})\s+([A-Za-z0-9]{6,15})\s+(.+)$/;
   let totalTabelaDetectados = 0;
+
+  function cleanNum(str) {
+    return String(str).replace(/[Oo]/g, '0')
+                      .replace(/[Il]/g, '1')
+                      .replace(/[Ss]/g, '5')
+                      .replace(/[Zz]/g, '2')
+                      .replace(/[B]/g, '8');
+  }
 
   for (let linha of linhas) {
     const limpa = linha.trim().replace(/\s+/g, ' ');
     const match = limpa.match(bulkRowRegex);
     if (match) {
       totalTabelaDetectados++;
-      const dataHora = `${match[1]}/${match[2]}/${match[3]} ${match[4]}:${match[5]}:${match[6]}`;
-      const protocolo = String(match[7]).trim();
+      const dataHora = `${cleanNum(match[1])}/${cleanNum(match[2])}/${cleanNum(match[3])} ${cleanNum(match[4])}:${cleanNum(match[5])}:${cleanNum(match[6])}`;
+      const protocolo = String(cleanNum(match[7])).trim();
       let resto = match[8];
 
       let contrato = "";
-      // Procura número de 4 a 12 dígitos no início do restante da linha (Contrato)
-      const contratoMatch = resto.match(/^(\d{4,12})\s+(.+)/);
+      // Procura número de 4 a 12 dígitos (ou letras parecidas) no início do restante da linha (Contrato)
+      const contratoMatch = resto.match(/^([A-Za-z0-9]{4,12})\s+(.+)/);
       if (contratoMatch) {
-        contrato = contratoMatch[1];
+        contrato = cleanNum(contratoMatch[1]);
         resto = contratoMatch[2];
       }
 
