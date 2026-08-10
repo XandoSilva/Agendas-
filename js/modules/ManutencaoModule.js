@@ -429,6 +429,15 @@ async function parseOCRText(text) {
     
     const match = limpa.match(bulkRowRegex);
     if (match) {
+      const protocolo = String(cleanNum(match[7])).trim();
+      
+      // Validação rigorosa: um protocolo válido de tabela precisa ter pelo menos 6 números
+      const numProtocolo = protocolo.replace(/\D/g, '');
+      if (numProtocolo.length < 6) {
+        linhasFalhas.push(linha);
+        continue;
+      }
+
       totalTabelaDetectados++;
       const dd = cleanNum(match[1]).padStart(2, '0');
       const mm = cleanNum(match[2]).padStart(2, '0');
@@ -438,7 +447,6 @@ async function parseOCRText(text) {
       const mi = cleanNum(match[5]).padStart(2, '0');
       const ss = cleanNum(match[6]).padStart(2, '0');
       const dataHora = `${dd}/${mm}/${yy} ${hh}:${mi}:${ss}`;
-      const protocolo = String(cleanNum(match[7])).trim();
       let resto = match[8];
 
       let contrato = "";
