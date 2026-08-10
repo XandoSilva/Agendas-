@@ -376,13 +376,8 @@ async function parseOCRText(text) {
   console.log("OCR Result Text:", text);
   
   // 1. Tentar Bulk Mode (Tabela)
-  const linhas = text.split('\n');
+  const rawLinhas = text.split('\n');
   const registrosLote = [];
-
-  // Padrão de linha da tabela
-  const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{2})\s*[\/\|\-1lI]\s*([A-Za-z0-9]{2})\s*[\/\|\-1lI]\s*([A-Za-z0-9]{4})\s+([A-Za-z0-9]{2})\s*[:;.\s]\s*([A-Za-z0-9]{2})\s*[:;.\s]\s*([A-Za-z0-9]{2})\s+([A-Za-z0-9]{6,15})\s+(.+)$/;
-  let totalTabelaDetectados = 0;
-  const linhasFalhas = [];
 
   function cleanNum(str) {
     return String(str).replace(/[Oo]/g, '0')
@@ -392,26 +387,56 @@ async function parseOCRText(text) {
                       .replace(/[B]/g, '8');
   }
 
-  for (let linha of linhas) {
-    const limpa = linha.trim().replace(/\s+/g, ' ');
-    if (limpa.length < 15) continue; // Pula linhas vazias ou muito curtas (cabeçalhos)
+  // Pré-processamento: detecta se uma linha começa com data; se não, junta com a anterior
+  // Isso resolve o problema do Tesseract quebrar linhas longas de tabela em várias
+  const dateStartRegex = /^\s*\d{1,2}\s*[\/\|\.\-]\s*\d{1,2}\s*[\/\|\.\-]\s*\d{2,4}/;
+  const linhasJuntas = [];
+
+  for (const rawLine of rawLinhas) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) continue;
+
+    if (dateStartRegex.test(trimmed) || linhasJuntas.length === 0) {
+      linhasJuntas.push(trimmed);
+    } else {
+      // Linha não começa com data → é continuação da linha anterior
+      linhasJuntas[linhasJuntas.length - 1] += ' ' + trimmed;
+    }
+  }
+
+  console.log("Linhas juntas para análise:", linhasJuntas);
+
+  // Regex tolerante a erros de OCR em data/hora/protocolo
+  const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{2,4})\s+([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})\s+([A-Za-z0-9]{6,15})\s+(.+)$/;
+  let totalTabelaDetectados = 0;
+  const linhasFalhas = [];
+
+  for (let linha of linhasJuntas) {
+    const limpa = linha.replace(/\s+/g, ' ').trim();
+    if (limpa.length < 15) continue;
     
     const match = limpa.match(bulkRowRegex);
     if (match) {
       totalTabelaDetectados++;
-      const dataHora = `${cleanNum(match[1])}/${cleanNum(match[2])}/${cleanNum(match[3])} ${cleanNum(match[4])}:${cleanNum(match[5])}:${cleanNum(match[6])}`;
+      const dd = cleanNum(match[1]).padStart(2, '0');
+      const mm = cleanNum(match[2]).padStart(2, '0');
+      let yy = cleanNum(match[3]);
+      if (yy.length === 2) yy = '20' + yy;
+      const hh = cleanNum(match[4]).padStart(2, '0');
+      const mi = cleanNum(match[5]).padStart(2, '0');
+      const ss = cleanNum(match[6]).padStart(2, '0');
+      const dataHora = `${dd}/${mm}/${yy} ${hh}:${mi}:${ss}`;
       const protocolo = String(cleanNum(match[7])).trim();
       let resto = match[8];
 
       let contrato = "";
-      // Procura número de 4 a 12 dígitos (ou letras parecidas) no início do restante da linha (Contrato)
       const contratoMatch = resto.match(/^([A-Za-z0-9]{4,12})\s+(.+)/);
       if (contratoMatch) {
         contrato = cleanNum(contratoMatch[1]);
         resto = contratoMatch[2];
       }
 
-      // Ignora chamados que já foram cadastrados ou que estão duplicados no próprio lote
+      // Ignora chamados duplicados (já no banco ou no próprio lote)
       if (manutencoes.find(m => String(m.protocolo || '').trim() === protocolo) || registrosLote.find(r => String(r.protocolo || '').trim() === protocolo)) {
         continue;
       }
@@ -429,9 +454,7 @@ async function parseOCRText(text) {
       // Tenta converter para ISO Date (Considerando timezone BR)
       let isoDate = new Date().toISOString();
       try {
-        const [dataPart, horaPart] = dataHora.split(' ');
-        const [d, m, y] = dataPart.split('/');
-        const parsed = new Date(`${y}-${m}-${d}T${horaPart}-03:00`);
+        const parsed = new Date(`${yy}-${mm}-${dd}T${hh}:${mi}:${ss}-03:00`);
         if (!isNaN(parsed.getTime())) isoDate = parsed.toISOString();
       } catch (e) {}
 
@@ -450,9 +473,11 @@ async function parseOCRText(text) {
         obs_despacho: ''
       });
     } else {
-        linhasFalhas.push(limpa);
+      linhasFalhas.push(limpa);
     }
   }
+
+  console.log("Resultado OCR:", { totalDetectados: totalTabelaDetectados, importados: registrosLote.length, falhas: linhasFalhas });
 
   if (registrosLote.length > 0) {
     console.log("Modo lote ativado!", registrosLote);
@@ -472,15 +497,17 @@ async function parseOCRText(text) {
     clearOCRPreview();
     
     let ignorados = totalTabelaDetectados - registrosLote.length;
-    let msg = `Sucesso! ${registrosLote.length} manutenções foram importadas da tabela e criadas.\nElas estão listadas como 'Pendente'.`;
+    let msg = `✅ ${registrosLote.length} manutenções importadas! (VERSAO v3)`;
     
     if (ignorados > 0) {
-      msg += `\n\n(Aviso: ${ignorados} chamados foram ignorados pois já constavam no sistema)`;
+      msg += `\n⏭️ ${ignorados} ignorados (já estavam no sistema)`;
     }
     
     if (linhasFalhas.length > 0) {
-      msg += `\n\nDEBUG - ${linhasFalhas.length} linhas não foram reconhecidas pelo robô:\n` + linhasFalhas.slice(0, 5).join('\n');
+      msg += `\n\n⚠️ ${linhasFalhas.length} linhas não reconhecidas:\n` + linhasFalhas.slice(0, 8).join('\n');
     }
+    
+    msg += `\n\n📊 Total linhas juntas: ${linhasJuntas.length} | Detectadas: ${totalTabelaDetectados} | Falhas: ${linhasFalhas.length}`;
     
     alert(msg);
     return;
