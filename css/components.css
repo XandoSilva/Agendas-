@@ -397,6 +397,10 @@ textarea#pasteBox:focus {
 .card.st-Reagendada { border-left-color: var(--muted-2); opacity: .7; }
 .card.st-EmAndamento { border-left-color: #60a5fa; }
 .card.st-Concluído { border-left-color: var(--green); }
+.card.st-Designado { border-left-color: #3b82f6; }
+.card.st-EmDeslocamento { border-left-color: #8b5cf6; }
+.card.st-Atuando { border-left-color: #f97316; }
+.card.st-Finalizado { border-left-color: var(--green); }
 
 .card-top {
   display: flex;
@@ -454,6 +458,26 @@ textarea#pasteBox:focus {
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 .tag-status.st-Concluído {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.tag-status.st-Designado {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.tag-status.st-EmDeslocamento {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+.tag-status.st-Atuando {
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+.tag-status.st-Finalizado {
   background: rgba(34, 197, 94, 0.12);
   color: var(--green);
   border: 1px solid rgba(34, 197, 94, 0.3);

@@ -549,8 +549,24 @@ function renderTimeline() {
     
     const safeObs = escapeHTML(m.descricao || m.obs_despacho || '');
     
-    const isConcluido = safeStatus === 'Concluído';
+    const isConcluido = safeStatus === 'Concluído' || safeStatus === 'Finalizado';
     const editable = isConcluido ? 'false' : 'true';
+
+    let statusHtml = '';
+    if (isConcluido) {
+      statusHtml = `<span class="tag tag-status st-${statusClass}">${safeStatus}</span>`;
+    } else {
+      statusHtml = `
+        <select class="tag tag-status st-${statusClass}" style="cursor:pointer; border:none; outline:none; font-weight:bold;" onchange="window.updateManutencaoStatus('${m.id}', this.value)">
+          <option value="Pendente" ${safeStatus === 'Pendente' ? 'selected' : ''}>Pendente</option>
+          <option value="Designado" ${safeStatus === 'Designado' ? 'selected' : ''}>Designado</option>
+          <option value="Em Deslocamento" ${safeStatus === 'Em Deslocamento' ? 'selected' : ''}>Em Deslocamento</option>
+          <option value="Atuando" ${safeStatus === 'Atuando' ? 'selected' : ''}>Atuando</option>
+          <option value="Finalizado" ${safeStatus === 'Finalizado' ? 'selected' : ''}>Finalizado</option>
+          <option value="Cancelado" ${safeStatus === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+        </select>
+      `;
+    }
 
     const card = document.createElement('div');
     card.className = `card st-${statusClass}`;
@@ -558,7 +574,7 @@ function renderTimeline() {
     card.innerHTML = `
       <div class="tag-row">
         <span class="tag tag-tipo">${safeTipo}</span>
-        <span class="tag tag-status st-${statusClass}">${safeStatus}</span>
+        ${statusHtml}
       </div>
       
       <ul class="info-list">
@@ -610,7 +626,7 @@ window.editManutencao = (id) => {
   const record = manutencoes.find(m => m.id === id);
   if (!record) return;
 
-  const isConcluido = record.status === 'Concluído';
+  const isConcluido = record.status === 'Concluído' || record.status === 'Finalizado';
 
   document.getElementById('m_id').value = record.id;
   document.getElementById('m_protocolo').value = record.protocolo || '';
@@ -632,7 +648,7 @@ window.editManutencao = (id) => {
   inputs.forEach(input => input.disabled = isConcluido);
 
   if (isConcluido) {
-    alert("Esta manutenção está Concluída e não pode mais ser alterada.");
+    alert("Esta manutenção está Concluída/Finalizada e não pode mais ser alterada.");
   }
 
   // Retornar à aba de lista no mobile (se aplicável)
@@ -687,3 +703,16 @@ window.saveField = async (id, fieldName, val) => {
     renderTimeline();
   }
 };
+window.updateManutencaoStatus = async (id, newStatus) => {
+  const record = manutencoes.find(m => m.id === id);
+  if (!record) return;
+  record.status = newStatus;
+  
+  try {
+    await persistEntry(TABLE_NAME, record, false, false, manutencoes);
+    renderTimeline();
+  } catch(e) {
+    console.error(e);
+    alert('Erro ao atualizar status');
+  }
+}
