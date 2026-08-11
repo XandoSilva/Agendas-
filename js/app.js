@@ -45,7 +45,7 @@ function switchModule(moduleName) {
   if (moduleName === 'agenda-ativacao') setAgendaContext('Ativação');
 
   // Atualizar layout Mobile
-  if (window.innerWidth <= 1024) {
+  if (window.innerWidth <= 768) {
     if (moduleName.startsWith('agenda')) {
       document.body.className = 'tab-agenda';
     } else if (moduleName === 'relatorios') {

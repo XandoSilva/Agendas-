@@ -2,10 +2,19 @@
  * Módulo Parser de mensagens do Teams (com suporte a HTML) e planilhas CSV.
  */
 
+/**
+ * Gera um ID único simples baseado no tempo atual e valores aleatórios.
+ * @returns {string} ID único
+ */
 export function uid() {
   return 'e' + Date.now() + Math.random().toString(36).slice(2, 7);
 }
 
+/**
+ * Realiza o parse de uma string CSV para um array bidimensional.
+ * @param {string} text - O conteúdo CSV bruto.
+ * @returns {string[][]} Array contendo as linhas e colunas do CSV.
+ */
 export function parseCSV(text) {
   let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
   for (l of text) {
@@ -57,21 +66,184 @@ function normalizePhone(raw) {
   return raw.trim();
 }
 
-export function extractDataSingle(raw) {
-  if (!raw || !raw.trim()) return null;
+/**
+ * Extrai dados massivamente (Print 1 - Tabela)
+ */
+function extractManutencaoBulk(text) {
+  const lines = text.split('\n');
+  const records = [];
+  const failures = [];
+  let totalLines = 0;
+  
+  const cleanNum = (str) => String(str).replace(/[Oo]/g, '0').replace(/[Il]/g, '1').replace(/[Ss]/g, '5').replace(/[Zz]/g, '2').replace(/[B]/g, '8');
+
+  // Data e Hora + Protocolo marcam o início de uma linha válida. O .*? é não-guloso e lida com qualquer lixo entre as colunas
+  const dateAnchor = /^\s*(\d{2}[\/\.]\d{2}[\/\.]\d{4})\s*.*?\s*(\d{2}[:;.]\d{2}[:;.]\d{2})\s*.*?\s*([A-Za-z0-9]{6,15})\s+(.*)$/i;
+  
+  const combinedLines = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.match(/^\s*\d{2}[\/\.]\d{2}[\/\.]\d{4}/) || combinedLines.length === 0) {
+      combinedLines.push(trimmed);
+    } else {
+      combinedLines[combinedLines.length - 1] += ' ' + trimmed;
+    }
+  }
+
+  for (let line of combinedLines) {
+    totalLines++;
+    const match = line.match(dateAnchor);
+    if (!match) {
+      if (line.length > 20 && !/Dt Abertura|Protocolo|Contrato/i.test(line)) {
+        failures.push(line);
+      }
+      continue;
+    }
+
+    const dataOriginal = match[1];
+    const horaOriginal = match[2];
+    const protocolo = cleanNum(match[3]).replace(/\D/g, '');
+    let resto = match[4].trim();
+
+    if (protocolo.length < 6) {
+      failures.push(line);
+      continue;
+    }
+
+    const [d, m, y] = dataOriginal.replace(/\./g, '/').split('/');
+    const dataIso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    const horaLimpa = horaOriginal.replace(/[:;.]/g, ':');
+
+    let contrato = '';
+    const contratoMatch = resto.match(/^([0-9]{4,15})\s+(.*)$/);
+    if (contratoMatch) {
+      contrato = contratoMatch[1];
+      resto = contratoMatch[2];
+    }
+    
+    let cliente = resto;
+    let endereco = '';
+    const addressMatch = resto.match(/\s+(RUA|AVENIDA|AV\.|ESTRADA|RODOVIA|PRA[CÇ]A|ALAMEDA|ROD\.|R\.|AV|CONDOMINIO)\s+/i);
+    if (addressMatch) {
+      cliente = resto.substring(0, addressMatch.index).trim();
+      endereco = resto.substring(addressMatch.index).trim();
+    }
+
+    records.push({
+      protocolo,
+      contrato,
+      cliente,
+      endereco,
+      created_at: `${dataIso}T${horaLimpa}-03:00`,
+      status: 'Pendente',
+      descricao: "Importado via tabela OCR",
+    });
+  }
+
+  return { type: 'BULK', records, stats: { totalLines, failures } };
+}
+
+/**
+ * Extrai dados únicos e detalhados (Print 2 - Janela de Detalhes)
+ */
+function extractManutencaoSingle(text) {
+  const cleanText = text.replace(/\s+/g, ' ');
+  const extract = (regex) => {
+    const match = cleanText.match(regex);
+    return match ? match[1].trim() : '';
+  };
+
+  let protocolo = extract(/Protocolo[:\s]+([A-Z0-9]+)/i);
+  if (protocolo) protocolo = protocolo.replace(/\D/g, '');
+  if (!protocolo || protocolo.length < 6) return null;
+
+  let contrato = extract(/(?:Nro\.?\s*Contrato|Contrato)[:\s]+(\d+)/i);
+  let cliente = extract(/(?:Nome\s*Cliente|Raz[ãa]o\s*Social)[:\s]+(.*?)(?=\s+(?:Reincid[eê]ncia|Nro\.?\s*Contrato|Contato|Telefone|Tel\.|Status|Origem|End\.|Endere[cç]o|$))/i);
+  let endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+(?:CEP|Área|Motivo|Sub|Atividade|Descri[cç]ão|Procedimentos|$))/i);
+  let contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+(?:Telefone|Tel\.|Status|Origem|End\.|Endere[cç]o|$))/i);
+  
+  let tel1 = extract(/(?:Telefone\s*1|Tel\.?\s*1)[:\s]+(.*?)(?=\s+(?:Tel\.\s*2|Status|Origem|End\.|Endere[cç]o|$))/i);
+  let tel2 = extract(/(?:Telefone\s*2|Tel\.?\s*2)[:\s]+(.*?)(?=\s+(?:Status|Origem|End\.|Endere[cç]o|$))/i);
+  let telefones = [tel1, tel2].filter(Boolean).map(t => normalizePhone(t)).join(' / ');
+
+  let tipo_reclamacao = extract(/Motivo Abertura[:\s]+(.*?)(?=\s+Área|$)/i);
+  let tipo_atendimento = extract(/Atividade[:\s]+(.*?)(?=\s+Descri[cç][ãa]o|Detalhes|Procedimentos|Última|$)/i);
+  let descricao = extract(/Descri[cç][ãa]o[:\s]+(.*?)(?=\s+Última|\s+Procedimentos|\s+EMPREITEIRA|$)/i);
+  let data_hora = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
+  let empreiteira = extract(/((?:VERO|SIMASTEL).*?)(?=\s+Atividade|\s+Agendamento|$)/i);
+
+  if (cliente) {
+    if (cliente.includes('-')) cliente = cliente.substring(cliente.indexOf('-') + 1).trim();
+    cliente = cliente.replace(/lacre.*$/ig, '').trim();
+  }
+  if (contato) contato = contato.replace(/\(Nome\):?\s*\|?/ig, '').trim();
+  if (endereco) endereco = endereco.replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
+
+  let created_at = '';
+  if (data_hora) {
+    const [dt, hr] = data_hora.split(' ');
+    const [d, m, y] = dt.split('/');
+    created_at = `${y}-${m}-${d}T${hr}:00-03:00`;
+  }
+
+  return {
+    type: 'SINGLE',
+    records: [{
+      protocolo,
+      contrato,
+      cliente,
+      endereco,
+      contato,
+      telefones,
+      tipo_reclamacao,
+      tipo_atendimento,
+      descricao,
+      empreiteira,
+      created_at
+    }]
+  };
+}
+
+/**
+ * Função principal para identificar o tipo de print e extrair os dados.
+ * @param {string} raw - O texto bruto do OCR.
+ */
+export function parseManutencaoOCR(raw) {
+  if (!raw || !raw.trim()) return { type: 'ERROR', records: [], message: 'Texto vazio.' };
   const safeText = cleanHtmlText(raw);
-  const cleanRaw = safeText.replace(/\*/g, '');
+
+  // Determina se é o Print 2 (detalhes) baseado em palavras chave
+  if (/Nome Cliente:|Nro\.? Contrato:|Motivo Abertura:|Atividade:/i.test(safeText)) {
+    const single = extractManutencaoSingle(safeText);
+    if (single) return single;
+  }
+  
+  // Fallback para Print 1 (Bulk)
+  const bulk = extractManutencaoBulk(safeText);
+  if (bulk.records.length > 0) return bulk;
+  
+  return { type: 'ERROR', records: [], message: 'Não foi possível reconhecer chamados válidos no formato esperado (Tabela ou Detalhes).' };
+}
+
+/**
+ * Funções Legadas da Agenda (Mantidas para compatibilidade com o módulo de Agenda)
+ */
+
+export function extractDataSingle(raw){
+  if(!raw || !raw.trim()) return null;
+  const cleanRaw = raw.replace(/\*/g, '');
   const get = (regex) => { const m = cleanRaw.match(regex); return m ? m[1].trim() : ''; };
 
   let tipo = 'Outro';
-  if (/VISTORIA/i.test(cleanRaw)) tipo = 'Vistoria';
-  if (/PASSAGEM DE CABO/i.test(cleanRaw)) tipo = 'Passagem de Cabo';
-  if (/ATIVA[ÇC][ÃA]O/i.test(cleanRaw)) tipo = 'Ativação';
+  if(/VISTORIA/i.test(cleanRaw)) tipo = 'Vistoria';
+  if(/PASSAGEM DE CABO/i.test(cleanRaw)) tipo = 'Passagem de Cabo';
+  if(/ATIVA[ÇC][ÃA]O/i.test(cleanRaw)) tipo = 'Ativação';
 
   let status = 'Confirmada';
-  if (/REAGENDAD/i.test(cleanRaw)) status = 'Reagendada';
-  else if (/CANCELAD/i.test(cleanRaw)) status = 'Cancelada';
-  else if (/N[ÃA]O FOI LIBERAD|SEM LIBERA[ÇC][ÃA]O|EM PROCESSO DE APROVA/i.test(cleanRaw)) status = 'Pendente';
+  if(/REAGENDAD/i.test(cleanRaw)) status = 'Reagendada';
+  else if(/CANCELAD/i.test(cleanRaw)) status = 'Cancelada';
+  else if(/N[ÃA]O FOI LIBERAD|SEM LIBERA[ÇC][ÃA]O|EM PROCESSO DE APROVA/i.test(cleanRaw)) status = 'Pendente';
 
   let contrato = get(/CONTRATO:?\s*([0-9]+)/i);
   let cliente = get(/CLIENTE:?\s*(.*?)(?=\n|ENDERE[ÇC]O|$)/i);
@@ -95,83 +267,57 @@ export function extractDataSingle(raw) {
 
   let acompanhante = get(/QUEM ACOMPANHAR[ÁA](?:\s+A\s+EQUIPE\s+SER[ÁA])?:?\s*(.*?)(?=\n|T[ÉE]CNICO|CONFORME|OBS|$)/i);
   
-  // --- Extração de datas (suporte a múltiplas: "13/08 E/OU 14/08") ---
-  const dataLineMatch = cleanRaw.match(/(?:PARA|DATA(?: DE ACESSO)?|DIA)\s*:?\s*([^\n]*\d{1,2}[\/\.]\d{1,2})/i);
-  const allDates = [];
-
-  if (dataLineMatch) {
-    const segment = dataLineMatch[1];
-    const dateTokens = segment.match(/\d{1,2}[\/\.]\d{1,2}/g);
-    if (dateTokens) {
-      const year = new Date().getFullYear();
-      for (const tok of dateTokens) {
-        const [d, m] = tok.replace('.', '/').split('/');
-        allDates.push(`${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
-      }
-    }
+  let dataStr = get(/PARA\s+(\d{1,2}[\/\.]\d{1,2})/i)
+    || get(/DATA(?: DE ACESSO)?:?\s*(\d{1,2}[\/\.]\d{1,2})/i)
+    || get(/DIA\s+(\d{1,2}[\/\.]\d{1,2})/i);
+  let f_data = '';
+  if(dataStr){
+    const [d,m] = dataStr.replace('.','/').split('/');
+    const year = new Date().getFullYear();
+    f_data = `${year}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
-
-  let f_data = allDates.length > 0 ? allDates[0] : '';
 
   let hora = get(/HORA?:?\s*(\d{1,2}[:hH]\d{0,2}(?:\s*(?:[aàAÀ]s|-|e)\s*\d{1,2}[:hH]\d{0,2})?)/i) 
           || get(/(?:^|\s)[aàAÀ]S\s*(\d{1,2}[:hH]\d{0,2}(?:\s*(?:[aàAÀ]s|-|e)\s*\d{1,2}[:hH]\d{0,2})?)/i) 
           || get(/HOR[ÁA]RIO:?\s*(\d{1,2}[:hH]?\d{0,2})/i);
-  if (/EM HC|HOR[ÁA]RIO COMERCIAL/i.test(cleanRaw) && !hora) hora = 'Horário Comercial';
+  if(/EM HC|HOR[ÁA]RIO COMERCIAL/i.test(cleanRaw) && !hora) hora = 'Horário Comercial';
   
-  if (hora && hora.toLowerCase() !== 'horário comercial') { 
-    hora = hora.replace(/H/gi, ':').replace(/:(?!\d)/g, ':00').toUpperCase(); 
-  }
+  if(hora) { hora = hora.replace(/H/gi,':').replace(/:(?!\d)/g,':00').toUpperCase(); }
 
   let contato = get(/CONTATO\s*:?\s*([^\n]+)/i);
-  if (!contato) {
-    // Busca qualquer telefone no texto: (XX) XXXXX-XXXX, XX XXXXX-XXXX, etc.
-    const contatoM = cleanRaw.match(/(\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4})/);
-    if (contatoM) contato = contatoM[1];
-  }
-  contato = normalizePhone(contato);
+  const contatoM = cleanRaw.match(/(\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4})/);
+  if (!contato && contatoM) { contato = contatoM[1]; }
 
   const obsBits = [];
   const osM = cleanRaw.match(/O\.?S\.?\s*(?:AUTORIZADA|APROVADA)?:?\s*([0-9]+)/i);
-  if (osM) obsBits.push('OS: ' + osM[1]);
-  else if (/SEM NECESSIDADE DE OS/i.test(cleanRaw)) obsBits.push('Sem necessidade de OS');
+  if(osM) obsBits.push('OS: ' + osM[1]);
+  else if(/SEM NECESSIDADE DE OS/i.test(cleanRaw)) obsBits.push('Sem necessidade de OS');
   
   const empM = cleanRaw.match(/EMPREITEIRA\s*(?:DIRECIONADA)?:?\s*([^\n]+)/i);
-  if (empM) obsBits.push('Empreiteira: ' + empM[1].trim());
+  if(empM) obsBits.push('Empreiteira: ' + empM[1].trim());
   
   const tecM = cleanRaw.match(/T[ÉE]CNICO(?:\s*DA\s*TERJ)?:?\s*([^\n,]+)/i);
-  if (tecM) obsBits.push('Técnico: ' + tecM[1].trim());
+  if(tecM) obsBits.push('Técnico: ' + tecM[1].trim());
 
-  // Clean up cliente: remove leading numbering like "1.", "1 -", "01 - " etc
-  if (cliente) {
-    cliente = cliente.replace(/^\s*[\d\.\-\/]+\s*[-.]?\s*/, '').trim();
-  }
-
-  // Clean up contato: remove leading "(nome):" or "nome:"
-  if (contato) {
-    contato = contato.replace(/^\s*\(?Nome\)?\s*:\s*/i, '').trim();
-  }
-
-  return { tipo, status, data: f_data, allDates, hora, contrato, cliente, endereco, acompanhante, contato, obs: obsBits.join('\n') };
+  return { tipo, status, data: f_data, hora, contrato, cliente, endereco, acompanhante, contato, obs: obsBits.join('\n') };
 }
 
 export function extractData(raw) {
-  if (!raw || !raw.trim()) return [];
-  const safeRawText = cleanHtmlText(raw);
+  if(!raw || !raw.trim()) return [];
   const entries = [];
   let current = null;
   let currentTipo = 'Outro';
   
-  const lines = safeRawText.split('\n');
-  for (let line of lines) {
+  const lines = raw.split('\n');
+  for(let line of lines) {
     const cleanLine = line.trim().replace(/\*/g, '');
-    if (!cleanLine) continue;
+    if(!cleanLine) continue;
     
     if (cleanLine.match(/PASSAGEM DE CABO/i)) currentTipo = 'Passagem de Cabo';
     if (cleanLine.match(/VISTORIAS?/i)) currentTipo = 'Vistoria';
     if (cleanLine.match(/ATIVA[ÇC][ÃA]O/i)) currentTipo = 'Ativação';
     
-    const dataMatch = cleanLine.match(/📅\s*(\d{2})\/(\d{2})\/(\d{4})/)
-                   || cleanLine.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    const dataMatch = cleanLine.match(/📅\s*(\d{2})\/(\d{2})\/(\d{4})/);
     if (dataMatch) {
       if (current && (current.contrato || current.cliente)) entries.push(current);
       current = {
@@ -186,9 +332,9 @@ export function extractData(raw) {
       if (cleanLine.match(/^Hora:\s*(.+)/i)) current.hora = cleanLine.match(/^Hora:\s*(.+)/i)[1];
       else if (cleanLine.match(/^Status:\s*(.+)/i)) {
         const st = cleanLine.match(/^Status:\s*(.+)/i)[1];
-        if (st.match(/Reagendad/i)) current.status = 'Reagendada';
-        else if (st.match(/Cancelad/i)) current.status = 'Cancelada';
-        else if (st.match(/Confirmad/i)) current.status = 'Confirmada';
+        if(st.match(/Reagendad/i)) current.status = 'Reagendada';
+        else if(st.match(/Cancelad/i)) current.status = 'Cancelada';
+        else if(st.match(/Confirmad/i)) current.status = 'Confirmada';
         else current.status = 'Pendente';
       }
       else if (cleanLine.match(/^Contrato:\s*(\d+)/i)) current.contrato = cleanLine.match(/^Contrato:\s*(\d+)/i)[1];
@@ -196,10 +342,10 @@ export function extractData(raw) {
       else if (cleanLine.match(/^Endere[çc]o:\s*(.+)/i)) current.endereco = cleanLine.match(/^Endere[çc]o:\s*(.+)/i)[1];
       else if (cleanLine.match(/^Acompanhamento.*?:\s*(.+)/i)) {
         const ac = cleanLine.match(/^Acompanhamento.*?:\s*(.+)/i)[1];
-        const fone = ac.match(/(\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4})/);
-        if (fone) {
-          current.contato = normalizePhone(fone[1]);
-          current.acompanhante = ac.replace(fone[0], '').replace(/[\(\)\-|]/g, '').trim();
+        const fone = ac.match(/(\(?\d{2}\)?\s?9?\d{4}[-\s]?\d{4})/);
+        if(fone) {
+          current.contato = fone[1];
+          current.acompanhante = ac.replace(fone[1], '').replace(/[\(\)\-]/g, '').trim().replace(/\|\s*$/, '').trim();
         } else {
           current.acompanhante = ac;
         }
@@ -214,22 +360,7 @@ export function extractData(raw) {
   
   if (entries.length === 0) {
      const single = extractDataSingle(raw);
-     if (single && (single.contrato || single.cliente)) {
-       // Se há múltiplas datas (ex: "13/08 E/OU 14/08"), cria uma entrada por data
-       if (single.allDates && single.allDates.length > 1) {
-         for (const dt of single.allDates) {
-           entries.push({ ...single, data: dt });
-         }
-       } else {
-         entries.push(single);
-       }
-     }
+     if(single && (single.contrato || single.cliente)) entries.push(single);
   }
-  
-  entries.forEach(e => {
-    if (Array.isArray(e.obs)) e.obs = e.obs.join('\n');
-    delete e.allDates; // propriedade interna, não precisa ir para o card
-  });
-  
   return entries;
 }

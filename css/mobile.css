@@ -45,9 +45,9 @@
 }
 
 /* ============================================================
-   TELAS ATÉ 1024px — TABLETS E CELULARES
+   TELAS ATÉ 768px — TABLETS E CELULARES
    ============================================================ */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
 
   /* ==== FONTE RAIZ ULTRA-GRANDE ==== */
   html {

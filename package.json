@@ -1,0 +1,32 @@
+{
+  "name": "agendas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XandoSilva/Agendas-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/XandoSilva/Agendas-/issues"
+  },
+  "homepage": "https://github.com/XandoSilva/Agendas-#readme",
+  "devDependencies": {
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

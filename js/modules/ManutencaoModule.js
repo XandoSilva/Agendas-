@@ -1,5 +1,6 @@
 import { fetchEntries, persistEntry } from '../services/api.js';
-import { escapeHTML } from '../utils/sanitizer.js';
+import { escapeHTML, sanitizeManutencoes } from '../utils/sanitizer.js';
+import { parseManutencaoOCR } from '../services/parser.js';
 
 let manutencoes = [];
 const TABLE_NAME = 'manutencoes';
@@ -27,31 +28,12 @@ async function loadManutencoes() {
   // Sort newest first
   manutencoes.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-  // Auto-cleanup: remove entradas com protocolo inválido (não-numérico) e duplicatas legadas
-  const vistos = new Set();
-  const paraDeletar = [];
-  manutencoes.forEach(m => {
-    if (m.protocolo) {
-      const p = String(m.protocolo).trim();
-      
-      // Remove protocolos inválidos (não-numéricos ou muito curtos, ex: "PREITEIRA")
-      if (!/^\d{6,}$/.test(p)) {
-        paraDeletar.push(m.id);
-        return;
-      }
-      
-      // Remove duplicatas (mesmo protocolo)
-      if (vistos.has(p)) {
-        paraDeletar.push(m.id);
-      } else {
-        vistos.add(p);
-      }
-    }
-  });
+  // Auto-cleanup: remove entradas com protocolo inválido e duplicatas
+  const { validos, paraDeletar } = sanitizeManutencoes(manutencoes);
 
   if (paraDeletar.length > 0) {
     console.log("Limpando duplicatas ocultas do banco de dados...", paraDeletar);
-    manutencoes = manutencoes.filter(m => !paraDeletar.includes(m.id));
+    manutencoes = validos;
     for (const id of paraDeletar) {
       persistEntry(TABLE_NAME, { id }, true, false, manutencoes).catch(e => console.error(e));
     }
@@ -88,7 +70,12 @@ function setupListeners() {
       };
 
       if (!idInput.value) {
-        record.created_at = new Date().toISOString();
+        const createdAtInput = document.getElementById('m_created_at');
+        if (createdAtInput && createdAtInput.value) {
+          record.created_at = createdAtInput.value;
+        } else {
+          record.created_at = new Date().toISOString();
+        }
       }
 
       if (record.protocolo) {
@@ -118,11 +105,12 @@ function setupListeners() {
         
         form.reset();
         idInput.value = '';
+        if (document.getElementById('m_created_at')) document.getElementById('m_created_at').value = '';
         clearOCRPreview();
         renderTimeline();
         
-        // Go back to list on mobile
-        if (window.innerWidth <= 1024) {
+        // Atualizar barra mobile caso mude
+        if (window.innerWidth <= 768) {
           const mobileListBtn = document.querySelector('.mobile-nav-item[data-tab="manutencao"]');
           if (mobileListBtn) mobileListBtn.click();
         }
@@ -140,6 +128,7 @@ function setupListeners() {
     btnClear.addEventListener('click', () => {
       form.reset();
       document.getElementById('m_id').value = '';
+      if (document.getElementById('m_created_at')) document.getElementById('m_created_at').value = '';
       clearOCRPreview();
       
       const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
@@ -383,314 +372,115 @@ async function performOCR(imageSrc) {
 async function parseOCRText(text) {
   console.log("OCR Result Text:", text);
   
-  // 1. Tentar Bulk Mode (Tabela)
-  const rawLinhas = text.split('\n');
-  const registrosLote = [];
-
-  function cleanNum(str) {
-    return String(str).replace(/[Oo]/g, '0')
-                      .replace(/[Il]/g, '1')
-                      .replace(/[Ss]/g, '5')
-                      .replace(/[Zz]/g, '2')
-                      .replace(/[B]/g, '8');
+  const parsed = parseManutencaoOCR(text);
+  
+  if (parsed.type === 'ERROR') {
+    clearOCRPreview();
+    alert('❌ ' + parsed.message);
+    return;
   }
 
-  // Pré-processamento: detecta se uma linha começa com data; se não, junta com a anterior
-  // Isso resolve o problema do Tesseract quebrar linhas longas de tabela em várias
-  const dateStartRegex = /^\s*\d{1,2}\s*[\/\|\.\-]\s*\d{1,2}\s*[\/\|\.\-]\s*\d{2,4}/;
-  const linhasJuntas = [];
+  if (parsed.type === 'BULK') {
+    const registrosLote = parsed.records;
+    const stats = parsed.stats;
+    const importados = [];
 
-  for (const rawLine of rawLinhas) {
-    const trimmed = rawLine.trim();
-    if (!trimmed) continue;
-
-    if (dateStartRegex.test(trimmed) || linhasJuntas.length === 0) {
-      linhasJuntas.push(trimmed);
-    } else {
-      // Linha não começa com data → é continuação da linha anterior
-      linhasJuntas[linhasJuntas.length - 1] += ' ' + trimmed;
+    // Filter duplicates
+    for (const record of registrosLote) {
+      if (!manutencoes.find(m => String(m.protocolo || '').trim() === record.protocolo)) {
+        record.id = 'man_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        importados.push(record);
+      }
     }
-  }
 
-  console.log("Linhas juntas para análise:", linhasJuntas);
+    if (importados.length > 0) {
+      const status = document.getElementById('ocrStatus');
+      if (status) status.textContent = `Salvando ${importados.length} registros...`;
 
-  // Regex tolerante a erros de OCR em data/hora/protocolo
-  // O [\s\-\u2014"\/|_.,:;>]* depois dos segundos engole lixo que o OCR insere entre horário e protocolo (—, ", /, etc)
-  const bulkRowRegex = /(?:^|\s)([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{1,2})\s*[\/\|\.\-]\s*([A-Za-z0-9]{2,4})\s+([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})\s*[:;.\s]\s*([A-Za-z0-9]{1,2})[\s\-\u2014"'\/|_.,:;>]*\s*([A-Za-z0-9]{6,15})\s+(.+)$/;
-  let totalTabelaDetectados = 0;
-  const linhasFalhas = [];
-
-  for (let linha of linhasJuntas) {
-    const limpa = linha.replace(/\s+/g, ' ').trim();
-    if (limpa.length < 15) continue;
-    
-    // Pula a linha de cabeçalho da tabela
-    if (/protocolo/i.test(limpa) && /contrato|raz[ãa]o|abertura/i.test(limpa)) continue;
-    
-    const match = limpa.match(bulkRowRegex);
-    if (match) {
-      const protocolo = String(cleanNum(match[7])).trim();
+      for (let i = importados.length - 1; i >= 0; i--) {
+        const record = importados[i];
+        manutencoes.unshift(record);
+        await persistEntry(TABLE_NAME, record, false, false, manutencoes);
+      }
       
-      // Validação rigorosa: um protocolo válido de tabela precisa ter pelo menos 6 números
-      const numProtocolo = protocolo.replace(/\D/g, '');
-      if (numProtocolo.length < 6) {
-        linhasFalhas.push(linha);
-        continue;
-      }
-
-      totalTabelaDetectados++;
-      const dd = cleanNum(match[1]).padStart(2, '0');
-      const mm = cleanNum(match[2]).padStart(2, '0');
-      let yy = cleanNum(match[3]);
-      if (yy.length === 2) yy = '20' + yy;
-      const hh = cleanNum(match[4]).padStart(2, '0');
-      const mi = cleanNum(match[5]).padStart(2, '0');
-      const ss = cleanNum(match[6]).padStart(2, '0');
-      const dataHora = `${dd}/${mm}/${yy} ${hh}:${mi}:${ss}`;
-      let resto = match[8];
-
-      let contrato = "";
-      const contratoMatch = resto.match(/^([A-Za-z0-9]{4,12})\s+(.+)/);
-      if (contratoMatch) {
-        contrato = cleanNum(contratoMatch[1]);
-        resto = contratoMatch[2];
-      }
-
-      // Ignora chamados duplicados (já no banco ou no próprio lote)
-      if (manutencoes.find(m => String(m.protocolo || '').trim() === protocolo) || registrosLote.find(r => String(r.protocolo || '').trim() === protocolo)) {
-        continue;
-      }
-
-      let cliente = resto;
-      let endereco = "";
-
-      const addressMatch = resto.match(/\s+(RUA|AVENIDA|AV\.|ESTRADA|RODOVIA|PRA[CÇ]A|ALAMEDA|ROD\.|R\.|AV)\s+/i);
-      if (addressMatch) {
-        const idx = addressMatch.index;
-        cliente = resto.substring(0, idx).trim();
-        endereco = resto.substring(idx).trim();
-      }
-
-      // Tenta converter para ISO Date (Considerando timezone BR)
-      let isoDate = new Date().toISOString();
-      try {
-        const parsed = new Date(`${yy}-${mm}-${dd}T${hh}:${mi}:${ss}-03:00`);
-        if (!isNaN(parsed.getTime())) isoDate = parsed.toISOString();
-      } catch (e) {}
-
-      registrosLote.push({
-        id: 'man_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
-        created_at: isoDate,
-        protocolo: protocolo,
-        contrato: contrato,
-        cliente: cliente,
-        endereco: endereco,
-        status: 'Pendente',
-        descricao: "Chamado importado em lote via OCR da tabela.",
-        equipe_designada: '',
-        empreiteira: '',
-        tipo_reclamacao: '',
-        obs_despacho: ''
-      });
-    } else {
-      linhasFalhas.push(limpa);
-    }
-  }
-
-  console.log("Resultado OCR:", { totalDetectados: totalTabelaDetectados, importados: registrosLote.length, falhas: linhasFalhas });
-
-  if (registrosLote.length > 0) {
-    console.log("Modo lote ativado!", registrosLote);
-    
-    // Mostra estado visual enquanto salva
-    const status = document.getElementById('ocrStatus');
-    if (status) status.textContent = `Salvando ${registrosLote.length} registros...`;
-
-    // Processa de trás para frente para manter a ordem cronológica visual no unshift
-    for (let i = registrosLote.length - 1; i >= 0; i--) {
-      const record = registrosLote[i];
-      manutencoes.unshift(record);
-      await persistEntry(TABLE_NAME, record, false, false, manutencoes);
-    }
-    
-    renderTimeline();
-    clearOCRPreview();
-    
-    let ignorados = totalTabelaDetectados - registrosLote.length;
-    let msg = `✅ ${registrosLote.length} manutenções importadas! (VERSAO v3)`;
-    
-    if (ignorados > 0) {
-      msg += `\n⏭️ ${ignorados} ignorados (já estavam no sistema)`;
-    }
-    
-    if (linhasFalhas.length > 0) {
-      msg += `\n\n⚠️ ${linhasFalhas.length} linhas não reconhecidas:\n` + linhasFalhas.slice(0, 8).join('\n');
-    }
-    
-    msg += `\n\n📊 Total linhas juntas: ${linhasJuntas.length} | Detectadas: ${totalTabelaDetectados} | Falhas: ${linhasFalhas.length}`;
-    
-    alert(msg);
-    return;
-  } else if (totalTabelaDetectados > 0) {
-    // Detectou linhas de tabela, mas TODAS eram duplicadas
-    clearOCRPreview();
-    alert(`Aviso: Foram lidos ${totalTabelaDetectados} chamados na imagem, mas TODOS já constavam no sistema (duplicados).\nNenhum chamado novo foi adicionado.`);
-    return;
-  }
-
-  // 2. Fallback para 1 ticket (Bloco de texto único)
-  // Normalizar múltiplos espaços e quebras de linha para uma linha única e limpa
-  const cleanText = text.replace(/\s+/g, ' ');
-
-  // Helper para extração segura com regex
-  const extract = (regex) => {
-    const match = cleanText.match(regex);
-    return match ? match[1].trim() : '';
-  };
-
-  // Regras de extração baseadas no layout da imagem fornecida
-  let protocolo = extract(/Protoco?lo[:\s]+([A-Z0-9-]+)/i);
-  
-  // Validação: protocolo PRECISA ser numérico com pelo menos 6 dígitos
-  if (protocolo && !/^\d{6,}$/.test(protocolo.replace(/\D/g, ''))) {
-    protocolo = ''; // Descarta protocolos inválidos como "PREITEIRA"
-  }
-  // Limpa para manter só dígitos
-  if (protocolo) protocolo = protocolo.replace(/\D/g, '');
-  
-  const contrato = extract(/(?:Nro\.?\s*Contrato|Contrato)[:\s]+(\d+)/i);
-  
-  // Procura por Razão Social ou Nome Cliente, parando nas próximas chaves
-  // Usamos Raz[ãa]o Soc.*? para lidar com o OCR lendo "Razão Sociat"
-  let cliente = extract(/Raz[ãa]o\s*Soc.*?[:\s]+(.*?)(?=\s+(?:Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
-  if (!cliente) {
-    cliente = extract(/Nome Cliente[:\s]+(.*?)(?=\s+(?:Atendente|Reincid[eê]ncia|Contato|Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
-  }
-  if (cliente) {
-    if (cliente.includes('-')) cliente = cliente.substring(cliente.indexOf('-') + 1).trim();
-    cliente = cliente.replace(/lacre\]\s*\|\s*NOS ULTIMOS 30 DIAS/ig, '').trim();
-    cliente = cliente.replace(/Reincid[eê]ncia.*?dias/ig, '').trim();
-  }
-  
-  let contato = extract(/Contato.*?(?:Nome)?[:\s]+(.*?)(?=\s+(?:Telefone|Tel\.|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
-  if (contato) {
-    contato = contato.replace(/\(Nome\):?\s*\|?/ig, '').replace(/^[\s\|\[\]]+/, '').trim();
-  }
-  
-  let endereco = extract(/End(?:\.|ere[cç]o)?\s*(?:do\s*Servi[cç]o)?[:\s]+(.*?)(?=\s+(?:CEP|Área|Motivo|Sub|Atividade|Descri[cç]ão|Procedimentos|$))/i);
-  if (endereco) {
-    endereco = endereco.replace(/^[\s\|\[\]]+/, '').replace(/\s*-?\s*CEP[:\s]*\d{5}-?\d{3}/ig, '').trim();
-  }
-  
-  let telefones = extract(/(?:Telefones?|Tel\.?\s*1)[:\s]+(.*?)(?=\s+(?:Tel\.\s*2|Status|Origem|Nro|End\.|Endere[cç]o|$))/i);
-  if (telefones) {
-    telefones = telefones.replace(/[\s\|\-\.,=]+$/, '').replace(/^1:\s*/, '').trim();
-  }
-  
-  let empreiteira = extract(/FILA.*?((?:VERO|SIMASTEL).*?)(?=\s+Oo\s+|\s+AGENDAMENTO|\s+Atividade|\s+MATERIAIS|\s+Contato|$)/i);
-  if (empreiteira) {
-    const empUpper = empreiteira.toUpperCase();
-    if (empUpper.includes('SIMASTEL')) {
-      empreiteira = 'SIMASTEL SERVIÇOS';
-    } else if (empUpper.includes('VERO')) {
-      const veroMatch = empUpper.match(/VERO\s+[A-Z]+/);
-      empreiteira = veroMatch ? veroMatch[0] : 'VERO';
-    }
-  }
-
-  const registradoEm = extract(/Registrado Em[:\s]+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/i);
-  
-  let tipo = extract(/TIPO DE RECLAMA[CÇ][ÃA]O[:\s]+(.*?)(?=\s+OBSERVA[CÇ][ÃA]O|\s*$)/i);
-  if (!tipo) {
-    tipo = extract(/Atividade[:\s]+(.*?)(?=\s+(?:Descri[cç][ãa]o|Pescri[cç][ãa]o|Detalhes|Procedimentos|Última|$))/i);
-    if (tipo && tipo.includes('-')) {
-      tipo = tipo.substring(tipo.indexOf('-') + 1).trim();
-    }
-  }
-
-  // Inteligência artificial simples: se a atividade for apenas "DESPACHO PENDENTE", vamos tentar achar o problema real na descrição
-  if (tipo && tipo.toUpperCase().includes('DESPACHO PENDENTE')) {
-    const keywords = ['LINK OFFLINE', 'LINK DOWN', 'LENTIDÃO', 'ROMPIMENTO', 'FALHA', 'PERDA DE PACOTE', 'SEM CONEXÃO', 'FIBRA ROMPIDA', 'SEM SINAL'];
-    for (let kw of keywords) {
-      if (cleanText.toUpperCase().includes(kw)) {
-        tipo = kw;
-        break;
-      }
-    }
-  }
-
-  // Trava de segurança para impedir que falhas do OCR coloquem textos gigantes nos campos curtos
-  if (tipo && tipo.length > 80) tipo = tipo.substring(0, 80) + '...';
-  if (cliente && cliente.length > 80) cliente = cliente.substring(0, 80) + '...';
-  
-  const obs = extract(/OBSERVA[CÇ][ÃA]O(?: DO DESPACHO)?[:\s]+(.*?)(?=\s*$)/i);
-  
-  let descricao = extract(/Descri[cç][ãa]o[:\s]+(.*?)(?=\s+Última|\s+Procedimentos|\s+EMPREITEIRA|$)/i);
-
-  // VALIDAÇÃO FINAL: se não encontrou protocolo numérico válido, recusa a importação
-  if (!protocolo) {
-    clearOCRPreview();
-    alert('❌ Não foi possível identificar um protocolo numérico válido nesta imagem.\n\nEsta imagem pode ser uma tela diferente do sistema, ou o OCR não conseguiu ler o número do protocolo.\n\nCole uma imagem da tela de detalhes do chamado que contenha o campo "Protocolo" visível.');
-    return;
-  }
-
-  // Verificação de duplicidade para ticket único
-  const protLimpo = protocolo.trim();
-  const existingTicket = manutencoes.find(m => String(m.protocolo || '').trim() === protLimpo);
-
-  if (existingTicket) {
-    // Ticket já existe: Auto-atualiza preenchendo os buracos com dados do OCR
-    const mergedRecord = {
-      ...existingTicket,
-      protocolo: existingTicket.protocolo || protocolo || '',
-      contrato: existingTicket.contrato || contrato || '',
-      cliente: existingTicket.cliente || cliente || '',
-      contato: existingTicket.contato || contato || '',
-      endereco: existingTicket.endereco || endereco || '',
-      telefones: existingTicket.telefones || telefones || '',
-      empreiteira: existingTicket.empreiteira || empreiteira || '',
-      reclamacao: existingTicket.reclamacao || tipo || '',
-      obs_despacho: existingTicket.obs_despacho || obs || ''
-      // A descrição não é alterada para preservar o histórico original
-    };
-
-    // Salva silenciosamente e recarrega a tela
-    try {
-      await persistEntry('manutencoes', mergedRecord, false, true, manutencoes);
       renderTimeline();
       clearOCRPreview();
-      alert(`✅ Chamado ${protLimpo} atualizado automaticamente!\n\nAs informações que estavam em branco foram preenchidas com os dados da imagem.\nO histórico de observações original foi preservado.`);
-    } catch (e) {
-      console.error("Erro ao auto-atualizar ticket:", e);
-      alert(`⚠️ Erro ao atualizar o chamado ${protLimpo}.`);
+      
+      let ignorados = registrosLote.length - importados.length;
+      let msg = `✅ ${importados.length} manutenções importadas!\n`;
+      if (ignorados > 0) msg += `⏭️ ${ignorados} ignorados (já estavam no sistema)\n`;
+      if (stats.failures.length > 0) msg += `⚠️ ${stats.failures.length} linhas não reconhecidas:\n` + stats.failures.slice(0, 5).join('\n');
+      
+      alert(msg);
+    } else {
+      clearOCRPreview();
+      alert(`Aviso: Foram lidos ${registrosLote.length} chamados na imagem, mas TODOS já constavam no sistema (duplicados). Nenhum chamado novo adicionado.`);
     }
     return;
   }
 
-  // Se for ticket novo, preenche normalmente
-  if (protocolo) document.getElementById('m_protocolo').value = protocolo;
-  if (contrato) document.getElementById('m_contrato').value = contrato;
-  if (cliente) document.getElementById('m_cliente').value = cliente;
-  if (contato) document.getElementById('m_contato').value = contato;
-  if (endereco) document.getElementById('m_endereco').value = endereco;
-  if (telefones) document.getElementById('m_telefones').value = telefones;
-  if (empreiteira) document.getElementById('m_empreiteira').value = empreiteira;
-  if (tipo) document.getElementById('m_tipo_reclamacao').value = tipo;
-  if (obs) document.getElementById('m_obs_despacho').value = obs;
-  
-  let finalDescricao = descricao;
-  if (registradoEm) {
-    finalDescricao = `Registrado Em: ${registradoEm}\n` + (finalDescricao || '');
-  }
+  if (parsed.type === 'SINGLE') {
+    const record = parsed.records[0];
+    const protLimpo = record.protocolo;
+    const existingTicket = manutencoes.find(m => String(m.protocolo || '').trim() === protLimpo);
 
-  if (finalDescricao) {
-    document.getElementById('m_descricao').value = finalDescricao;
+    if (existingTicket) {
+      const mergedRecord = {
+        ...existingTicket,
+        protocolo: existingTicket.protocolo || record.protocolo || '',
+        contrato: existingTicket.contrato || record.contrato || '',
+        cliente: existingTicket.cliente || record.cliente || '',
+        contato: existingTicket.contato || record.contato || '',
+        endereco: existingTicket.endereco || record.endereco || '',
+        telefones: existingTicket.telefones || record.telefones || '',
+        empreiteira: existingTicket.empreiteira || record.empreiteira || '',
+        tipo_reclamacao: existingTicket.tipo_reclamacao || record.tipo_reclamacao || '',
+        created_at: record.created_at || existingTicket.created_at
+        // A descrição não é alterada aqui para preservar o histórico original
+      };
+
+      try {
+        // Atualiza a memória local primeiro
+        const idx = manutencoes.findIndex(m => String(m.protocolo || '').trim() === protLimpo);
+        if (idx !== -1) {
+          manutencoes[idx] = mergedRecord;
+        }
+
+        // Usa upsert (isUpdate = false) para salvar corretamente no banco
+        await persistEntry(TABLE_NAME, mergedRecord, false, false, manutencoes);
+        renderTimeline();
+        clearOCRPreview();
+        alert(`✅ Chamado ${protLimpo} atualizado automaticamente!\n\nAs informações que estavam em branco foram preenchidas com os dados da imagem.`);
+      } catch (e) {
+        console.error("Erro ao auto-atualizar ticket:", e);
+        alert(`⚠️ Erro ao atualizar o chamado ${protLimpo}.`);
+      }
+      return;
+    }
+
+    // Se for ticket novo, preenche o form
+    const f = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    f('m_protocolo', record.protocolo);
+    f('m_contrato', record.contrato);
+    f('m_cliente', record.cliente);
+    f('m_contato', record.contato);
+    f('m_endereco', record.endereco);
+    f('m_telefones', record.telefones);
+    f('m_empreiteira', record.empreiteira);
+    f('m_tipo_reclamacao', record.tipo_reclamacao);
+    
+    f('m_descricao', record.descricao);
+    if (record.created_at) {
+      f('m_created_at', record.created_at);
+    }
+
+    const form = document.getElementById('form-man');
+    if (form) {
+      form.style.boxShadow = '0 0 10px rgba(20, 184, 166, 0.5)';
+      setTimeout(() => { form.style.boxShadow = 'none'; }, 1000);
+    }
+    clearOCRPreview();
   }
-  
-  // Highlight to user that fields were filled
-  const form = document.getElementById('form-man');
-  form.style.boxShadow = '0 0 10px rgba(20, 184, 166, 0.5)';
-  setTimeout(() => { form.style.boxShadow = 'none'; }, 1000);
 }
 
 function renderTimeline() {
@@ -845,8 +635,8 @@ window.editManutencao = (id) => {
     alert("Esta manutenção está Concluída e não pode mais ser alterada.");
   }
 
-  // Open form if mobile
-  if (window.innerWidth <= 1024) {
+  // Retornar à aba de lista no mobile (se aplicável)
+  if (window.innerWidth <= 768) {
     const mobileNovoBtn = document.querySelector('.mobile-nav-item[data-tab="novo"]');
     if (mobileNovoBtn) mobileNovoBtn.click();
   }
