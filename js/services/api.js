@@ -95,9 +95,19 @@ export async function persistEntry(tableName, singleEntry, isDelete = false, isU
       if (isDelete) {
         res = await sbClient.from(tableName).delete().eq('id', singleEntry.id);
       } else if (isUpdate) {
-        res = await sbClient.from(tableName).update(singleEntry.data).eq('id', singleEntry.id);
+        const cleanData = { ...singleEntry.data };
+        if (tableName === 'manutencoes') {
+          delete cleanData.tipo_atendimento;
+          delete cleanData.equipe_designada;
+        }
+        res = await sbClient.from(tableName).update(cleanData).eq('id', singleEntry.id);
       } else if (singleEntry) {
-        res = await sbClient.from(tableName).upsert(singleEntry);
+        const cleanEntry = { ...singleEntry };
+        if (tableName === 'manutencoes') {
+          delete cleanEntry.tipo_atendimento;
+          delete cleanEntry.equipe_designada;
+        }
+        res = await sbClient.from(tableName).upsert(cleanEntry);
       }
       if (res && res.error) {
         console.warn(`Aviso: Falha ao salvar no banco online (${tableName})`, res.error);
