@@ -2,7 +2,7 @@
   "name": "Agenda de Vistorias & Passagens",
   "short_name": "Vistorias",
   "description": "Painel de agendamento de vistorias e passagens de cabo em tempo real",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0B1220",
   "theme_color": "#0B1220",
