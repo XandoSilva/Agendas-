@@ -183,12 +183,12 @@
   },
   "active": "6f37eb05af9ea9f2",
   "lastOpenFiles": [
-    "Sem título.base",
     "Sem título.canvas",
+    "Sem título.base",
+    "README.md",
+    "CONFIGURACAO_TEAMS.md",
     "2026-08-10.md",
     "Regras_Negocio/OCR.md",
-    "ADRs/0001-adocao-do-obsidian.md",
-    "README.md",
-    "CONFIGURACAO_TEAMS.md"
+    "ADRs/0001-adocao-do-obsidian.md"
   ]
 }

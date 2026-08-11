@@ -866,3 +866,92 @@ select.status-select:focus {
 .cal-clear-filter:hover {
   background: rgba(244, 63, 94, 0.06);
 }
+
+/* -------------------------------------
+   MANUTENÇÃO: Melhorias (Kanban, SLA, Flash)
+-------------------------------------- */
+.kanban-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 24px;
+  align-items: flex-start;
+}
+.kanban-column {
+  flex: 1;
+  min-width: 320px;
+  background: rgba(13, 21, 36, 0.4);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kanban-header {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--text);
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: 8px;
+}
+.kanban-count {
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.kanban-dropzone {
+  min-height: 100px;
+  transition: background 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kanban-dropzone.drag-over {
+  background: rgba(255, 255, 255, 0.05);
+  outline: 2px dashed var(--vero-magenta);
+  border-radius: 6px;
+}
+.manutencao-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+.sla-late {
+  border-left: 3px solid var(--coral) !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.1);
+}
+.sla-warning-text {
+  color: var(--coral);
+  font-weight: 600;
+  font-size: 11px;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.save-success {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  transition: background-color 0.2s ease;
+}
+.btn-toggle-view {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-toggle-view:hover {
+  background: var(--line);
+}

@@ -5,6 +5,13 @@ import { parseManutencaoOCR } from '../services/parser.js';
 let manutencoes = [];
 const TABLE_NAME = 'manutencoes';
 
+// Estado da UI
+let searchQuery = '';
+let sortOrder = 'newest';
+let isKanban = false;
+let renderLimit = 30;
+let currentFilter = 'all';
+
 export async function initManutencaoModule() {
   await loadManutencoes();
   setupListeners();
@@ -136,48 +143,52 @@ function setupListeners() {
     });
   }
 
-  const btnExport = document.getElementById('btnExportCSV');
-  if (btnExport) {
-    btnExport.addEventListener('click', exportToCSV);
-  }
-}
-
-function exportToCSV() {
-  if (manutencoes.length === 0) {
-    alert('Nenhuma manutenção para exportar.');
-    return;
+  // --- Novos Event Listeners da Toolbar (Busca, Kanban, Filtros) ---
+  const searchInput = document.getElementById('search-manutencao');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.toLowerCase();
+      renderLimit = 30; // reset
+      renderTimeline();
+    });
   }
 
-  const headers = ['Protocolo', 'Contrato', 'Cliente', 'Contato', 'Telefones', 'Endereço', 'Empreiteira', 'Tipo Reclamação', 'Atendimento', 'Equipe', 'Status', 'Obs Despacho', 'Descrição', 'Criado Em'];
-  const rows = manutencoes.map(m => [
-    m.protocolo || '',
-    m.contrato || '',
-    m.cliente || '',
-    m.contato || '',
-    m.telefones || '',
-    m.endereco || '',
-    m.empreiteira || '',
-    m.tipo_reclamacao || '',
-    m.tipo_atendimento || '',
-    m.equipe_designada || '',
-    m.status || '',
-    m.obs_despacho || '',
-    m.descricao || '',
-    m.created_at || ''
-  ]);
+  const sortSelect = document.getElementById('sort-manutencao');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      sortOrder = e.target.value;
+      renderTimeline();
+    });
+  }
 
-  const csvContent = [headers, ...rows]
-    .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
-    .join('\n');
+  const btnToggleKanban = document.getElementById('btn-toggle-kanban');
+  if (btnToggleKanban) {
+    btnToggleKanban.addEventListener('click', () => {
+      isKanban = !isKanban;
+      btnToggleKanban.style.background = isKanban ? 'rgba(20, 184, 166, 0.1)' : '';
+      btnToggleKanban.style.color = isKanban ? 'var(--teal)' : 'var(--text)';
+      btnToggleKanban.innerHTML = isKanban 
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Lista` 
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg> Kanban`;
+      renderLimit = 30;
+      renderTimeline();
+    });
+  }
 
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `manutencoes_${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  // Filtragem de chips via state em vez de DOM display
+  const chips = document.querySelectorAll('.chip-status-man');
+  chips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      chips.forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      currentFilter = e.target.getAttribute('data-status');
+      renderLimit = 30;
+      renderTimeline();
+    });
+  });
 }
+
+// Export moved to RelatoriosModule
 
 /**
  * OCR setup
@@ -483,15 +494,15 @@ async function parseOCRText(text) {
   }
 }
 
-function renderTimeline() {
+export function renderTimeline() {
   const container = document.getElementById('timeline-man');
   if (!container) return;
 
   container.innerHTML = '';
   
-  // Deduplicação visual para ocultar duplicatas legadas do banco (mesmo protocolo)
+  // Deduplicação visual
   const vistos = new Set();
-  const unicos = [];
+  let unicos = [];
   manutencoes.forEach(m => {
     if (m.protocolo) {
       const p = String(m.protocolo).trim();
@@ -504,123 +515,249 @@ function renderTimeline() {
     }
   });
 
+  // Contador global
   const counter = document.getElementById('counter-man');
   if (counter) {
-    counter.textContent = `Manutenções (${unicos.length})`;
+    const concluidos = unicos.filter(m => m.status === 'Concluído' || m.status === 'Finalizado').length;
+    counter.innerHTML = `Entrantes: <span style="color:var(--vero-magenta)">${unicos.length}</span> <span style="margin: 0 8px; color: var(--line)">|</span> Concluídos: <span style="color:var(--green)">${concluidos}</span>`;
   }
 
-  if (unicos.length === 0) {
-    container.innerHTML = '<p style="color:var(--muted); font-size:14px;">Nenhuma manutenção registrada.</p>';
+  // --- FILTROS, BUSCA, ORDENAÇÃO ---
+  if (currentFilter !== 'all') {
+    unicos = unicos.filter(m => (m.status || 'Pendente') === currentFilter);
+  }
+
+  if (searchQuery) {
+    unicos = unicos.filter(m => {
+      const combined = `${m.protocolo || ''} ${m.contrato || ''} ${m.cliente || ''} ${m.endereco || ''} ${m.descricao || ''} ${m.status || ''}`.toLowerCase();
+      return combined.includes(searchQuery);
+    });
+  }
+
+  if (sortOrder === 'newest') {
+    unicos.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  } else if (sortOrder === 'oldest') {
+    unicos.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+  } else if (sortOrder === 'sla') {
+    // Pendentes/Em andamento na frente, Finalizados por último.
+    const score = (s) => (s === 'Finalizado' || s === 'Concluído' || s === 'Cancelado') ? 1 : 0;
+    unicos.sort((a, b) => (score(a.status) - score(b.status)) || (new Date(a.created_at || 0) - new Date(b.created_at || 0)));
+  }
+
+  const hasMore = unicos.length > renderLimit;
+  const toRender = unicos.slice(0, renderLimit);
+
+  if (toRender.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted); font-size:14px;">Nenhuma manutenção encontrada.</p>';
     return;
   }
 
-  unicos.forEach(m => {
-    const dateObj = m.created_at ? new Date(m.created_at) : new Date();
-    const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  if (isKanban) {
+    renderKanban(container, toRender);
+  } else {
+    container.style.display = 'flex'; // restore normal layout
+    container.style.gap = '16px';
+    container.style.flexDirection = 'column';
+    toRender.forEach(m => {
+      container.appendChild(createCardElement(m));
+    });
+  }
 
-    const safeStatus = m.status || 'Pendente';
-    const statusClass = safeStatus.replace(/\s+/g, '');
-    const safeTipo = m.tipo_reclamacao || 'Manutenção';
-    let rawCliente = m.cliente || 'Cliente não informado';
-    rawCliente = rawCliente.replace(/^\s*[\d\.\-\/]+\s*[-.]?\s*/, '').trim();
-    
-    let reincidenciaHtml = '';
-    const reinMatch = rawCliente.match(/REINCID[EÊ]NCIA:\s*(.*)/i);
-    if (reinMatch) {
-      const numMatch = reinMatch[1].match(/\d+/);
-      const qty = numMatch ? numMatch[0] : (/[|Il\\]\\[]/.test(reinMatch[1]) ? '1' : '1');
-      reincidenciaHtml = `<div class="reincidencia">Reincidências 30 dias: ${qty}</div>`;
-      rawCliente = rawCliente.replace(/\s*REINCID[EÊ]NCIA:.*/i, '').trim();
-    }
-    
-    const safeCliente = rawCliente;
-    const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
-    const safeEndereco = escapeHTML(m.endereco || '');
-    const safeEmpreiteira = escapeHTML(m.empreiteira || '—');
-    
-    let contatoNome = (m.contato || '').trim();
-    let contatoTel = (m.telefones || '').trim();
-    let combinedContato = [contatoNome, contatoTel].filter(Boolean).join(' - ');
-    const safeContato = escapeHTML(combinedContato || '—');
-    
-    // Isola apenas o primeiro telefone, impedindo que múltiplos números ou números no nome se misturem
-    let wppNumber = contatoTel.split('/')[0].replace(/\D/g, '');
-    if (!wppNumber) wppNumber = safeContato.replace(/\D/g, ''); // fallback
-    
-    const safeObs = escapeHTML(m.descricao || m.obs_despacho || '');
-    
-    const isConcluido = safeStatus === 'Concluído' || safeStatus === 'Finalizado';
-    const editable = isConcluido ? 'false' : 'true';
+  if (hasMore) {
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.className = 'btn';
+    loadMoreBtn.style.margin = '20px auto';
+    loadMoreBtn.style.display = 'block';
+    loadMoreBtn.textContent = 'Carregar mais...';
+    loadMoreBtn.onclick = () => {
+      renderLimit += 30;
+      renderTimeline();
+    };
+    container.appendChild(loadMoreBtn);
+  }
+}
 
-    let statusHtml = '';
-    if (isConcluido) {
-      statusHtml = `<span class="tag tag-status st-${statusClass}">${safeStatus}</span>`;
-    } else {
-      statusHtml = `
-        <select class="tag tag-status st-${statusClass}" style="cursor:pointer; border:none; outline:none; font-weight:bold;" onchange="window.updateManutencaoStatus('${m.id}', this.value)">
-          <option value="Pendente" ${safeStatus === 'Pendente' ? 'selected' : ''}>Pendente</option>
-          <option value="Designado" ${safeStatus === 'Designado' ? 'selected' : ''}>Designado</option>
-          <option value="Em Deslocamento" ${safeStatus === 'Em Deslocamento' ? 'selected' : ''}>Em Deslocamento</option>
-          <option value="Atuando" ${safeStatus === 'Atuando' ? 'selected' : ''}>Atuando</option>
-          <option value="Finalizado" ${safeStatus === 'Finalizado' ? 'selected' : ''}>Finalizado</option>
-          <option value="Cancelado" ${safeStatus === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
-        </select>
-      `;
-    }
+function renderKanban(container, list) {
+  container.style.display = 'grid';
+  container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+  container.style.gap = '16px';
+  container.style.alignItems = 'start';
 
-    const card = document.createElement('div');
-    card.className = `card st-${statusClass}`;
+  const colunas = [
+    { title: 'Pendente', status: ['Pendente'] },
+    { title: 'Designado', status: ['Designado'] },
+    { title: 'Em Deslocamento', status: ['Em Deslocamento'] },
+    { title: 'Atuando', status: ['Atuando'] },
+    { title: 'Finalizado', status: ['Finalizado', 'Concluído'] },
+    { title: 'Cancelado', status: ['Cancelado'] }
+  ];
+
+  colunas.forEach(col => {
+    const colDiv = document.createElement('div');
+    colDiv.style.background = 'var(--card-bg)';
+    colDiv.style.border = '1px solid var(--line)';
+    colDiv.style.borderRadius = '8px';
+    colDiv.style.padding = '12px';
+    colDiv.style.display = 'flex';
+    colDiv.style.flexDirection = 'column';
+    colDiv.style.gap = '12px';
+    colDiv.style.minHeight = '200px';
+
+    const colTitle = document.createElement('h3');
+    colTitle.textContent = col.title;
+    colTitle.style.fontSize = '14px';
+    colTitle.style.margin = '0 0 8px 0';
+    colTitle.style.paddingBottom = '8px';
+    colTitle.style.borderBottom = '1px solid var(--line)';
+    colDiv.appendChild(colTitle);
+
+    const filtered = list.filter(m => col.status.includes(m.status || 'Pendente'));
     
-    card.innerHTML = `
-      <div class="tag-row">
-        <span class="tag tag-tipo">${safeTipo}</span>
-        ${statusHtml}
-      </div>
-      
-      <ul class="info-list">
-        <li>👤 <b>${safeCliente}</b></li>
-        <li>📄 Contrato: <b>${escapeHTML(m.contrato || '—')}</b></li>
-        ${reincidenciaHtml ? `<li>🔄 ${reincidenciaHtml.replace(/<[^>]*>?/gm, '')}</li>` : ''}
-        <li>📌 Protocolo: <b>${escapeHTML(m.protocolo || '—')}</b></li>
-        <li>🕒 Registrado Em: <b>${formattedDate}</b></li>
-        <li>🛠️ Empreiteira: <b>${safeEmpreiteira}</b></li>
-        <li>📞 Contato Local: <b>${safeContato}</b></li>
-        <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
-        <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
-        <li>💼 Atendimento: <b>${escapeHTML(m.tipo_atendimento || '—')}</b></li>
-        <li>👷 Equipe designada: <span class="editable-inline" contenteditable="${editable}" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
-      </ul>
-      
-      <div class="card-field-actions">
-        <button class="btn-action" onclick="window.copyCarimbo('${m.id}')" style="background-color: var(--card-bg); border: 1px solid var(--line); color: var(--text);">📋 Copiar Carimbo</button>
-        ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
-        ${wppNumber ? `<button class="btn-action wpp-btn" onclick="window.open('https://api.whatsapp.com/send?phone=55${wppNumber}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
-      </div>
+    // Configura a coluna como área de soltura do drag and drop
+    colDiv.addEventListener('dragover', e => {
+      e.preventDefault();
+      colDiv.style.borderColor = 'var(--teal)';
+    });
+    colDiv.addEventListener('dragleave', e => {
+      e.preventDefault();
+      colDiv.style.borderColor = 'var(--line)';
+    });
+    colDiv.addEventListener('drop', e => {
+      e.preventDefault();
+      colDiv.style.borderColor = 'var(--line)';
+      const cardId = e.dataTransfer.getData('text/plain');
+      // Atualiza o status para o status principal da coluna
+      window.updateManutencaoStatus(cardId, col.status[0]);
+    });
 
-      <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="${editable}" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
-      
-      <div class="unified-fields-box">
-        <div class="box-title">Andamento do Atendimento</div>
-        <div class="editable-field" data-label="Em Deslocamento (Prev. Chegada)" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="prev_chegada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_chegada || '')}</div>
-        <div class="editable-field" data-label="Em Atendimento (Prev. Testes)" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="prev_testes" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_testes || '')}</div>
-        <div class="editable-field" data-label="Finalizado" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="horario_finalizado" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.horario_finalizado || '')}</div>
-      </div>
+    filtered.forEach(m => {
+      const card = createCardElement(m);
+      card.draggable = true;
+      card.style.cursor = 'grab';
+      card.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', m.id);
+        card.style.opacity = '0.5';
+      });
+      card.addEventListener('dragend', () => {
+        card.style.opacity = '1';
+      });
+      colDiv.appendChild(card);
+    });
 
-      <div class="unified-fields-box">
-        <div class="box-title">Execução e Resolução</div>
-        <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="${editable}" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
-        <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="${editable}" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
-        <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="${editable}" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
-      </div>
-      
-      ${isConcluido ? '' : `
-      <div class="card-actions">
-        <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
-        <button class="icon-btn" onclick="window.deleteManutencao('${m.id}')">Excluir</button>
-      </div>`}
-    `;
-    container.appendChild(card);
+    container.appendChild(colDiv);
   });
+}
+
+function createCardElement(m) {
+  const dateObj = m.created_at ? new Date(m.created_at) : new Date();
+  const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+  const safeStatus = m.status || 'Pendente';
+  const statusClass = safeStatus.replace(/\s+/g, '');
+  const isConcluido = safeStatus === 'Concluído' || safeStatus === 'Finalizado';
+  const editable = isConcluido ? 'false' : 'true';
+
+  // Alerta SLA (>4 horas pendente)
+  const isAtrasado = !isConcluido && (Date.now() - dateObj.getTime()) > (4 * 60 * 60 * 1000);
+  const slaWarning = isAtrasado ? `<span style="color:var(--coral); font-size:12px; font-weight:bold; margin-left: 8px;" title="Ultrapassou 4 horas de SLA">⚠️ SLA Atrasado</span>` : '';
+
+  const safeTipo = m.tipo_reclamacao || 'Manutenção';
+  let rawCliente = m.cliente || 'Cliente não informado';
+  rawCliente = rawCliente.replace(/^\s*[\d\.\-\/]+\s*[-.]?\s*/, '').trim();
+  
+  let reincidenciaHtml = '';
+  const reinMatch = rawCliente.match(/REINCID[EÊ]NCIA:\s*(.*)/i);
+  if (reinMatch) {
+    const numMatch = reinMatch[1].match(/\d+/);
+    const qty = numMatch ? numMatch[0] : (/[|Il\\]\\[]/.test(reinMatch[1]) ? '1' : '1');
+    reincidenciaHtml = `<div class="reincidencia">Reincidências 30 dias: ${qty}</div>`;
+    rawCliente = rawCliente.replace(/\s*REINCID[EÊ]NCIA:.*/i, '').trim();
+  }
+  
+  const safeCliente = rawCliente;
+  const safeContrato = `Prot: ${m.protocolo || '—'} | Contrato: ${m.contrato || '—'}`;
+  const safeEndereco = escapeHTML(m.endereco || '');
+  const safeEmpreiteira = escapeHTML(m.empreiteira || '—');
+  
+  let contatoNome = (m.contato || '').trim();
+  let contatoTel = (m.telefones || '').trim();
+  let combinedContato = [contatoNome, contatoTel].filter(Boolean).join(' - ');
+  const safeContato = escapeHTML(combinedContato || '—');
+  
+  let wppNumber = contatoTel.split('/')[0].replace(/\D/g, '');
+  if (!wppNumber) wppNumber = safeContato.replace(/\D/g, ''); 
+  
+  const safeObs = escapeHTML(m.descricao || m.obs_despacho || '');
+  
+  let statusHtml = '';
+  if (isConcluido) {
+    statusHtml = `<span class="tag tag-status st-${statusClass}">${safeStatus}</span>`;
+  } else {
+    statusHtml = `
+      <select class="tag tag-status st-${statusClass}" style="cursor:pointer; border:none; outline:none; font-weight:bold;" onchange="window.updateManutencaoStatus('${m.id}', this.value)">
+        <option value="Pendente" ${safeStatus === 'Pendente' ? 'selected' : ''}>Pendente</option>
+        <option value="Designado" ${safeStatus === 'Designado' ? 'selected' : ''}>Designado</option>
+        <option value="Em Deslocamento" ${safeStatus === 'Em Deslocamento' ? 'selected' : ''}>Em Deslocamento</option>
+        <option value="Atuando" ${safeStatus === 'Atuando' ? 'selected' : ''}>Atuando</option>
+        <option value="Finalizado" ${safeStatus === 'Finalizado' ? 'selected' : ''}>Finalizado</option>
+        <option value="Cancelado" ${safeStatus === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+      </select>
+    `;
+  }
+
+  const card = document.createElement('div');
+  card.className = `card st-${statusClass}`;
+  
+  card.innerHTML = `
+    <div class="tag-row">
+      <span class="tag tag-tipo">${safeTipo}</span>
+      ${statusHtml}
+      ${slaWarning}
+    </div>
+    
+    <ul class="info-list">
+      <li>👤 <b>${safeCliente}</b></li>
+      <li>📄 Contrato: <b>${escapeHTML(m.contrato || '—')}</b></li>
+      ${reincidenciaHtml ? `<li>🔄 ${reincidenciaHtml.replace(/<[^>]*>?/gm, '')}</li>` : ''}
+      <li>📌 Protocolo: <b>${escapeHTML(m.protocolo || '—')}</b></li>
+      <li>🕒 Registrado Em: <b>${formattedDate}</b></li>
+      <li>🛠️ Empreiteira: <b>${safeEmpreiteira}</b></li>
+      <li>📞 Contato Local: <b>${safeContato}</b></li>
+      <li>📍 End. do Serviço: <b>${safeEndereco || '—'}</b></li>
+      <li>⚠️ Reclamação: <b>${safeTipo}</b></li>
+      <li>💼 Atendimento: <b>${escapeHTML(m.tipo_atendimento || '—')}</b></li>
+      <li>👷 Equipe designada: <span class="editable-inline" contenteditable="${editable}" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
+    </ul>
+    
+    <div class="card-field-actions">
+      <button class="btn-action" onclick="window.copyCarimbo('${m.id}')" style="background-color: var(--card-bg); border: 1px solid var(--line); color: var(--text);">📋 Copiar Carimbo</button>
+      ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
+      ${wppNumber ? `<button class="btn-action wpp-btn" onclick="window.open('https://api.whatsapp.com/send?phone=55${wppNumber}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
+    </div>
+
+    <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="${editable}" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
+    
+    <div class="unified-fields-box">
+      <div class="box-title">Andamento do Atendimento</div>
+      <div class="editable-field" data-label="Em Deslocamento (Prev. Chegada)" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="prev_chegada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_chegada || '')}</div>
+      <div class="editable-field" data-label="Em Atendimento (Prev. Testes)" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="prev_testes" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.prev_testes || '')}</div>
+      <div class="editable-field" data-label="Finalizado" data-empty="-" contenteditable="${editable}" data-id="${m.id}" data-field="horario_finalizado" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.horario_finalizado || '')}</div>
+    </div>
+
+    <div class="unified-fields-box">
+      <div class="box-title">Execução e Resolução</div>
+      <div class="editable-field" data-label="Causa da Falha" data-empty="Causa não informada." contenteditable="${editable}" data-id="${m.id}" data-field="causa_falha" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.causa_falha || '')}</div>
+      <div class="editable-field" data-label="Ação Tomada" data-empty="Ação não informada." contenteditable="${editable}" data-id="${m.id}" data-field="acao_tomada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.acao_tomada || '')}</div>
+      <div class="editable-field" data-label="Gasto de Material" data-empty="Nenhum material informado." contenteditable="${editable}" data-id="${m.id}" data-field="gasto_material" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.gasto_material || '')}</div>
+    </div>
+    
+    ${isConcluido ? '' : `
+    <div class="card-actions">
+      <button class="icon-btn" onclick="window.editManutencao('${m.id}')">Editar</button>
+      <button class="icon-btn" style="color: var(--coral);" onclick="window.deleteManutencao('${m.id}')">Excluir</button>
+    </div>`}
+  `;
+  return card;
 }
 
 window.editManutencao = (id) => {
@@ -687,7 +824,7 @@ window.saveField = async (id, fieldName, val) => {
   const record = manutencoes.find(m => m.id === id);
   if (!record || record[fieldName] === val) return;
 
-  if (record.status === 'Concluído') {
+  if (record.status === 'Concluído' || record.status === 'Finalizado') {
     renderTimeline(); // reverse visually
     return;
   }
@@ -697,6 +834,12 @@ window.saveField = async (id, fieldName, val) => {
   
   try {
     await persistEntry(TABLE_NAME, { id, data: { [fieldName]: val } }, false, true, manutencoes);
+    const el = document.querySelector(`[data-id="${id}"][data-field="${fieldName}"]`);
+    if (el) {
+      el.style.transition = 'background-color 0.3s ease';
+      el.style.backgroundColor = 'rgba(20, 184, 166, 0.2)'; // teal
+      setTimeout(() => { el.style.backgroundColor = 'transparent'; }, 500);
+    }
   } catch (err) {
     console.error("Erro ao salvar " + fieldName, err);
     record[fieldName] = oldVal; // revert
@@ -731,7 +874,9 @@ window.copyCarimbo = (id) => {
   const record = manutencoes.find(m => m.id === id);
   if (!record) return;
 
-  const text = `📋 CARIMBO DE ATENDIMENTO — INFOREADY TECNOLOGIA LTDA
+  const clientNameTitle = record.cliente ? record.cliente.split('(')[0].split('-')[0].trim() : 'NOME NÃO INFORMADO';
+
+  const text = `📋 CARIMBO DE ATENDIMENTO — ${clientNameTitle.toUpperCase()}
 
 Protocolo: ${record.protocolo || '—'}
 Nº Contrato: ${record.contrato || '—'}
