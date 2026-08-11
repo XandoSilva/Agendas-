@@ -80,11 +80,14 @@ function extractManutencaoBulk(text) {
   // Data e Hora + Protocolo marcam o início de uma linha válida. O .*? é não-guloso e lida com qualquer lixo entre as colunas
   const dateAnchor = /^\s*(\d{2}[\/\.]\d{2}[\/\.]\d{4})\s*.*?\s*(\d{2}[:;.]\d{2}[:;.]\d{2})\s*.*?\s*([A-Za-z0-9]{6,15})\s+(.*)$/i;
   
+  // Âncora para novo modelo de incidentes. O OCR pode ler zeros como a letra 'O' e pode inserir lixo entre as colunas.
+  const incidentAnchor = /^\s*(TAS[A-Za-z0-9]+)\s*.*?\s*(INC[A-Za-z0-9]+)\s+(.*)$/i;
+  
   const combinedLines = [];
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    if (trimmed.match(/^\s*\d{2}[\/\.]\d{2}[\/\.]\d{4}/) || combinedLines.length === 0) {
+    if (trimmed.match(/^\s*\d{2}[\/\.]\d{2}[\/\.]\d{4}/) || trimmed.match(/^\s*TAS/i) || combinedLines.length === 0) {
       combinedLines.push(trimmed);
     } else {
       combinedLines[combinedLines.length - 1] += ' ' + trimmed;
@@ -93,18 +96,86 @@ function extractManutencaoBulk(text) {
 
   for (let line of combinedLines) {
     totalLines++;
-    const match = line.match(dateAnchor);
-    if (!match) {
+    const matchNormal = line.match(dateAnchor);
+    const matchIncident = line.match(incidentAnchor);
+
+    if (!matchNormal && !matchIncident) {
       if (line.length > 20 && !/Dt Abertura|Protocolo|Contrato/i.test(line)) {
         failures.push(line);
       }
       continue;
     }
 
-    const dataOriginal = match[1];
-    const horaOriginal = match[2];
-    const protocolo = cleanNum(match[3]).replace(/\D/g, '');
-    let resto = match[4].trim();
+    if (matchIncident) {
+      const tas = matchIncident[1];
+      const inc = matchIncident[2];
+      let resto = matchIncident[3];
+      
+      // Ignora o cabeçalho "TaskID Incidente..."
+      if (tas.toUpperCase().includes('TASK') || tas.length < 8) continue;
+      
+      let protocolo = `${tas} / ${inc}`;
+      
+      // Separar pelo Status "Designado", "Pendente", etc.
+      // Assumimos que o campo "Status" é uma palavra conhecida ou "Pendente" por padrão.
+      const statusRegex = /\s+(Designado|Pendente|Em andamento|Cancelado|Conclu[íi]do)\s+/i;
+      const statusMatch = resto.match(statusRegex);
+      
+      let status = 'Pendente';
+      let tituloChamado = resto;
+      
+      if (statusMatch) {
+         status = statusMatch[1].trim();
+         // O título do chamado é tudo ANTES do status.
+         tituloChamado = resto.substring(0, statusMatch.index).trim();
+         // O que vem DEPOIS do status é cliente, etc.
+         resto = resto.substring(statusMatch.index + statusMatch[0].length).trim();
+      }
+
+      // Separar Título WFM do Título do Chamado
+      let wfmMatch = tituloChamado.match(/^(.*?)\s+(Tarefa\b.*)$/i);
+      let tituloWfm = 'Tarefa'; // Conforme solicitado, deixar apenas "Tarefa"
+      
+      if (wfmMatch) {
+         tituloChamado = wfmMatch[1].trim();
+      }
+
+      // Cliente / Razão Social: usar o que estiver após a ultima /
+      let cliente = '';
+      let endereco = '';
+      
+      const lastSlashIndex = resto.lastIndexOf('/');
+      if (lastSlashIndex !== -1) {
+         cliente = resto.substring(lastSlashIndex + 1).trim();
+         endereco = resto.substring(0, lastSlashIndex).trim();
+         
+         // Se ainda houver outra barra antes do endereço, tenta limpar mais (o OCR pode ler Rio de Janeiro - ...)
+         const cityMatch = endereco.match(/^(.*?)\s+-/);
+         if (cityMatch) {
+             endereco = cityMatch[1].trim();
+         }
+      } else {
+         cliente = resto;
+      }
+
+      records.push({
+         protocolo,
+         contrato: '',
+         cliente,
+         endereco,
+         created_at: new Date().toISOString(),
+         status,
+         tipo_reclamacao: tituloWfm,
+         descricao: tituloChamado,
+      });
+      continue;
+    }
+
+    // Fluxo normal (Print 1)
+    const dataOriginal = matchNormal[1];
+    const horaOriginal = matchNormal[2];
+    const protocolo = cleanNum(matchNormal[3]).replace(/\D/g, '');
+    let resto = matchNormal[4].trim();
 
     if (protocolo.length < 6) {
       failures.push(line);

@@ -26,8 +26,8 @@ export function sanitizeManutencoes(manutencoes) {
     if (m.protocolo) {
       const p = String(m.protocolo).trim();
       
-      // Regra de Negócio: Protocolos válidos devem ter no mínimo 6 dígitos numéricos
-      if (!/^\d{6,}$/.test(p)) {
+      // Regra de Negócio: Protocolos válidos devem ter no mínimo 6 dígitos numéricos ou ser um Incidente (TAS / INC)
+      if (!/^\d{6,}$/.test(p) && !/^TAS[A-Za-z0-9]+\s*\/\s*INC[A-Za-z0-9]+/i.test(p)) {
         paraDeletar.push(m.id);
         return;
       }
