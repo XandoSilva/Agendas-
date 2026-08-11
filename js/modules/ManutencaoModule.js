@@ -591,10 +591,11 @@ function renderTimeline() {
         <li>👷 Equipe designada: <span class="editable-inline" contenteditable="${editable}" data-id="${m.id}" data-field="equipe_designada" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.equipe_designada || '')}</span></li>
       </ul>
       
-      ${safeEndereco || wppNumber ? `<div class="card-field-actions">
+      <div class="card-field-actions">
+        <button class="btn-action" onclick="window.copyCarimbo('${m.id}')" style="background-color: var(--card-bg); border: 1px solid var(--line); color: var(--text);">📋 Copiar Carimbo</button>
         ${safeEndereco ? `<button class="btn-action maps-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeEndereco)}', '_blank')">🗺️ Abrir no Maps/Waze</button>` : ''}
         ${wppNumber ? `<button class="btn-action wpp-btn" onclick="window.open('https://api.whatsapp.com/send?phone=55${wppNumber}', '_blank')">💬 WhatsApp / Ligar</button>` : ''}
-      </div>` : ''}
+      </div>
 
       <div class="editable-field" data-label="Observações" data-empty="Nenhuma observação." contenteditable="${editable}" data-id="${m.id}" data-field="descricao" onblur="window.saveField(this.getAttribute('data-id'), this.getAttribute('data-field'), this.innerText)">${escapeHTML(m.descricao || m.obs_despacho || '')}</div>
       
@@ -706,6 +707,15 @@ window.saveField = async (id, fieldName, val) => {
 window.updateManutencaoStatus = async (id, newStatus) => {
   const record = manutencoes.find(m => m.id === id);
   if (!record) return;
+  
+  if (newStatus === 'Finalizado' || newStatus === 'Concluído') {
+    const confirmacao = confirm('Ao alterar para "Finalizado", este card será bloqueado e não poderá mais ser editado.\nDeseja continuar?');
+    if (!confirmacao) {
+      renderTimeline(); // Reverte a UI para o status anterior
+      return;
+    }
+  }
+
   record.status = newStatus;
   
   try {
@@ -716,3 +726,45 @@ window.updateManutencaoStatus = async (id, newStatus) => {
     alert('Erro ao atualizar status');
   }
 }
+
+window.copyCarimbo = (id) => {
+  const record = manutencoes.find(m => m.id === id);
+  if (!record) return;
+
+  const text = `📋 CARIMBO DE ATENDIMENTO — INFOREADY TECNOLOGIA LTDA
+
+Protocolo: ${record.protocolo || '—'}
+Nº Contrato: ${record.contrato || '—'}
+Cliente / Razão Social: ${record.cliente || '—'}
+Contato: ${record.contato || '—'}
+Endereço do Serviço: ${record.endereco || '—'}
+Telefones: ${record.telefones || '—'}
+Descrição: ${record.descricao || record.obs_despacho || '—'}`;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Carimbo copiado para a área de transferência!');
+    }).catch(err => {
+      console.error('Erro ao copiar carimbo: ', err);
+      alert('Não foi possível copiar o carimbo automaticamente.');
+    });
+  } else {
+    // Fallback for non-secure contexts (http) or unsupported browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert('Carimbo copiado para a área de transferência!');
+    } catch (err) {
+      console.error('Erro ao copiar carimbo: ', err);
+      alert('Não foi possível copiar o carimbo automaticamente.');
+    }
+    textArea.remove();
+  }
+};
