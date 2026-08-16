@@ -305,10 +305,10 @@ export default class EstoqueModule {
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
       Toast.success("Etiqueta identificada com sucesso!");
       
-      const safeCat = escapeHTML(result.categoria || 'Outros');
+      const safeCat = escapeHTML(result.categoria || '');
       const safeMarca = escapeHTML(result.marca || '');
       const safeModelo = escapeHTML(result.modelo || '');
-      const safeSerial = escapeHTML(result.serial || 'S/N Desconhecido');
+      const safeSerial = escapeHTML(result.serial || '');
 
       const msgHtml = `
         <p style="margin-bottom:12px; color:var(--text-dim);">Revise os dados capturados pela IA antes de adicionar ao estoque:</p>
@@ -334,14 +334,14 @@ export default class EstoqueModule {
       
       if (confirmed) {
         const row = [
-          inputs['ai-categoria'] || 'Outros',
+          inputs['ai-categoria'] || '',
           inputs['ai-marca'] || '',
           inputs['ai-modelo'] || '',
-          inputs['ai-serial'] || 'S/N Desconhecido',
+          inputs['ai-serial'] || '',
           1,
-          1,
-          'Disponível',
           'Sede / Depósito',
+          'Disponível',
+          '',
           new Date().toLocaleDateString('pt-BR'),
           'Cadastrado via IA'
         ];
@@ -499,14 +499,14 @@ export default class EstoqueModule {
 
     // 1. Adicionar o "Defeituoso" na aba "Logística Reversa"
     const rowRetirado = [
-      retirado.categoria || 'Outros',     // Categoria
+      retirado.categoria || '',           // Categoria
       retirado.marca || '',               // Marca
       retirado.modelo || '',              // Modelo
-      retirado.serial || 'S/N Desconhecido', // Série
+      retirado.serial || '',              // Série
       1,                                  // Qtd
-      1,                                  // Min
+      `Retirado em Campo (${ticketText})`,// Localização
       'Defeituoso',                       // Status
-      `Retirado em Campo (${ticketText})`, // Localização
+      '',                                 // Logistica VAG (assumindo mesma estrutura)
       new Date().toLocaleDateString('pt-BR'), // Data
       ticketText || 'Sem chamado'         // Obs
     ];
@@ -515,22 +515,22 @@ export default class EstoqueModule {
 
     // 2. Dar baixa no "Novo" ou cadastrar como "Em Uso"
     const rowNovo = [
-      novo.categoria || 'Outros',
+      novo.categoria || '',
       novo.marca || '',
       novo.modelo || '',
-      novo.serial || 'S/N Desconhecido',
+      novo.serial || '',
       1,
-      1,
-      'Em Uso',
-      `Instalado (${ticketText})`,
-      new Date().toLocaleDateString('pt-BR'),
-      'Instalado via Substituição em Campo'
+      `Instalado (${ticketText})`, // Localização
+      'Em Uso',                    // Status
+      '',                          // Logistica VAG
+      new Date().toLocaleDateString('pt-BR'), // Data
+      'Instalado via Substituição em Campo'   // Obs
     ];
     enqueueWrite('append', { sheetName: 'Estoque Disponível', rowData: rowNovo });
 
     // 3. Atualizar o chamado se selecionado
     if (sheetName && rowIndex) {
-      const msgSub = `n[SISTEMA] Substituição em Campo: Retirado (${retirado.marca} ${retirado.serial || 'S/N Desconhecido'}) -> Instalado (${novo.marca} ${novo.serial || 'S/N Desconhecido'})`;
+      const msgSub = `\\n[SISTEMA] Substituição em Campo: Retirado (${retirado.marca || ''} ${retirado.serial || '(Sem S/N)'}) -> Instalado (${novo.marca || ''} ${novo.serial || '(Sem S/N)'})`;
       // Atualizando coluna "Observações / Histórico" (coluna 11/K no B2B, 9/I no Inc)
       const targetCol = sheetName === 'Chamados B2B' ? 11 : 9;
       enqueueWrite('update', { sheetName, row: rowIndex, col: targetCol, value: msgSub });
