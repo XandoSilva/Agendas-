@@ -33,23 +33,22 @@ O sistema é um **PWA Mobile-First** construído em Vanilla JS que utiliza o **G
 ### 🧩 Módulos (`js/modules/`)
 Os módulos abaixo já foram integrados com o RBAC e exibem os botões de **"Editar"** que abrem o `EditModal` ou possuem botões de ação rápida:
 - `ChamadosB2BModule.js`
-- `IncidentesModule.js`
+- `IncidentesModule.js` (Lógica de filtragem refatorada com chips de status e dropdowns).
 - `VistoriasModule.js` (inclui atalho para Google Maps)
 - `InfraModule.js` (inclui atalho para Google Maps)
+- `EstoqueModule.js` (Integrado com **Google Gemini Vision API** para escaneamento de etiquetas e automação completa do fluxo de **Substituição em Campo**, interagindo com B2B, Incidentes e Logística Reversa).
 
 ## 4. O que FALTA implementar (Pendências)
 
 Abaixo estão as próximas tarefas da fila de desenvolvimento (Fases 4 a 6):
 
-1. **Módulo de Estoque (`EstoqueModule.js`)**: 
-   - Falta adicionar a capacidade de editar quantidades e registrar saídas/entradas, semelhante aos outros módulos.
-2. **PWA Completo (Offline Support)**: 
+1. **PWA Completo (Offline Support)**: 
    - Criar ou atualizar o `sw.js` (Service Worker) para interceptar rotas e fazer cache da aplicação (app shell).
    - Revisar e completar o `manifest.json`.
-3. **UX & Micro-Interações**:
+2. **UX & Micro-Interações**:
    - Componente `PullToRefresh.js`: Para puxar a tela para baixo no celular e recarregar a planilha (igual feed de Instagram).
    - Componente `SwipeCard.js`: Para deslizar um card para a direita/esquerda e realizar ações rápidas.
-4. **Configuração Google Cloud (IMPORTANTE)**:
+3. **Configuração Google Cloud (IMPORTANTE)**:
    - Para que o write-back funcione no mundo real, o `CLIENT_ID` dentro de `auth.js` que hoje está como placeholder (`'COLE_SEU_CLIENT_ID_AQUI'`) precisará ser substituído por um Client ID válido de um projeto no Google Cloud com as APIs habilitadas (Drive e Sheets) e permissões de OAuth configuradas.
 
 ## 5. Como Iniciar / Navegar no Projeto

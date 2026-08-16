@@ -1,14 +1,17 @@
 /**
- * EstoqueModule - Controle de Estoque VERO
+ * EstoqueModule - Controle de Estoque VERO com IA Vision
  * Consome a aba "Estoque Disponível" (gid=738843736)
  */
 import { escapeHTML } from '../services/sheets-api.js';
 import { canEdit } from '../services/rbac.js';
+import { VisionAPI } from '../services/vision-api.js';
+import { enqueueWrite } from '../services/sheets-write-api.js';
 
 export default class EstoqueModule {
   constructor() {
     this.container = null;
     this.data = [];
+    this.allData = null;
     this.filterCat = 'TODOS';
     this.searchTerm = '';
     this._editCallback = null;
@@ -20,6 +23,7 @@ export default class EstoqueModule {
 
   render(allData) {
     if (!this.container) return;
+    this.allData = allData;
     this.data = allData.estoque || [];
 
     const filtered = this.data.filter(item => {
@@ -63,6 +67,26 @@ export default class EstoqueModule {
         <div class="module-title-group">
           <h2 class="module-title">📦 Estoque VERO</h2>
           <p class="module-subtitle">Controle de equipamentos e sobressalentes — ${this.data.length} registros</p>
+          <div class="module-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn" id="btn-ai-scan" style="background:var(--primary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
+                <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM12 12v.01M16 16v.01M16 20v.01M20 16v.01M12 16v.01M12 20v.01M20 12v.01"/>
+              </svg>
+              Leitor IA
+            </button>
+            <button class="btn" id="btn-substitute" style="background:var(--purple);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
+                <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+              </svg>
+              Substituição em Campo
+            </button>
+            <button class="btn btn-icon" id="btn-ai-settings" title="Configurar IA" style="background:transparent; border:1px solid var(--border); color:var(--text);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="filters-container">
           <div class="filters-actions">
@@ -128,7 +152,7 @@ export default class EstoqueModule {
     } else if (qtd <= min || statusUpper.includes('ALERTA')) {
       badgeClass = 'badge-atenuacao';
       statusText = statusTextRaw || 'Atenção';
-    } else if (statusUpper.includes('RESERVA') || statusUpper.includes('USO')) {
+    } else if (statusUpper.includes('RESERVA') || statusUpper.includes('USO') || statusUpper.includes('REVERSA')) {
       badgeClass = 'badge-designado';
     } else {
       badgeClass = 'badge-normalizado';
@@ -161,18 +185,17 @@ export default class EstoqueModule {
     if (search) {
       search.addEventListener('input', (e) => {
         this.searchTerm = e.target.value;
-        this.render({ estoque: this.data });
+        this.render(this.allData);
       });
     }
 
     this.container.querySelectorAll('.filter-chip[data-filter]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.filterCat = btn.dataset.filter;
-        this.render({ estoque: this.data });
+        this.render(this.allData);
       });
     });
 
-    // Edit buttons
     this.container.querySelectorAll('.action-btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx);
@@ -192,6 +215,256 @@ export default class EstoqueModule {
         }
       });
     });
+
+    // IA Settings
+    const btnAiSettings = this.container.querySelector('#btn-ai-settings');
+    if (btnAiSettings) {
+      btnAiSettings.addEventListener('click', () => {
+        const currentKey = VisionAPI.getApiKey();
+        const newKey = prompt("Insira a chave da API do Google Gemini (AI Studio):", currentKey);
+        if (newKey !== null) {
+          VisionAPI.setApiKey(newKey);
+          alert("Chave de API salva com sucesso!");
+        }
+      });
+    }
+
+    // AI Scan
+    const btnAiScan = this.container.querySelector('#btn-ai-scan');
+    if (btnAiScan) {
+      btnAiScan.addEventListener('click', () => this._handleAIScan());
+    }
+
+    // AI Substitute
+    const btnSubstitute = this.container.querySelector('#btn-substitute');
+    if (btnSubstitute) {
+      btnSubstitute.addEventListener('click', () => this._handleSubstitute());
+    }
+  }
+
+  async _handleAIScan() {
+    if (!VisionAPI.hasApiKey()) {
+      alert("Configure a chave da API do Gemini primeiro (ícone de engrenagem).");
+      return;
+    }
+    const file = await this._promptCamera();
+    if (!file) return;
+
+    const overlay = this._showLoading("Analisando imagem com IA...");
+    try {
+      const { base64, mimeType } = await VisionAPI.fileToBase64(file);
+      const prompt = `Analise a imagem desta etiqueta de equipamento e retorne um JSON estrito, sem markdown, contendo as chaves: "marca", "modelo", "serial", "categoria". Se não identificar algo, deixe vazio.`;
+      const result = await VisionAPI.analyzeImage(base64, mimeType, prompt);
+      
+      document.body.removeChild(overlay);
+      alert(`Resultados da IA:nMarca: ${result.marca}nModelo: ${result.modelo}nS/N: ${result.serial}nCategoria: ${result.categoria}`);
+    } catch (err) {
+      document.body.removeChild(overlay);
+      alert("Erro na IA: " + err.message);
+    }
+  }
+
+  async _handleSubstitute() {
+    if (!VisionAPI.hasApiKey()) {
+      alert("Configure a chave da API do Gemini primeiro (ícone de engrenagem).");
+      return;
+    }
+
+    const modalHtml = `
+      <div class="modal-overlay" id="substitute-modal">
+        <div class="modal-content" style="max-width:500px;">
+          <div class="modal-header">
+            <h3>Substituição em Campo</h3>
+            <button class="close-btn" onclick="document.body.removeChild(document.getElementById('substitute-modal'))">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p><strong>1. Equipamento Retirado (Defeituoso)</strong></p>
+            <div id="sub-retirado-data" style="margin-bottom:8px; font-size:13px; color:var(--text-dim);">Aguardando foto...</div>
+            <button class="btn btn-outline" id="btn-foto-retirado" style="width:100%; margin-bottom: 24px;">📸 Tirar Foto da Etiqueta</button>
+
+            <p><strong>2. Equipamento Novo (Instalado)</strong></p>
+            <div id="sub-novo-data" style="margin-bottom:8px; font-size:13px; color:var(--text-dim);">Aguardando foto...</div>
+            <button class="btn btn-outline" id="btn-foto-novo" style="width:100%; margin-bottom: 24px;">📸 Tirar Foto da Etiqueta</button>
+
+            <p><strong>3. Chamado Relacionado</strong></p>
+            <select id="sub-chamado-select" class="form-input" style="width:100%; margin-bottom: 24px;">
+              <option value="">Selecione um chamado aberto...</option>
+              ${this._getOpenTicketsOptions()}
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline" onclick="document.body.removeChild(document.getElementById('substitute-modal'))">Cancelar</button>
+            <button class="btn btn-primary" id="btn-sub-confirm" disabled>Confirmar Substituição</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('substitute-modal');
+    let retiradoData = null;
+    let novoData = null;
+
+    modal.querySelector('#btn-foto-retirado').addEventListener('click', async () => {
+      const file = await this._promptCamera();
+      if (!file) return;
+      const overlay = this._showLoading("Analisando equipamento retirado...");
+      try {
+        const { base64, mimeType } = await VisionAPI.fileToBase64(file);
+        const prompt = `Analise a etiqueta e retorne JSON: {"marca":"", "modelo":"", "serial":"", "categoria":""}`;
+        retiradoData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
+        document.body.removeChild(overlay);
+        modal.querySelector('#sub-retirado-data').innerHTML = `
+          <strong style="color:var(--text);">S/N: ${retiradoData.serial || '?'}</strong> - ${retiradoData.marca} ${retiradoData.modelo} <span class="badge badge-cancelado" style="font-size:10px;">Defeito</span>
+        `;
+        this._checkSubReady(modal, retiradoData, novoData);
+      } catch (e) {
+        document.body.removeChild(overlay);
+        alert(e.message);
+      }
+    });
+
+    modal.querySelector('#btn-foto-novo').addEventListener('click', async () => {
+      const file = await this._promptCamera();
+      if (!file) return;
+      const overlay = this._showLoading("Analisando equipamento novo...");
+      try {
+        const { base64, mimeType } = await VisionAPI.fileToBase64(file);
+        const prompt = `Analise a etiqueta e retorne JSON: {"marca":"", "modelo":"", "serial":"", "categoria":""}`;
+        novoData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
+        document.body.removeChild(overlay);
+        modal.querySelector('#sub-novo-data').innerHTML = `
+          <strong style="color:var(--text);">S/N: ${novoData.serial || '?'}</strong> - ${novoData.marca} ${novoData.modelo} <span class="badge badge-normalizado" style="font-size:10px;">Novo</span>
+        `;
+        this._checkSubReady(modal, retiradoData, novoData);
+      } catch (e) {
+        document.body.removeChild(overlay);
+        alert(e.message);
+      }
+    });
+
+    modal.querySelector('#btn-sub-confirm').addEventListener('click', () => {
+      const select = modal.querySelector('#sub-chamado-select');
+      const ticketId = select.value;
+      const ticketText = select.options[select.selectedIndex].text;
+      
+      this._commitSubstitution(retiradoData, novoData, ticketId, ticketText);
+      document.body.removeChild(modal);
+    });
+  }
+
+  _checkSubReady(modal, retiradoData, novoData) {
+    const btn = modal.querySelector('#btn-sub-confirm');
+    if (retiradoData && novoData) {
+      btn.removeAttribute('disabled');
+    } else {
+      btn.setAttribute('disabled', 'true');
+    }
+  }
+
+  _commitSubstitution(retirado, novo, ticketVal, ticketText) {
+    let sheetName = null;
+    let rowIndex = null;
+
+    if (ticketVal) {
+      const parts = ticketVal.split('|');
+      if (parts.length === 3) {
+        rowIndex = parseInt(parts[1], 10);
+        sheetName = parts[2];
+      }
+    }
+
+    // 1. Adicionar o "Defeituoso" na aba "Logística Reversa"
+    const rowRetirado = [
+      retirado.categoria || 'Outros',     // Categoria
+      retirado.marca || '',               // Marca
+      retirado.modelo || '',              // Modelo
+      retirado.serial || 'S/N Desconhecido', // Série
+      1,                                  // Qtd
+      1,                                  // Min
+      'Defeituoso',                       // Status
+      `Retirado em Campo (${ticketText})`, // Localização
+      new Date().toLocaleDateString('pt-BR'), // Data
+      ticketText || 'Sem chamado'         // Obs
+    ];
+
+    enqueueWrite('append', { sheetName: 'Logística Reversa', rowData: rowRetirado });
+
+    // 2. Dar baixa no "Novo" ou cadastrar como "Em Uso"
+    const rowNovo = [
+      novo.categoria || 'Outros',
+      novo.marca || '',
+      novo.modelo || '',
+      novo.serial || 'S/N Desconhecido',
+      1,
+      1,
+      'Em Uso',
+      `Instalado (${ticketText})`,
+      new Date().toLocaleDateString('pt-BR'),
+      'Instalado via Substituição em Campo'
+    ];
+    enqueueWrite('append', { sheetName: 'Estoque Disponível', rowData: rowNovo });
+
+    // 3. Atualizar o chamado se selecionado
+    if (sheetName && rowIndex) {
+      const msgSub = `n[SISTEMA] Substituição em Campo: Retirado (${retirado.marca} ${retirado.serial || 'S/N Desconhecido'}) -> Instalado (${novo.marca} ${novo.serial || 'S/N Desconhecido'})`;
+      // Atualizando coluna "Observações / Histórico" (coluna 11/K no B2B, 9/I no Inc)
+      const targetCol = sheetName === 'Chamados B2B' ? 11 : 9;
+      enqueueWrite('update', { sheetName, row: rowIndex, col: targetCol, value: msgSub });
+    }
+
+    alert('Substituição registrada! A fila offline enviará os dados em breve.');
+  }
+
+  _getOpenTicketsOptions() {
+    let options = '';
+    // B2B Pendentes
+    const b2bPendentes = (this.allData?.chamadosB2B || []).filter(c => {
+      const st = (c['Agendamento / Acesso'] || '').toUpperCase();
+      return !st.includes('CONCLUÍDO') && !st.includes('CANCELADO');
+    });
+    b2bPendentes.forEach(c => {
+      options += `<option value="B2B|${c._rowIndex}|Chamados B2B">[B2B] ${c['Cliente / Empresa']} - ${c['Agendamento / Acesso']}</option>`;
+    });
+
+    // Incidentes Pendentes
+    const incPendentes = (this.allData?.incidentes || []).filter(c => {
+      const st = (c['Status'] || '').toUpperCase();
+      return !st.includes('CONCLUÍDO') && !st.includes('CANCELADO') && !st.includes('FINALIZADO');
+    });
+    incPendentes.forEach(c => {
+      options += `<option value="INC|${c._rowIndex}|Incidentes">[INC] ${c['Origem']} - ${c['Ativo Relacionado']}</option>`;
+    });
+
+    return options;
+  }
+
+  _promptCamera() {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = (e) => {
+        resolve(e.target.files[0] || null);
+      };
+      input.click();
+    });
+  }
+
+  _showLoading(msg) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content" style="text-align:center; padding: 40px; background:var(--bg-card);">
+        <div class="spinner" style="margin: 0 auto 16px;"></div>
+        <p style="color:var(--text); font-weight:500;">${msg}</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
   }
 
   renderLoading() {
