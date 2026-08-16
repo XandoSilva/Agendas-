@@ -242,9 +242,42 @@ export default class EstoqueModule {
     }
   }
 
+  _showCustomDialog(title, htmlContent, showCancel = false) {
+    return new Promise((resolve) => {
+      const modalHtml = `
+      <div class="modal-overlay" id="custom-dialog-modal">
+        <div class="modal-content" style="max-width:400px;">
+          <div class="modal-header">
+            <h3>${title}</h3>
+            <button class="close-btn" id="dialog-close-btn">&times;</button>
+          </div>
+          <div class="modal-body" style="padding: 16px; font-size: 14px; text-align: left;">
+            ${htmlContent}
+          </div>
+          <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+            ${showCancel ? `<button class="btn btn-outline" id="dialog-cancel-btn" style="background:var(--bg-hover); color:var(--text-color); border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancelar</button>` : ''}
+            <button class="btn btn-primary" id="dialog-confirm-btn" style="background:var(--primary-color); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">OK</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = document.getElementById('custom-dialog-modal');
+      
+      const cleanup = () => {
+        if (document.body.contains(modal)) document.body.removeChild(modal);
+      };
+      
+      modal.querySelector('#dialog-close-btn').addEventListener('click', () => { cleanup(); resolve(false); });
+      if (showCancel) {
+        modal.querySelector('#dialog-cancel-btn').addEventListener('click', () => { cleanup(); resolve(false); });
+      }
+      modal.querySelector('#dialog-confirm-btn').addEventListener('click', () => { cleanup(); resolve(true); });
+    });
+  }
+
   async _handleAIScan() {
     if (!VisionAPI.hasApiKey()) {
-      alert("Configure a chave da API do Gemini primeiro (ícone de engrenagem).");
+      await this._showCustomDialog("Atenção", "Configure a chave da API do Gemini primeiro (ícone de engrenagem).", false);
       return;
     }
     const file = await this._promptCamera();
@@ -258,9 +291,20 @@ export default class EstoqueModule {
       
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
       
-      const msg = `Resultados da IA:\n\nMarca: ${result.marca || '-'}\nModelo: ${result.modelo || '-'}\nS/N: ${result.serial || '-'}\nCategoria: ${result.categoria || '-'}\n\nDeseja adicionar este item ao Estoque Disponível?`;
+      const msgHtml = `
+        <p><strong>Resultados da IA:</strong></p>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li><b>Marca:</b> ${result.marca || '-'}</li>
+          <li><b>Modelo:</b> ${result.modelo || '-'}</li>
+          <li><b>S/N:</b> ${result.serial || '-'}</li>
+          <li><b>Categoria:</b> ${result.categoria || '-'}</li>
+        </ul>
+        <p style="margin-top:10px;">Deseja adicionar este item ao Estoque Disponível?</p>
+      `;
       
-      if (confirm(msg)) {
+      const confirmed = await this._showCustomDialog("Confirmação", msgHtml, true);
+      
+      if (confirmed) {
         const row = [
           result.categoria || 'Outros',
           result.marca || '',
@@ -275,12 +319,12 @@ export default class EstoqueModule {
         ];
         
         enqueueWrite('append', { sheetName: 'Estoque Disponível', rowData: row });
-        alert('Item adicionado à fila de sincronização com sucesso!');
+        await this._showCustomDialog("Sucesso", "Item adicionado à fila de sincronização com sucesso!", false);
         import('../services/sheets-write-api.js').then(m => m.processQueue());
       }
     } catch (err) {
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
-      alert("Erro na IA: " + err.message);
+      await this._showCustomDialog("Erro na IA", err.message, false);
     }
   }
 
