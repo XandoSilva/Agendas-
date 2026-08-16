@@ -296,6 +296,8 @@ export default class EstoqueModule {
     if (!file) return;
 
     const overlay = this._showLoading("Analisando imagem com IA...");
+    await new Promise(r => setTimeout(r, 50)); // Garante que a UI renderize o overlay
+    
     try {
       const { base64, mimeType } = await VisionAPI.fileToBase64(file);
       const prompt = `Analise a imagem desta etiqueta de equipamento e retorne um JSON estrito, sem markdown, contendo as chaves: "marca", "modelo", "serial", "categoria". Se não identificar algo, deixe vazio.`;

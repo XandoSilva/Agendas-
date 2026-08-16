@@ -69,15 +69,29 @@ export class VisionAPI {
         // Algoritmo robusto para encontrar apenas o primeiro bloco JSON válido
         let start = cleanedText.indexOf('{');
         if (start !== -1) {
-          let depth = 0;
+          let end = -1;
           for (let i = start; i < cleanedText.length; i++) {
             if (cleanedText[i] === '{') depth++;
             else if (cleanedText[i] === '}') {
               depth--;
               if (depth === 0) {
-                cleanedText = cleanedText.substring(start, i + 1);
+                end = i + 1;
                 break;
               }
+            }
+          }
+          
+          if (end !== -1) {
+            cleanedText = cleanedText.substring(start, end);
+          } else {
+            cleanedText = cleanedText.substring(start);
+            // Fechar string aberta se houver
+            const quotes = (cleanedText.match(/"/g) || []).length;
+            if (quotes % 2 !== 0) cleanedText += '"';
+            // Fechar chaves abertas
+            while (depth > 0) {
+              cleanedText += '}';
+              depth--;
             }
           }
         }
@@ -85,7 +99,7 @@ export class VisionAPI {
         return JSON.parse(cleanedText);
       } catch (e) {
         console.warn("Retorno da IA não é um JSON válido:", rawText);
-        return rawText;
+        throw new Error("A IA retornou um formato inválido ou incompleto. Tente novamente tirando outra foto.");
       }
     } catch (error) {
       console.error("[VisionAPI] Error:", error);
