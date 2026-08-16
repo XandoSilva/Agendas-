@@ -64,7 +64,8 @@ export class VisionAPI {
       if (!rawText) throw new Error("A IA não retornou nenhum texto útil.");
 
       try {
-        return JSON.parse(rawText);
+        const cleanedText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        return JSON.parse(cleanedText);
       } catch (e) {
         console.warn("Retorno da IA não é um JSON válido:", rawText);
         return rawText;
