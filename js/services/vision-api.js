@@ -64,7 +64,24 @@ export class VisionAPI {
       if (!rawText) throw new Error("A IA não retornou nenhum texto útil.");
 
       try {
-        const cleanedText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        let cleanedText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+        
+        // Algoritmo robusto para encontrar apenas o primeiro bloco JSON válido
+        let start = cleanedText.indexOf('{');
+        if (start !== -1) {
+          let depth = 0;
+          for (let i = start; i < cleanedText.length; i++) {
+            if (cleanedText[i] === '{') depth++;
+            else if (cleanedText[i] === '}') {
+              depth--;
+              if (depth === 0) {
+                cleanedText = cleanedText.substring(start, i + 1);
+                break;
+              }
+            }
+          }
+        }
+        
         return JSON.parse(cleanedText);
       } catch (e) {
         console.warn("Retorno da IA não é um JSON válido:", rawText);
