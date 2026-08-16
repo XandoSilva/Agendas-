@@ -75,21 +75,15 @@ export default class EstoqueModule {
           <div class="module-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn" id="btn-ai-scan" style="background:var(--primary); display:flex; align-items:center;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle>
               </svg>
               Leitor IA
             </button>
             <button class="btn" id="btn-substitute" style="background:var(--purple); display:flex; align-items:center;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
-                <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+                <path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
               </svg>
               Substituição em Campo
-            </button>
-            <button class="btn btn-icon" id="btn-ai-settings" title="Configurar IA" style="background:transparent; border:1px solid var(--border); color:var(--text);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
             </button>
           </div>
         </div>
@@ -285,11 +279,6 @@ export default class EstoqueModule {
   }
 
   async _handleAIScan() {
-    if (!VisionAPI.hasApiKey()) {
-      Toast.warning("Configure a chave do Gemini primeiro!");
-      await this._showCustomDialog("Atenção", "Configure a chave da API do Gemini primeiro (ícone de engrenagem).", false);
-      return;
-    }
     const file = await this._promptCamera();
     if (!file) return;
 
@@ -399,12 +388,6 @@ export default class EstoqueModule {
   }
 
   async _handleSubstitute() {
-    if (!VisionAPI.hasApiKey()) {
-      Toast.warning("Configure a chave da API do Gemini primeiro!");
-      await this._showCustomDialog("Atenção", "Configure a chave da API do Gemini primeiro (ícone de engrenagem).", false);
-      return;
-    }
-
     const modalHtml = `
       <div class="modal-overlay" id="substitute-modal">
         <div class="modal-content" style="max-width:500px;">
