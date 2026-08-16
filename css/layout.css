@@ -8,7 +8,7 @@
 html, body {
   height: 100%;
   font-family: var(--font-body);
-  background: url('../img/vero-bg.png') center center / cover no-repeat fixed, var(--bg);
+  background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

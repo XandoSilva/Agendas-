@@ -134,7 +134,7 @@ export default class DashboardModule {
     (data.chamadosB2B || []).forEach(item => {
       const isAberto = this._isDateInPeriod(item['Dt. Abertura'], period);
       const isConcluido = this._isDateInPeriod(item['Dt. Finalizado'] || item['Dt. Finalizado / Previsão'], period) && 
-                          (item['Status / Andamento'] || '').toUpperCase().includes('NORMALIZADO');
+                          (item['Agendamento / Acesso'] || '').toUpperCase().includes('NORMALIZADO');
       
       const inScope = isAberto || isConcluido;
       const p = getProd(item['Técnico / Responsável']);

@@ -31,11 +31,11 @@ export default class ChamadosB2BModule {
     const tecnicos = this._getUniqueValues('Técnico / Responsável');
     const diagnosticos = this._getUniqueValues('Diagnóstico / Tipo de Falha');
 
-    const normalizadoCount = this.data.filter(i => (i['Status / Andamento'] || '').toUpperCase().includes('NORMALIZADO')).length;
-    const canceladoCount = this.data.filter(i => (i['Status / Andamento'] || '').toUpperCase().includes('CANCELADO')).length;
+    const normalizadoCount = this.data.filter(i => (i['Agendamento / Acesso'] || '').toUpperCase().includes('NORMALIZADO')).length;
+    const canceladoCount = this.data.filter(i => (i['Agendamento / Acesso'] || '').toUpperCase().includes('CANCELADO')).length;
     const pendentesCount = this.data.length - normalizadoCount - canceladoCount;
     const atenuacaoCount = this.data.filter(i => {
-      const s = (i['Status / Andamento'] || '').toUpperCase();
+      const s = (i['Agendamento / Acesso'] || '').toUpperCase();
       return s.includes('ATENUAÇÃO') || s.includes('ATENUACAO');
     }).length;
 
@@ -83,7 +83,7 @@ export default class ChamadosB2BModule {
 
   _applyFilters() {
     this.filteredData = this.data.filter(item => {
-      const status = (item['Status / Andamento'] || '').toUpperCase();
+      const status = (item['Agendamento / Acesso'] || '').toUpperCase();
       
       if (this.filterTecnico && (item['Técnico / Responsável'] || '').trim() !== this.filterTecnico) {
         return false;
@@ -124,17 +124,17 @@ export default class ChamadosB2BModule {
         count = this.data.length;
       } else if (f.id === 'PENDENTES') {
         count = this.data.filter(item => {
-          const s = (item['Status / Andamento'] || '').toUpperCase();
+          const s = (item['Agendamento / Acesso'] || '').toUpperCase();
           return !s.includes('NORMALIZADO') && !s.includes('CANCELADO');
         }).length;
       } else if (f.id === 'CONCLUÍDOS') {
         count = this.data.filter(item => {
-          const s = (item['Status / Andamento'] || '').toUpperCase();
+          const s = (item['Agendamento / Acesso'] || '').toUpperCase();
           return s.includes('NORMALIZADO');
         }).length;
       } else {
         count = this.data.filter(item => {
-          const s = (item['Status / Andamento'] || '').toUpperCase();
+          const s = (item['Agendamento / Acesso'] || '').toUpperCase();
           return s.includes(f.id.toUpperCase());
         }).length;
       }
@@ -153,7 +153,7 @@ export default class ChamadosB2BModule {
     }
 
     return this.filteredData.map((item, i) => {
-      const statusBadge = this._getStatusBadge(item['Status / Andamento'] || '');
+      const statusBadge = this._getStatusBadge(item['Agendamento / Acesso'] || '');
       const diagBadge = this._getDiagBadge(item['Diagnóstico / Tipo de Falha'] || '');
       const endereco = item['Endereço'] || '';
       const numero = item['Número / Complemento'] || '';
