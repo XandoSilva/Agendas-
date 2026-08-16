@@ -403,18 +403,19 @@ export default class EstoqueModule {
       const file = await this._promptCamera();
       if (!file) return;
       const overlay = this._showLoading("Analisando equipamento retirado...");
+      await new Promise(r => setTimeout(r, 50));
       try {
         const { base64, mimeType } = await VisionAPI.fileToBase64(file);
         const prompt = `Analise a etiqueta e retorne JSON: {"marca":"", "modelo":"", "serial":"", "categoria":""}`;
         retiradoData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
-        document.body.removeChild(overlay);
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
         modal.querySelector('#sub-retirado-data').innerHTML = `
           <strong style="color:var(--text);">S/N: ${retiradoData.serial || '?'}</strong> - ${retiradoData.marca} ${retiradoData.modelo} <span class="badge badge-cancelado" style="font-size:10px;">Defeito</span>
         `;
         this._checkSubReady(modal, retiradoData, novoData);
       } catch (e) {
-        document.body.removeChild(overlay);
-        alert(e.message);
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        await this._showCustomDialog("Erro na IA", e.message, false);
       }
     });
 
@@ -422,18 +423,19 @@ export default class EstoqueModule {
       const file = await this._promptCamera();
       if (!file) return;
       const overlay = this._showLoading("Analisando equipamento novo...");
+      await new Promise(r => setTimeout(r, 50));
       try {
         const { base64, mimeType } = await VisionAPI.fileToBase64(file);
         const prompt = `Analise a etiqueta e retorne JSON: {"marca":"", "modelo":"", "serial":"", "categoria":""}`;
         novoData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
-        document.body.removeChild(overlay);
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
         modal.querySelector('#sub-novo-data').innerHTML = `
           <strong style="color:var(--text);">S/N: ${novoData.serial || '?'}</strong> - ${novoData.marca} ${novoData.modelo} <span class="badge badge-normalizado" style="font-size:10px;">Novo</span>
         `;
         this._checkSubReady(modal, retiradoData, novoData);
       } catch (e) {
-        document.body.removeChild(overlay);
-        alert(e.message);
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        await this._showCustomDialog("Erro na IA", e.message, false);
       }
     });
 
