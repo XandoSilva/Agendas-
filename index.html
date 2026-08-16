@@ -159,36 +159,37 @@
         </nav>
         <div id="toast-container"></div>
 
-    <!-- Nebula Login Overlay -->
+    <!-- Vero Login Overlay (Using Nebula IDs for JS compat) -->
     <div id="nebula-login-overlay" class="nebula-login-overlay">
-        <h1 class="nebula-login-title">Nebula login</h1>
+        <div class="login-brand-logo">V</div>
+        <h1 class="nebula-login-title">VERO Telecom</h1>
         
         <div class="nebula-login-card">
             <!-- Tabs -->
             <div class="nebula-tabs">
                 <div id="nebula-tab-marker" class="nebula-tab-marker"></div>
-                <div id="nebula-tab-login" class="nebula-tab active">Login</div>
-                <div id="nebula-tab-register" class="nebula-tab" style="opacity:0.5; cursor:pointer;">Register</div>
+                <div id="nebula-tab-login" class="nebula-tab active">Entrar</div>
+                <div id="nebula-tab-register" class="nebula-tab" style="opacity:0.5; cursor:pointer;">Solicitar Acesso</div>
             </div>
 
             <div id="nebula-group-name" class="nebula-input-group" style="display:none;">
-                <label>FULL NAME</label>
+                <label>NOME COMPLETO</label>
                 <input type="text" id="nebula-name" placeholder="Seu nome completo">
             </div>
 
             <div class="nebula-input-group">
-                <label>EMAIL ADDRESS</label>
+                <label>E-MAIL CORPORATIVO</label>
                 <input type="email" id="nebula-email" placeholder="nome@verointernet.com.br">
             </div>
 
             <div class="nebula-input-group">
-                <label>PASSWORD</label>
+                <label>SENHA</label>
                 <input type="password" id="nebula-password" placeholder="••••••••">
             </div>
 
             <div id="nebula-error" class="nebula-error">E-mail ou senha incorretos.</div>
 
-            <button id="nebula-login-btn" class="nebula-btn">LOGIN</button>
+            <button id="nebula-login-btn" class="nebula-btn">ACESSAR PAINEL</button>
         </div>
     </div>
 

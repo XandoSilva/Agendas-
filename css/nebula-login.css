@@ -1,6 +1,6 @@
 /* 
    ========================================
-   Nebula Login Overlay
+   Vero Telecom Login Overlay
    ========================================
 */
 .nebula-login-overlay {
@@ -9,8 +9,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: #3952dc; /* Azul/Roxo do topo da imagem */
-    background: linear-gradient(180deg, #3952dc 0%, #1a1a40 100%);
+    background: url('../img/vero-bg.png') center center / cover no-repeat fixed, #080E1A;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -19,27 +18,55 @@
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
+.nebula-login-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 21, 42, 0.6); /* Vero Dark Navy overlay */
+    z-index: -1;
+}
+
 .nebula-login-overlay.hidden {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
+}
+
+.login-brand-logo {
+    width: 64px;
+    height: 64px;
+    background: var(--teal); /* Vero Orange */
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 20px rgba(243, 112, 33, 0.4);
 }
 
 .nebula-login-title {
-    color: #e94057; /* Laranja/Vermelho texto */
-    font-size: 3rem;
-    font-weight: 800;
-    font-family: serif; /* Na imagem parece uma serif moderna */
+    color: #FFFFFF;
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: var(--font-display);
     margin-bottom: 2rem;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    letter-spacing: -0.5px;
 }
 
 .nebula-login-card {
-    background: #0C1222;
+    background: rgba(21, 35, 69, 0.65); /* panel-2 */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     width: 90%;
     max-width: 400px;
-    border-radius: 24px;
-    padding: 2rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -48,23 +75,26 @@
 /* Tabs toggle (Login / Register visual only) */
 .nebula-tabs {
     display: flex;
-    background: #151e32;
+    background: rgba(0,0,0,0.2);
     border-radius: 12px;
     position: relative;
     padding: 4px;
     margin-bottom: 1rem;
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
 .nebula-tab {
     flex: 1;
     text-align: center;
-    padding: 12px 0;
-    color: rgba(255, 255, 255, 0.5);
+    padding: 10px 0;
+    color: rgba(255, 255, 255, 0.6);
     font-weight: 600;
-    font-size: 0.9rem;
-    cursor: default; /* Como é só visual pra esse projeto */
+    font-size: 0.85rem;
+    cursor: default;
     z-index: 2;
     position: relative;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .nebula-tab.active {
@@ -77,9 +107,9 @@
     left: 4px;
     height: calc(100% - 8px);
     width: calc(50% - 4px);
-    background: linear-gradient(45deg, #8a2387, #e94057, #f27121);
+    background: var(--teal); /* Orange */
     border-radius: 10px;
-    box-shadow: 0 0 20px rgba(233, 64, 87, 0.4);
+    box-shadow: 0 0 15px rgba(243, 112, 33, 0.3);
     z-index: 1;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -88,52 +118,58 @@
 .nebula-input-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
 }
 
 .nebula-input-group label {
     font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .nebula-input-group input {
-    background: #151e32;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 14px 16px;
     color: #ffffff;
-    font-size: 1rem;
+    font-size: 0.95rem;
     outline: none;
     transition: all 0.3s ease;
+    font-family: var(--font-body);
+}
+
+.nebula-input-group input::placeholder {
+    color: rgba(255,255,255,0.3);
 }
 
 .nebula-input-group input:focus {
-    border-color: #e94057;
-    box-shadow: 0 0 10px rgba(233, 64, 87, 0.2);
+    border-color: var(--teal);
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.15);
 }
 
 .nebula-btn {
     margin-top: 1rem;
-    background: linear-gradient(45deg, #8a2387, #e94057, #f27121);
+    background: var(--teal);
     border: none;
     border-radius: 12px;
     padding: 16px;
     color: #ffffff;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(233, 64, 87, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 15px rgba(243, 112, 33, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .nebula-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 25px rgba(233, 64, 87, 0.6);
+    background: #FF833B; /* Lighter orange */
+    box-shadow: 0 6px 20px rgba(243, 112, 33, 0.4);
 }
 
 .nebula-btn:active {
@@ -141,9 +177,10 @@
 }
 
 .nebula-error {
-    color: #ff4b4b;
+    color: var(--coral); /* Vero Pink */
     font-size: 0.85rem;
     text-align: center;
     margin-top: -0.5rem;
     display: none;
+    font-weight: 500;
 }

@@ -1,34 +1,34 @@
 /* ═══════════════════════════════════════════════════════════════
-   VERO TELECOM - Design System Variables
+   VERO TELECOM - Design System Variables (Vero Empresas)
    ═══════════════════════════════════════════════════════════════ */
 
 :root,
 [data-theme="dark"] {
   /* ── Core Palette ── */
-  --bg:          #080E1A;
-  --bg-elevated: #0C1425;
-  --panel:       #111A2E;
-  --panel-2:     rgba(17, 26, 46, 0.7);
-  --card-bg:     #141E33;
-  --card-hover:  #182440;
-  --line:        #1E2D4A;
-  --line-subtle: #162038;
+  --bg:          #080E1A; 
+  --bg-elevated: #101B36;
+  --panel:       #152345;
+  --panel-2:     rgba(21, 35, 69, 0.7);
+  --card-bg:     #1A2A54;
+  --card-hover:  #1F3263;
+  --line:        #293F7A;
+  --line-subtle: #1E2D5E;
 
   /* ── Text ── */
-  --text:        #E8ECF4;
-  --text-dim:    #C5CDD8;
-  --muted:       #8592A6;
-  --muted-2:     #5C6B85;
+  --text:        #FFFFFF;
+  --text-dim:    #CBD5E1;
+  --muted:       #94A3B8;
+  --muted-2:     #64748B;
 
-  /* ── Accent Colors ── */
-  --teal:        #2DD4BF;
-  --teal-dim:    rgba(45, 212, 191, 0.12);
+  /* ── Accent Colors (Vero Identity) ── */
+  --teal:        #F37021; /* Re-mapped to Vero Orange */
+  --teal-dim:    rgba(243, 112, 33, 0.12);
   --amber:       #F5A623;
   --amber-dim:   rgba(245, 166, 35, 0.12);
-  --coral:       #FB7185;
-  --coral-dim:   rgba(251, 113, 133, 0.12);
-  --violet:      #A78BFA;
-  --violet-dim:  rgba(167, 139, 250, 0.12);
+  --coral:       #E50064; /* Re-mapped to Vero Pink */
+  --coral-dim:   rgba(229, 0, 100, 0.12);
+  --violet:      #00B5E2; /* Re-mapped to Vero Light Blue */
+  --violet-dim:  rgba(0, 181, 226, 0.12);
   --green:       #4ADE80;
   --green-dim:   rgba(74, 222, 128, 0.12);
   --blue:        #60A5FA;
@@ -37,41 +37,41 @@
   --rose-dim:    rgba(244, 114, 182, 0.12);
   --cyan:        #22D3EE;
   --cyan-dim:    rgba(34, 211, 238, 0.12);
-  --orange:      #FB923C;
-  --orange-dim:  rgba(251, 146, 60, 0.12);
+  --orange:      #F37021;
+  --orange-dim:  rgba(243, 112, 33, 0.12);
   --sky:         #38BDF8;
   --sky-dim:     rgba(56, 189, 248, 0.12);
 
   /* ── Status Colors ── */
   --st-normalizado:  #4ADE80;
   --st-pendente:     #F5A623;
-  --st-atenuacao:    #FB923C;
-  --st-agendado:     #60A5FA;
-  --st-designado:    #A78BFA;
+  --st-atenuacao:    #F37021;
+  --st-agendado:     #00B5E2;
+  --st-designado:    #E50064;
   --st-deslocamento: #22D3EE;
   --st-atuando:      #F472B6;
   --st-concluido:    #4ADE80;
-  --st-cancelado:    #FB7185;
+  --st-cancelado:    #E50064;
   --st-validacao:    #FBBF24;
   --st-nao-realiz:   #94A3B8;
 
   /* ── Diagnóstico / Tipo ── */
-  --diag-rompimento:   #FB7185;
+  --diag-rompimento:   #E50064;
   --diag-qualidade:    #F5A623;
-  --diag-radio:        #FB923C;
-  --diag-swhw:         #A78BFA;
+  --diag-radio:        #F37021;
+  --diag-swhw:         #00B5E2;
   --diag-outros:       #94A3B8;
 
   /* ── Prioridade POP ── */
-  --pop-p1:  #FB7185;
+  --pop-p1:  #E50064;
   --pop-p2:  #F5A623;
   --pop-p3:  #4ADE80;
 
   /* ── Categoria Incidente ── */
-  --cat-backbone:  #FB7185;
-  --cat-caixa:     #FB923C;
+  --cat-backbone:  #E50064;
+  --cat-caixa:     #F37021;
   --cat-tarefas:   #60A5FA;
-  --cat-telefonia: #A78BFA;
+  --cat-telefonia: #00B5E2;
   --cat-pop:       #22D3EE;
 
   /* ── Typography ── */
@@ -83,7 +83,7 @@
   --shadow-sm:  0 1px 3px rgba(0,0,0,0.3);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.35);
   --shadow-lg:  0 8px 30px rgba(0,0,0,0.4);
-  --shadow-glow-teal: 0 0 20px rgba(45, 212, 191, 0.15);
+  --shadow-glow-teal: 0 0 20px rgba(243, 112, 33, 0.25);
 
   /* ── Radius ── */
   --radius-sm:  6px;
@@ -106,20 +106,20 @@
 }
 
 [data-theme="light"] {
-  --bg:          #F0F2F5;
-  --bg-elevated: #FAFBFC;
+  --bg:          #F8FAFC;
+  --bg-elevated: #FFFFFF;
   --panel:       #FFFFFF;
   --panel-2:     rgba(255, 255, 255, 0.85);
   --card-bg:     #FFFFFF;
-  --card-hover:  #F5F6F8;
-  --line:        #E2E5EA;
-  --line-subtle: #EEF0F3;
-  --text:        #1A1D24;
-  --text-dim:    #3A3F4A;
-  --muted:       #6B7280;
-  --muted-2:     #9CA3AF;
+  --card-hover:  #F1F5F9;
+  --line:        #E2E8F0;
+  --line-subtle: #F1F5F9;
+  --text:        #0F152A;
+  --text-dim:    #334155;
+  --muted:       #64748B;
+  --muted-2:     #94A3B8;
   --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.1);
   --shadow-lg:  0 8px 30px rgba(0,0,0,0.12);
-  --shadow-glow-teal: 0 0 20px rgba(45, 212, 191, 0.1);
+  --shadow-glow-teal: 0 0 20px rgba(243, 112, 33, 0.15);
 }
