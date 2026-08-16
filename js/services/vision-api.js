@@ -69,6 +69,7 @@ export class VisionAPI {
         // Algoritmo robusto para encontrar apenas o primeiro bloco JSON válido
         let start = cleanedText.indexOf('{');
         if (start !== -1) {
+          let depth = 0;
           let end = -1;
           for (let i = start; i < cleanedText.length; i++) {
             if (cleanedText[i] === '{') depth++;
