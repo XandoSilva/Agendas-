@@ -1,6 +1,7 @@
 export class VisionAPI {
   static getApiKey() {
-    return localStorage.getItem('VERO_GEMINI_KEY') || '';
+    const envKey = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_GEMINI_API_KEY : '';
+    return localStorage.getItem('VERO_GEMINI_KEY') || envKey || '';
   }
 
   static setApiKey(key) {
