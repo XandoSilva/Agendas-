@@ -188,7 +188,7 @@ class App {
     const b2bBadge = document.getElementById('badge-b2b');
     if (b2bBadge && this.data.chamadosB2B) {
       const pendentes = this.data.chamadosB2B.filter(i => {
-        const s = (i['Status / Andamento'] || '').toUpperCase();
+        const s = (i['Agendamento / Acesso'] || '').toUpperCase();
         return !s.includes('NORMALIZADO') && !s.includes('CANCELADO');
       }).length;
       
