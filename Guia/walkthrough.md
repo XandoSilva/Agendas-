@@ -30,7 +30,7 @@ A funcionalidade solicitada foi construída com sucesso. Agora, o seu módulo de
 4. Tente realizar um fluxo completo de **Substituição em Campo** para ver como as informações são lançadas na planilha com zero necessidade de digitação.
 
 > [!TIP]
-> Por usarmos o *Gemini 2.5 Flash*, a leitura levará em média apenas de 2 a 3 segundos e consegue entender etiquetas amassadas, reflexos ou textos de ponta cabeça.
+> Por usarmos o *Gemini 3.5 Flash*, a leitura levará em média apenas de 2 a 3 segundos e consegue entender etiquetas amassadas, reflexos ou textos de ponta cabeça.
 
 > [!NOTE]
 > Para testar pelo computador, quando ele pedir a câmera, ele também te dará a opção de anexar um arquivo salvo, como a imagem `media_1786904829016.jpg` que você nos enviou anteriormente.
