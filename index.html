@@ -1,463 +1,148 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://*.google.com https://*.googleusercontent.com https://cdn.jsdelivr.net https://unpkg.com https://tesseract.projectnaptha.com;">
-  <title>Sistema de Operações - Agendas & Manutenção</title>
-  
-  <!-- PWA Meta Tags (iOS Safari & Android Chrome) -->
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#0B1220">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VERO Telecom - Operações RJ</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
 
-  <!-- Fontes do Google -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Estilos CSS -->
-  <link rel="stylesheet" href="./css/variables.css?v=15">
-  <link rel="stylesheet" href="./css/base.css?v=15">
-  <link rel="stylesheet" href="./css/layout.css?v=15">
-  <link rel="stylesheet" href="./css/components.css?v=15">
-  <link rel="stylesheet" href="./css/mobile.css?v=15">
-
-  <!-- Supabase JS Client via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Tesseract.js para OCR (Extração de texto de imagens) -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="tab-agenda" data-theme="light">
-
-  <script>
-    // Remove Service Workers antigos para não travar o cache durante o desenvolvimento
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          registration.unregister();
-        }
-      });
-    }
-  </script>
-
-  <div id="modalContainer"></div>
-
-  <div class="app-layout">
-    
-    <!-- Top Header -->
-    <header class="global-header">
-      <div class="header-user-info">
-        <div class="header-avatar">👤</div>
-        <div class="header-details">
-          <div class="header-name"></div>
-          <div class="header-role"></div>
-          <div class="header-canal"></div>
-        </div>
-      </div>
-      <div class="header-branding">
-        <div class="header-online-users"></div>
-        <div class="header-logo">
-          <h2></h2>
-          <span></span>
-        </div>
-      </div>
-    </header>
-
-    <div class="app-body">
-      <!-- Sidebar Global (Desktop) -->
-      <aside class="global-sidebar">
-        <div class="sidebar-header" style="display:none;">
-          <div class="dot" id="onlineDot"></div>
-          <div>
-            <h2>Sistema Operacional</h2>
-            <span id="connStatus" style="font-size: 11px; color: var(--muted-2);">Conectando...</span>
-          </div>
-        </div>
+<body>
+    <div class="app-shell">
         
-        <nav class="nav-menu">
-        <button class="nav-item active" data-module="agenda-vistoria">
-          <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-          <span>Agenda: Vistoria</span>
-        </button>
-        <button class="nav-item" data-module="agenda-infra">
-          <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-          <span>Agenda: Infra</span>
-        </button>
-        <button class="nav-item" data-module="agenda-ativacao">
-          <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-          <span>Agenda: Ativação</span>
-        </button>
-        <button class="nav-item" data-module="manutencao">
-          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-          <span>Manutenção</span>
-        </button>
-        <button class="nav-item" data-module="relatorios">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
-          <span>Relatórios & Auditoria</span>
-        </button>
-      </nav>
-
-      <button id="toggleSidebar" class="toggle-sidebar-btn" title="Recolher/Expandir Menu">
-        <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
-      </button>
-    </aside>
-
-    <!-- Módulo 1: Agenda (O #app antigo) -->
-    <div id="module-agenda" class="module-container active" style="display: flex; width: 100%;">
-      <!-- LEFT: intake panel -->
-      <div id="intake">
-        <div id="headerContainer"></div> <!-- Header Antigo Mobile -->
-
-        <div class="field">
-          <label>Colar mensagem do Teams</label>
-          <textarea id="pasteBox" placeholder="Cole aqui o bloco de mensagem recebido no grupo do Teams..."></textarea>
-        </div>
-        <div class="row">
-          <button class="btn btn-primary btn-block" id="btnParsePaste">Analisar mensagem</button>
-        </div>
-        
-        <div id="syncSection" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
-          <label style="font-size:10.5px; text-transform:uppercase; color:var(--muted-2); font-weight:600; display:block; margin-bottom:4px;">Sincronização Automática (Teams)</label>
-          <input type="text" id="syncUrl" class="field" style="width:100%; background:#0D1524; border:1px solid var(--line); border-radius:6px; color:var(--text); padding:7px 9px; font-size:11.5px; font-family:var(--font-mono);" placeholder="Cole a URL do CSV (Google Sheets)">
-          <button type="button" class="btn btn-ghost btn-block" style="margin-top:8px;" id="btnSync">Sincronizar Mensagens</button>
-        </div>
-
-        <div id="formHint" style="margin-top:14px;">Confira os campos abaixo — a extração automática pode errar em datas sem ano. <b>Ajuste antes de salvar.</b></div>
-
-        <form id="form">
-          <input type="hidden" id="f_id">
-          <input type="hidden" id="f_source_id">
-          <div class="field-row">
-            <div class="field">
-              <label>Tipo</label>
-              <select id="f_tipo" style="pointer-events: none; opacity: 0.7; background: var(--card-bg);">
-                <option>Vistoria</option>
-                <option>Passagem de Cabo</option>
-                <option>Ativação</option>
-                <option>Outro</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Status</label>
-              <select id="f_status">
-                <option>Confirmada</option>
-                <option>Pendente</option>
-                <option>Realizada</option>
-                <option>Reagendada</option>
-                <option>Cancelada</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-row" id="fileFieldContainer" style="display: none;">
-            <div class="field">
-              <label>Anexar PPI (Projeto em PDF)</label>
-              <input type="file" id="f_ppi_file" accept=".pdf">
-              <div style="font-size: 10px; color: var(--muted-2); margin-top: 4px;">Tamanho máximo recomendado: 5MB</div>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Data</label>
-              <input type="date" id="f_data">
-              <div class="date-shortcuts">
-                <button type="button" class="btn-xs" id="btnDateToday">Hoje</button>
-                <button type="button" class="btn-xs" id="btnDateTomorrow">Amanhã</button>
-                <button type="button" class="btn-xs" id="btnDateMonday">Segunda</button>
-              </div>
-            </div>
-            <div class="field">
-              <label>Horário</label>
-              <input type="text" id="f_hora" placeholder="ex: 10:00 ou HC">
-            </div>
-          </div>
-          <div class="field">
-            <label>Contrato</label>
-            <input type="text" id="f_contrato">
-          </div>
-          <div class="field">
-            <label>Cliente</label>
-            <input type="text" id="f_cliente">
-          </div>
-          <div class="field">
-            <label>Endereço</label>
-            <input type="text" id="f_endereco">
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Acompanhante</label>
-              <input type="text" id="f_acompanhante" placeholder="nome">
-            </div>
-            <div class="field">
-              <label>Contato</label>
-              <input type="text" id="f_contato" placeholder="telefone">
-            </div>
-          </div>
-          <div class="field">
-            <label>Observações (empreiteira, OS, técnico...)</label>
-            <textarea id="f_obs" rows="3"></textarea>
-          </div>
-          <div class="row" style="margin-top:8px;">
-            <button type="submit" class="btn btn-primary btn-block">Salvar na agenda</button>
-            <button type="button" class="btn btn-ghost" id="btnClearForm">Limpar</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- RIGHT: timeline -->
-      <div id="main">
-        <div id="dashboardContainer"></div>
-
-        <div class="content-wrapper">
-          <div class="main-column">
-            <div id="toolbar">
-              <h2 id="counter">Agenda</h2>
-              <input id="search" placeholder="Buscar contrato ou cliente...">
-              
-              <!-- Filters for "Atividade" have been removed as the Sidebar handles them -->
-
-              <div class="filter-group">
-                <span class="filter-label">Status:</span>
-                <button class="chip chip-status active" data-status="all">Todos</button>
-                <button class="chip chip-status" data-status="Confirmada">Confirmada</button>
-                <button class="chip chip-status" data-status="Pendente">Pendente</button>
-                <button class="chip chip-status" data-status="Realizada">Realizada</button>
-                <button class="chip chip-status" data-status="Cancelada">Cancelada/Reagendada</button>
-              </div>
-            </div>
-            <div id="timeline"></div>
-          </div>
-
-          <div class="side-column">
-            <div id="calendarContainer"></div>
-          </div>
-        </div>
-      </div>
-    </div> <!-- Fim Módulo Agenda -->
-
-
-    <!-- Módulo 2: Manutenção (Novo) -->
-    <div id="module-manutencao" class="module-container" style="display: none; width: 100%;">
-      <!-- LEFT: Form de Manutenção -->
-      <div id="intake-man">
-        <div style="margin-bottom: 14px;">
-          <h1 style="color:var(--text); font-size:20px; font-weight:600;">Nova Manutenção</h1>
-          <p style="color:var(--muted); font-size:13px; margin-top:4px;">Cole um print do sistema para auto-preenchimento.</p>
-        </div>
-
-        <div class="field" style="margin-bottom: 14px;">
-          <label>Colar Imagem do Sistema (OCR)</label>
-          <div id="imagePasteZone" contenteditable="true" style="width: 100%; min-height: 80px; max-height: 200px; background: rgba(20, 184, 166, 0.05); border: 2px dashed var(--teal); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--teal); font-size: 13px; font-weight: 600; cursor: text; padding: 14px; text-align: center; transition: all 0.2s ease; outline: none; overflow: hidden; position: relative;">
-            <span id="ocrStatus">Clique, cole (Ctrl+V) ou solte uma imagem aqui</span>
-            <div id="ocrProgress" style="width: 100%; height: 4px; background: var(--line); border-radius: 4px; margin-top: 8px; overflow: hidden; display: none;">
-              <div id="ocrProgressBar" style="width: 0%; height: 100%; background: var(--teal); transition: width 0.1s linear;"></div>
-            </div>
-            <img id="ocrPreview" style="max-width: 100%; max-height: 120px; margin-top: 10px; border-radius: 4px; display: none; object-fit: contain;">
-          </div>
-        </div>
-
-        <form id="form-man">
-          <input type="hidden" id="m_id">
-          <input type="hidden" id="m_created_at">
-          
-          <div class="field-row">
-            <div class="field">
-              <label>Protocolo</label>
-              <input type="text" id="m_protocolo" placeholder="Ex: 260806217">
-            </div>
-            <div class="field">
-              <label>Nº Contrato</label>
-              <input type="text" id="m_contrato">
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Cliente / Razão Social</label>
-            <input type="text" id="m_cliente">
-          </div>
-          
-          <div class="field-row">
-            <div class="field">
-              <label>Contato</label>
-              <input type="text" id="m_contato">
-            </div>
-            <div class="field">
-              <label>Telefones</label>
-              <input type="text" id="m_telefones">
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Endereço do Serviço</label>
-            <input type="text" id="m_endereco">
-          </div>
-
-          <div class="field">
-            <label>Empreiteira Direcionada</label>
-            <input type="text" id="m_empreiteira">
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label>Tipo de Reclamação</label>
-              <input type="text" id="m_tipo_reclamacao" placeholder="Ex: LINK DOWN">
-            </div>
-            <div class="field">
-              <label>Atendimento</label>
-              <select id="m_tipo_atendimento">
-                <option value="">Selecione...</option>
-                <option value="Qualidade">Qualidade</option>
-                <option value="Rompimento">Rompimento</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label>Equipe</label>
-              <input type="text" id="m_equipe" placeholder="Equipe designada">
-            </div>
-            <div class="field">
-              <label>Status</label>
-              <select id="m_status">
-                <option value="Pendente">Pendente</option>
-                <option value="Designado">Designado</option>
-                <option value="Em Deslocamento">Em Deslocamento</option>
-                <option value="Atuando">Atuando</option>
-                <option value="Finalizado">Finalizado</option>
-                <option value="Concluído">Concluído</option>
-                <option value="Cancelado">Cancelado</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Observação do Despacho</label>
-            <input type="text" id="m_obs_despacho">
-          </div>
-
-          <div class="field">
-            <label>Descrição (Obs/Solicitação)</label>
-            <textarea id="m_descricao" rows="3"></textarea>
-          </div>
-          
-          <div class="row" style="margin-top:16px;">
-            <button type="submit" class="btn btn-primary btn-block">Salvar Manutenção</button>
-            <button type="button" class="btn btn-ghost" id="btnClearFormMan">Limpar</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- RIGHT: Timeline de Manutenção -->
-      <div id="main-man">
-        <div class="content-wrapper">
-          <div class="main-column" style="width: 100%;">
-            <div id="toolbar-man" style="display: flex; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); align-items: center; flex-wrap: wrap;">
-              <h2 id="counter-man" style="color:var(--text); font-size:20px; font-weight:600; margin: 0;">Entrantes: 0 | Concluídos: 0</h2>
-              
-              <input type="text" id="search-manutencao" class="field" placeholder="Buscar..." style="background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 13px; max-width: 200px;">
-              
-              <select id="sort-manutencao" class="field" style="background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 13px;">
-                <option value="newest">Mais Recentes</option>
-                <option value="oldest">Mais Antigos</option>
-                <option value="sla">SLA (Prioridade)</option>
-              </select>
-
-              <button id="btn-toggle-kanban" class="btn-toggle-view">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-                Kanban
-              </button>
-
-              <div class="filter-group" style="margin-left: auto; overflow-x: auto; white-space: nowrap; padding-bottom: 4px;">
-                <span class="filter-label">Status:</span>
-                <button class="chip chip-status-man active" data-status="all">Todos</button>
-                <button class="chip chip-status-man" data-status="Pendente">Pendente</button>
-                <button class="chip chip-status-man" data-status="Designado">Designado</button>
-                <button class="chip chip-status-man" data-status="Em Deslocamento">Em Deslocamento</button>
-                <button class="chip chip-status-man" data-status="Atuando">Atuando</button>
-                <button class="chip chip-status-man" data-status="Finalizado">Finalizado</button>
-                <button class="chip chip-status-man" data-status="Cancelado">Cancelado</button>
-              </div>
+        <!-- Sidebar (Desktop) -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo">V</div>
+                <div class="sidebar-brand-text">
+                    <h1>VERO TELECOM</h1>
+                    <span>Operações RJ</span>
+                </div>
             </div>
             
-            <!-- Grid estilo Kanban ou Timeline simples -->
-            <div id="timeline-man">
-              <!-- Lista renderizada via JS -->
+            <div class="user-profile" id="user-profile-container" style="padding: 0 20px 20px 20px; text-align: center;">
+                <!-- Login/Profile -->
             </div>
-            <div id="kanban-man" style="display: none;">
-              <!-- Kanban renderizado via JS -->
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Visão Geral</div>
+                <a href="#" class="nav-item active" data-target="dashboard">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    Painel Operacional
+                </a>
+
+                <div class="nav-section-title" style="margin-top:12px;">Operações Corporativas</div>
+                <a href="#" class="nav-item" data-target="b2b">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Chamados B2B
+                    <span class="nav-badge" id="badge-b2b" style="display:none">0</span>
+                </a>
+                <a href="#" class="nav-item" data-target="incidentes">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Incidentes
+                    <span class="nav-badge" id="badge-incidentes" style="display:none">0</span>
+                </a>
+
+                <div class="nav-section-title" style="margin-top:12px;">Serviços de Campo</div>
+                <a href="#" class="nav-item" data-target="vistorias">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><circle cx="11" cy="11" r="3"/></svg>
+                    Vistorias RJ
+                </a>
+                <a href="#" class="nav-item" data-target="infra">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.9V17L12 22l-9-4.9V7z"/><path d="M12 22V12"/><path d="M12 12L3 7"/><path d="M12 12l9-5"/></svg>
+                    Infraestrutura
+                </a>
+
+                <div class="nav-section-title" style="margin-top:12px;">Infraestrutura e Ativos</div>
+                <a href="#" class="nav-item" data-target="pops">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v16z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+                    POPs & Preventivas
+                </a>
+                <a href="#" class="nav-item" data-target="estoque">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Estoque VERO
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-brand">
+                    <div class="sidebar-logo">V</div>
+                    <div class="header-brand-mobile">VERO Operações</div>
+                </div>
+                <div class="header-title" id="header-page-title">Painel Operacional</div>
             </div>
-          </div>
-        </div>
-      </div>
-      </div>
-    </div> <!-- Fim Módulo Manutenção -->
-    
-    <!-- Módulo 3: Relatórios e Auditoria -->
-    <div id="module-relatorios" class="module-container" style="display: none; width: 100%; flex-direction: column; padding: 20px;">
-      <div class="panel" style="width: 100%; max-width: 1200px; margin: 0 auto;">
-        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <h2>📊 Auditoria de Manutenções</h2>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="month" id="relatorioMesFiltro" class="field" style="background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: inherit;">
             
-            <button class="btn btn-ghost" id="btnExportarPlanilha" style="display: flex; gap: 8px; align-items: center; border: 1px solid var(--line);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              Planilha Detalhada
-            </button>
-            
-            <button class="btn btn-primary" id="btnExportarRelatorio" style="display: flex; gap: 8px; align-items: center;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Exportar Fechamento
-            </button>
-          </div>
-        </div>
+            <div class="header-right">
+                <div class="sync-indicator" id="sync-status">
+                    <div class="dot"></div>
+                    <span id="sync-text">Sincronizado</span>
+                </div>
+                <button class="btn-sync" id="btn-force-sync" title="Forçar Atualização">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.27l-5.42 6.46"/></svg>
+                    <span>Sincronizar</span>
+                </button>
+            </div>
+        </header>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; margin-top: 20px;">
-          <div class="card" style="padding: 15px; text-align: center; background: rgba(20, 184, 166, 0.05); border: 1px solid var(--teal);">
-            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Total do Mês</div>
-            <div id="relTotalMes" style="font-size: 28px; font-weight: 700; color: var(--teal);">0</div>
-          </div>
-          <div class="card" style="padding: 15px; text-align: center;">
-            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Equipes Envolvidas</div>
-            <div id="relTotalEquipes" style="font-size: 28px; font-weight: 700; color: var(--text);">0</div>
-          </div>
-          <div class="card" style="padding: 15px; text-align: center;">
-            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Empreiteiras</div>
-            <div id="relTotalEmpreiteiras" style="font-size: 28px; font-weight: 700; color: var(--text);">0</div>
-          </div>
-        </div>
+        <!-- Main Content Area -->
+        <main class="app-content">
+            <div id="module-dashboard" class="module-view active"></div>
+            <div id="module-b2b" class="module-view"></div>
+            <div id="module-incidentes" class="module-view"></div>
+            <div id="module-vistorias" class="module-view"></div>
+            <div id="module-infra" class="module-view"></div>
+            <div id="module-pops" class="module-view"></div>
+            <div id="module-estoque" class="module-view"></div>
+        </main>
 
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;">
-            <thead>
-              <tr style="border-bottom: 2px solid var(--line); color: var(--muted);">
-                <th style="padding: 12px 8px; text-align: left;">Empreiteira Executora</th>
-                <th style="padding: 12px 8px; text-align: left;">Equipe Designada</th>
-                <th style="padding: 12px 8px; text-align: right;">Total Realizado</th>
-              </tr>
-            </thead>
-            <tbody id="relatoriosTableBody">
-              <tr>
-                <td colspan="3" style="text-align: center; padding: 20px; color: var(--muted);">Carregando relatórios...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div> <!-- Fim Módulo Relatórios -->
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <a href="#" class="mobile-nav-item active" data-target="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                <span>Painel</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="b2b">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <span>B2B</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="incidentes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Incidentes</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="vistorias">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Vistorias</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="infra">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.9V17L12 22l-9-4.9V7z"/></svg>
+                <span>Infra</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="pops">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v16z"/></svg>
+                <span>POPs</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-target="estoque">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <span>Estoque</span>
+            </a>
+        </nav>
+    </div>
 
-    </div> <!-- Fim App Body -->
-  </div> <!-- Fim App Layout -->
-
-  <div id="mobileNavContainer"></div>
-
-  <!-- SheetJS para exportar XLSX (Arquivo local para evitar bloqueios de rede/adblock) -->
-  <script src="./js/libs/xlsx.full.min.js"></script>
-  
-  <!-- JavaScript App Shell -->
-  <script type="module" src="/js/app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

@@ -1,59 +1,125 @@
-:root, [data-theme="dark"] {
-  --bg: #0F172A;
-  --panel: #1E293B;
-  --panel-2: #334155;
-  --card-bg: #1E293B;
-  --line: #334155;
-  --text: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --muted: #94A3B8;
-  --muted-2: #64748B;
-  
-  --amber: #F5923E; /* Vero Orange */
-  --teal: #C22F5B;  /* Vero Magenta */
-  --coral: #F43F5E;
-  --violet: #8B5CF6;
-  --blue: #38BDF8;
-  --green: #22C55E;
+/* ═══════════════════════════════════════════════════════════════
+   VERO TELECOM - Design System Variables
+   ═══════════════════════════════════════════════════════════════ */
 
-  --vero-magenta: #C22F5B;
-  --vero-orange: #F5923E;
-  --vero-magenta-dark: #A3224B;
-  --vero-bg-light: #FEF4F4;
+:root,
+[data-theme="dark"] {
+  /* ── Core Palette ── */
+  --bg:          #080E1A;
+  --bg-elevated: #0C1425;
+  --panel:       #111A2E;
+  --panel-2:     rgba(17, 26, 46, 0.7);
+  --card-bg:     #141E33;
+  --card-hover:  #182440;
+  --line:        #1E2D4A;
+  --line-subtle: #162038;
 
-  --input-bg: #0F172A;
-  --meta-bg: #0F172A;
-  --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  --font-display: 'Montserrat', 'Space Grotesk', 'Segoe UI', sans-serif;
-  --font-body: 'Montserrat', 'Inter', 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  /* ── Text ── */
+  --text:        #E8ECF4;
+  --text-dim:    #C5CDD8;
+  --muted:       #8592A6;
+  --muted-2:     #5C6B85;
+
+  /* ── Accent Colors ── */
+  --teal:        #2DD4BF;
+  --teal-dim:    rgba(45, 212, 191, 0.12);
+  --amber:       #F5A623;
+  --amber-dim:   rgba(245, 166, 35, 0.12);
+  --coral:       #FB7185;
+  --coral-dim:   rgba(251, 113, 133, 0.12);
+  --violet:      #A78BFA;
+  --violet-dim:  rgba(167, 139, 250, 0.12);
+  --green:       #4ADE80;
+  --green-dim:   rgba(74, 222, 128, 0.12);
+  --blue:        #60A5FA;
+  --blue-dim:    rgba(96, 165, 250, 0.12);
+  --rose:        #F472B6;
+  --rose-dim:    rgba(244, 114, 182, 0.12);
+  --cyan:        #22D3EE;
+  --cyan-dim:    rgba(34, 211, 238, 0.12);
+  --orange:      #FB923C;
+  --orange-dim:  rgba(251, 146, 60, 0.12);
+  --sky:         #38BDF8;
+  --sky-dim:     rgba(56, 189, 248, 0.12);
+
+  /* ── Status Colors ── */
+  --st-normalizado:  #4ADE80;
+  --st-pendente:     #F5A623;
+  --st-atenuacao:    #FB923C;
+  --st-agendado:     #60A5FA;
+  --st-designado:    #A78BFA;
+  --st-deslocamento: #22D3EE;
+  --st-atuando:      #F472B6;
+  --st-concluido:    #4ADE80;
+  --st-cancelado:    #FB7185;
+  --st-validacao:    #FBBF24;
+  --st-nao-realiz:   #94A3B8;
+
+  /* ── Diagnóstico / Tipo ── */
+  --diag-rompimento:   #FB7185;
+  --diag-qualidade:    #F5A623;
+  --diag-radio:        #FB923C;
+  --diag-swhw:         #A78BFA;
+  --diag-outros:       #94A3B8;
+
+  /* ── Prioridade POP ── */
+  --pop-p1:  #FB7185;
+  --pop-p2:  #F5A623;
+  --pop-p3:  #4ADE80;
+
+  /* ── Categoria Incidente ── */
+  --cat-backbone:  #FB7185;
+  --cat-caixa:     #FB923C;
+  --cat-tarefas:   #60A5FA;
+  --cat-telefonia: #A78BFA;
+  --cat-pop:       #22D3EE;
+
+  /* ── Typography ── */
+  --font-display: 'Inter', 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  /* ── Shadows ── */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:  0 8px 30px rgba(0,0,0,0.4);
+  --shadow-glow-teal: 0 0 20px rgba(45, 212, 191, 0.15);
+
+  /* ── Radius ── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-pill: 100px;
+
+  /* ── Transitions ── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms var(--ease-out);
+  --transition-normal: 250ms var(--ease-out);
+  --transition-slow: 400ms var(--ease-out);
+
+  /* ── Layout ── */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --header-height: 56px;
+  --mobile-nav-height: 64px;
 }
 
 [data-theme="light"] {
-  --bg: #F5F7FA; /* Lighter background for the app */
-  --panel: #FFFFFF;
-  --panel-2: #F8FAFC;
-  --card-bg: #FFFFFF;
-  --line: #E2E8F0;
-  --text: #333333;
-  --text-secondary: #555555;
-  --muted: #888888;
-  --muted-2: #AAAAAA;
-  
-  --amber: #FF5722; /* More vibrant orange for Simetra */
-  --teal: #D81B60;  /* Bright Magenta */
-  --coral: #E11D48;
-  --violet: #7C3AED;
-  --blue: #0284C7;
-  --green: #16A34A;
-
-  --vero-magenta: #D81B60; /* Simetra Magenta */
-  --vero-orange: #FF5722;
-  --vero-magenta-dark: #A3224B;
-  --vero-bg-light: #FFF3E0; /* Peach background for alternating rows */
-
-  --input-bg: #F8FAFC;
-  --meta-bg: #F4F6F8;
-  --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --bg:          #F0F2F5;
+  --bg-elevated: #FAFBFC;
+  --panel:       #FFFFFF;
+  --panel-2:     rgba(255, 255, 255, 0.85);
+  --card-bg:     #FFFFFF;
+  --card-hover:  #F5F6F8;
+  --line:        #E2E5EA;
+  --line-subtle: #EEF0F3;
+  --text:        #1A1D24;
+  --text-dim:    #3A3F4A;
+  --muted:       #6B7280;
+  --muted-2:     #9CA3AF;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg:  0 8px 30px rgba(0,0,0,0.12);
+  --shadow-glow-teal: 0 0 20px rgba(45, 212, 191, 0.1);
 }
