@@ -101,7 +101,7 @@ function csvToObjects(rows, headerRowIndex = 0) {
 
 // ─── Fetch de uma aba específica ────────────────────────────────────
 export async function fetchSheet(sheetConfig) {
-  const url = `${BASE_URL}&gid=${sheetConfig.gid}`;
+  const url = `${BASE_URL}&gid=${sheetConfig.gid}&single=true`;
   
   try {
     const res = await fetch(url);
