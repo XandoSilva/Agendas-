@@ -309,24 +309,64 @@ export default class EstoqueModule {
       const safeMarca = escapeHTML(result.marca || '');
       const safeModelo = escapeHTML(result.modelo || '');
       const safeSerial = escapeHTML(result.serial || '');
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
 
       const msgHtml = `
         <p style="margin-bottom:12px; color:var(--text-dim);">Revise os dados capturados pela IA antes de adicionar ao estoque:</p>
-        <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Categoria</label>
-          <input type="text" id="ai-categoria" value="${safeCat}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Categoria</label>
+            <input type="text" id="ai-categoria" value="${safeCat}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Marca</label>
+            <input type="text" id="ai-marca" value="${safeMarca}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
         </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Marca</label>
-          <input type="text" id="ai-marca" value="${safeMarca}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Modelo</label>
+            <input type="text" id="ai-modelo" value="${safeModelo}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Nº de Série / Lote</label>
+            <input type="text" id="ai-serial" value="${safeSerial}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
         </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Modelo</label>
-          <input type="text" id="ai-modelo" value="${safeModelo}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Qtd. em Estoque</label>
+            <input type="number" id="ai-qtd" value="1" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Localização física</label>
+            <input type="text" id="ai-local" value="Sede / Depósito" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
         </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Nº de Série / Lote</label>
-          <input type="text" id="ai-serial" value="${safeSerial}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Status do Equipamento</label>
+            <input type="text" id="ai-status" value="Disponível" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Logistica VAG</label>
+            <input type="text" id="ai-vag" value="" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Data Cadastro</label>
+            <input type="text" id="ai-data" value="${dataAtual}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Observação</label>
+            <input type="text" id="ai-obs" value="Cadastrado via IA" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+          </div>
         </div>
       `;
       
@@ -338,12 +378,12 @@ export default class EstoqueModule {
           inputs['ai-marca'] || '',
           inputs['ai-modelo'] || '',
           inputs['ai-serial'] || '',
-          1,
-          'Sede / Depósito',
-          'Disponível',
-          '',
-          new Date().toLocaleDateString('pt-BR'),
-          'Cadastrado via IA'
+          inputs['ai-qtd'] || '1',
+          inputs['ai-local'] || '',
+          inputs['ai-status'] || '',
+          inputs['ai-vag'] || '',
+          inputs['ai-data'] || dataAtual,
+          inputs['ai-obs'] || ''
         ];
         
         enqueueWrite('append', { sheetName: 'Estoque Disponível', rowData: row });
