@@ -119,20 +119,17 @@ export default class EstoqueModule {
         <table class="data-table">
           <thead>
             <tr>
-              <th style="width:120px;">Nº Série / Lote</th>
-              <th>Modelo / Marca</th>
-              <th>Categoria</th>
-              <th style="text-align:right;">Qtd</th>
-              <th style="width:100px;">Status</th>
-              <th>Localização</th>
-              ${canEdit('estoque') ? '<th style="width:60px;">Ação</th>' : ''}
+              <th>S/N / LOTE</th>
+              <th>MARCA / MODELO</th>
+              <th>CATEGORIA</th>
+              <th style="text-align:right;">DISP.</th>
+              <th>STATUS</th>
+              <th>LOCALIZAÇÃO</th>
+              ${canEdit('estoque') ? '<th style="width:50px;">AÇÕES</th>' : ''}
             </tr>
           </thead>
           <tbody>
-            ${filtered.length === 0 ? 
-              `<tr><td colspan="${canEdit('estoque') ? '7' : '6'}" style="text-align:center; padding: 40px;"><div class="empty-state"><h3>Nenhum material encontrado</h3><p>Ajuste os filtros ou a busca</p></div></td></tr>` :
-              filtered.map((item, i) => this._renderRow(item, i)).join('')
-            }
+            ${filtered.length === 0 ? '<tr><td colspan="7" class="empty-state">Nenhum equipamento encontrado no estoque.</td></tr>' : filtered.map((item, idx) => this._renderRow(item, idx)).join('')}
           </tbody>
         </table>
       </div>
@@ -141,10 +138,17 @@ export default class EstoqueModule {
     this._bindEvents();
   }
 
+  _renderFilterChips() {
+    const cats = ['TODOS', 'ONT', 'OLT', 'SWITCH', 'ROUTER', 'TRANSCEPTOR', 'CABO', 'FERRAMENTA'];
+    return cats.map(c => `
+      <button class="filter-chip ${this.filterCat === c ? 'active' : ''}" data-filter="${c}">${c}</button>
+    `).join('');
+  }
+
   _renderRow(item, i) {
-    const qtd = parseFloat(item['Qtd. em Estoque']) || 0;
-    const min = parseFloat(item['Estoque Mínimo']) || 0;
-    const statusTextRaw = item['Status do Equipamento'] || '';
+    const qtd = parseInt(item['Quantidade Disponível']) || 0;
+    const min = parseInt(item['Quantidade Mínima']) || 0;
+    const statusTextRaw = item.Status || '';
     const statusUpper = statusTextRaw.toUpperCase();
     
     let badgeClass = 'badge-normalizado';
@@ -158,26 +162,21 @@ export default class EstoqueModule {
       statusText = statusTextRaw || 'Atenção';
     } else if (statusUpper.includes('RESERVA') || statusUpper.includes('USO') || statusUpper.includes('REVERSA')) {
       badgeClass = 'badge-designado';
-    } else {
-      badgeClass = 'badge-normalizado';
     }
 
-    const marcaModelo = [item['Marca / Fabricante'], item['Modelo']].filter(Boolean).join(' - ');
+    const marcaModelo = [item['Marca / Fabricante'], item.Modelo].filter(Boolean).join(' - ');
 
     return `
       <tr>
         <td style="font-family:var(--font-mono); font-weight:600;">${escapeHTML(item['Nº de Série / Lote'] || '-')}</td>
-        <td style="font-weight:500; color:var(--text);">${escapeHTML(marcaModelo || '-')}</td>
+        <td style="font-weight:500;">${escapeHTML(marcaModelo || '-')}</td>
         <td><span class="meta-tag">${escapeHTML(item['Categoria / Tipo'] || 'Outros')}</span></td>
-        <td style="text-align:right; font-family:var(--font-mono); font-weight:700; color:var(--text);">
-          ${qtd}
-          <div style="font-size:9px; color:var(--muted); font-weight:normal;">Mín: ${min}</div>
-        </td>
+        <td style="text-align:right; font-family:var(--font-mono); font-weight:700;">${qtd}</td>
         <td><span class="badge ${badgeClass}">${escapeHTML(statusText)}</span></td>
         <td style="color:var(--text-dim); font-size:11px;">${escapeHTML(item['Localização Física'] || '-')}</td>
         ${canEdit('estoque') ? `<td>
           <button class="action-btn action-btn-edit" data-idx="${i}" style="min-height:32px; padding:4px 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </td>` : ''}
       </tr>
@@ -220,7 +219,6 @@ export default class EstoqueModule {
       });
     });
 
-    // IA Settings
     const btnAiSettings = this.container.querySelector('#btn-ai-settings');
     if (btnAiSettings) {
       btnAiSettings.addEventListener('click', () => {
@@ -228,18 +226,16 @@ export default class EstoqueModule {
         const newKey = prompt("Insira a chave da API do Google Gemini (AI Studio):", currentKey);
         if (newKey !== null) {
           VisionAPI.setApiKey(newKey);
-          alert("Chave de API salva com sucesso!");
+          Toast.success("Chave de API salva com sucesso!");
         }
       });
     }
 
-    // AI Scan
     const btnAiScan = this.container.querySelector('#btn-ai-scan');
     if (btnAiScan) {
       btnAiScan.addEventListener('click', () => this._handleAIScan());
     }
 
-    // AI Substitute
     const btnSubstitute = this.container.querySelector('#btn-substitute');
     if (btnSubstitute) {
       btnSubstitute.addEventListener('click', () => this._handleSubstitute());
@@ -260,7 +256,7 @@ export default class EstoqueModule {
           </div>
           <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
             ${showCancel ? `<button class="btn btn-outline" id="dialog-cancel-btn" style="background:var(--bg-hover); color:var(--text-color); border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancelar</button>` : ''}
-            <button class="btn btn-primary" id="dialog-confirm-btn" style="background:var(--primary-color); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">OK</button>
+            <button class="btn btn-primary" id="dialog-confirm-btn" style="background:var(--teal); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">OK</button>
           </div>
         </div>
       </div>`;
@@ -289,15 +285,15 @@ export default class EstoqueModule {
 
   async _handleAIScan() {
     if (!VisionAPI.hasApiKey()) {
+      Toast.warning("Configure a chave do Gemini primeiro!");
       await this._showCustomDialog("Atenção", "Configure a chave da API do Gemini primeiro (ícone de engrenagem).", false);
       return;
     }
     const file = await this._promptCamera();
     if (!file) return;
 
-    // Mostra o overlay ANTES de qualquer processamento pesado
     const overlay = this._showLoading("Analisando imagem com IA...");
-    // Delay maior para garantir que o browser faça o repaint no iOS/Android antes do canvas pesado
+    Toast.info("Enviando foto para análise...", 3000);
     await new Promise(r => setTimeout(r, 150));
     
     try {
@@ -306,6 +302,7 @@ export default class EstoqueModule {
       const result = await VisionAPI.analyzeImage(base64, mimeType, prompt);
       
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
+      Toast.success("Etiqueta identificada com sucesso!");
       
       const safeCat = escapeHTML(result.categoria || 'Outros');
       const safeMarca = escapeHTML(result.marca || '');
@@ -313,22 +310,22 @@ export default class EstoqueModule {
       const safeSerial = escapeHTML(result.serial || 'S/N Desconhecido');
 
       const msgHtml = `
-        <p style="margin-bottom:12px;">Revise os dados capturados pela IA antes de adicionar ao estoque:</p>
+        <p style="margin-bottom:12px; color:var(--text-dim);">Revise os dados capturados pela IA antes de adicionar ao estoque:</p>
         <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Categoria</label>
-          <input type="text" id="ai-categoria" value="${safeCat}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Categoria</label>
+          <input type="text" id="ai-categoria" value="${safeCat}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
         </div>
         <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Marca</label>
-          <input type="text" id="ai-marca" value="${safeMarca}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Marca</label>
+          <input type="text" id="ai-marca" value="${safeMarca}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
         </div>
         <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Modelo</label>
-          <input type="text" id="ai-modelo" value="${safeModelo}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Modelo</label>
+          <input type="text" id="ai-modelo" value="${safeModelo}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
         </div>
         <div style="margin-bottom: 12px;">
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Nº de Série / Lote</label>
-          <input type="text" id="ai-serial" value="${safeSerial}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Nº de Série / Lote</label>
+          <input type="text" id="ai-serial" value="${safeSerial}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
         </div>
       `;
       
@@ -349,19 +346,21 @@ export default class EstoqueModule {
         ];
         
         enqueueWrite('append', { sheetName: 'Estoque Disponível', rowData: row });
+        Toast.success("Item adicionado à fila de sincronização!");
         await this._showCustomDialog("Sucesso", "Item adicionado à fila de sincronização com sucesso!", false);
         import('../services/sheets-write-api.js').then(m => m.processQueue());
       }
     } catch (err) {
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
-      await this._showCustomDialog("Erro na IA", err.message, false);
+      Toast.error(err.message, 6000);
+      await this._showCustomDialog("Erro na IA", `<p style="color:var(--coral); font-weight:600; margin-bottom:8px;">Não foi possível processar a imagem:</p><p style="color:var(--text);">${escapeHTML(err.message)}</p>`, false);
     }
   }
 
-
   async _handleSubstitute() {
     if (!VisionAPI.hasApiKey()) {
-      alert("Configure a chave da API do Gemini primeiro (ícone de engrenagem).");
+      Toast.warning("Configure a chave da API do Gemini primeiro!");
+      await this._showCustomDialog("Atenção", "Configure a chave da API do Gemini primeiro (ícone de engrenagem).", false);
       return;
     }
 
@@ -370,27 +369,39 @@ export default class EstoqueModule {
         <div class="modal-content" style="max-width:500px;">
           <div class="modal-header">
             <h3>Substituição em Campo</h3>
-            <button class="close-btn" onclick="document.body.removeChild(document.getElementById('substitute-modal'))">
+            <button class="close-btn" id="substitute-modal-close">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div class="modal-body">
-            <p><strong>1. Equipamento Retirado (Defeituoso)</strong></p>
-            <div id="sub-retirado-data" style="margin-bottom:8px; font-size:13px; color:var(--text-dim);">Aguardando foto...</div>
-            <button class="btn btn-outline" id="btn-foto-retirado" style="width:100%; margin-bottom: 24px;">📸 Tirar Foto da Etiqueta</button>
+            <div style="margin-bottom:16px;">
+              <p style="font-weight:700; color:var(--text); margin-bottom:6px;">1. Equipamento Retirado (Defeituoso)</p>
+              <div id="sub-retirado-data" style="margin-bottom:8px; font-size:13px; color:var(--muted);">Aguardando foto...</div>
+              <button class="btn btn-outline" id="btn-foto-retirado" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Foto da Etiqueta (Retirado)</span>
+              </button>
+            </div>
 
-            <p><strong>2. Equipamento Novo (Instalado)</strong></p>
-            <div id="sub-novo-data" style="margin-bottom:8px; font-size:13px; color:var(--text-dim);">Aguardando foto...</div>
-            <button class="btn btn-outline" id="btn-foto-novo" style="width:100%; margin-bottom: 24px;">📸 Tirar Foto da Etiqueta</button>
+            <div style="margin-bottom:16px;">
+              <p style="font-weight:700; color:var(--text); margin-bottom:6px;">2. Equipamento Novo (Instalado)</p>
+              <div id="sub-novo-data" style="margin-bottom:8px; font-size:13px; color:var(--muted);">Aguardando foto...</div>
+              <button class="btn btn-outline" id="btn-foto-novo" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Foto da Etiqueta (Novo)</span>
+              </button>
+            </div>
 
-            <p><strong>3. Chamado Relacionado</strong></p>
-            <select id="sub-chamado-select" class="form-input" style="width:100%; margin-bottom: 24px;">
-              <option value="">Selecione um chamado aberto...</option>
-              ${this._getOpenTicketsOptions()}
-            </select>
+            <div style="margin-bottom:16px;">
+              <p style="font-weight:700; color:var(--text); margin-bottom:6px;">3. Chamado Relacionado</p>
+              <select id="sub-chamado-select" class="form-input" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+                <option value="">Selecione um chamado aberto...</option>
+                ${this._getOpenTicketsOptions()}
+              </select>
+            </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-outline" onclick="document.body.removeChild(document.getElementById('substitute-modal'))">Cancelar</button>
+            <button class="btn btn-outline" id="substitute-modal-cancel">Cancelar</button>
             <button class="btn btn-primary" id="btn-sub-confirm" disabled>Confirmar Substituição</button>
           </div>
         </div>
@@ -399,6 +410,12 @@ export default class EstoqueModule {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     const modal = document.getElementById('substitute-modal');
+    const closeModal = () => {
+      if (document.body.contains(modal)) document.body.removeChild(modal);
+    };
+    modal.querySelector('#substitute-modal-close').addEventListener('click', closeModal);
+    modal.querySelector('#substitute-modal-cancel').addEventListener('click', closeModal);
+
     let retiradoData = null;
     let novoData = null;
 
@@ -406,19 +423,22 @@ export default class EstoqueModule {
       const file = await this._promptCamera();
       if (!file) return;
       const overlay = this._showLoading("Analisando equipamento retirado...");
-      await new Promise(r => setTimeout(r, 50));
+      Toast.info("Lendo etiqueta do equipamento retirado...", 3000);
+      await new Promise(r => setTimeout(r, 150));
       try {
         const { base64, mimeType } = await VisionAPI.fileToBase64(file);
         const prompt = `Analise a etiqueta e retorne JSON: {"marca":"", "modelo":"", "serial":"", "categoria":""}`;
         retiradoData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
         if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        Toast.success("Equipamento retirado lido!");
         modal.querySelector('#sub-retirado-data').innerHTML = `
-          <strong style="color:var(--text);">S/N: ${retiradoData.serial || '?'}</strong> - ${retiradoData.marca} ${retiradoData.modelo} <span class="badge badge-cancelado" style="font-size:10px;">Defeito</span>
+          <strong style="color:var(--text);">S/N: ${escapeHTML(retiradoData.serial || '?')}</strong> - ${escapeHTML(retiradoData.marca || '')} ${escapeHTML(retiradoData.modelo || '')} <span class="badge badge-cancelado" style="font-size:10px;">Defeito</span>
         `;
         this._checkSubReady(modal, retiradoData, novoData);
       } catch (e) {
         if (document.body.contains(overlay)) document.body.removeChild(overlay);
-        await this._showCustomDialog("Erro na IA", e.message, false);
+        Toast.error(e.message, 6000);
+        await this._showCustomDialog("Erro na IA", `<p style="color:var(--coral); font-weight:600; margin-bottom:8px;">Erro ao analisar foto:</p><p style="color:var(--text);">${escapeHTML(e.message)}</p>`, false);
       }
     });
 
@@ -426,19 +446,22 @@ export default class EstoqueModule {
       const file = await this._promptCamera();
       if (!file) return;
       const overlay = this._showLoading("Analisando equipamento novo...");
-      await new Promise(r => setTimeout(r, 50));
+      Toast.info("Lendo etiqueta do equipamento novo...", 3000);
+      await new Promise(r => setTimeout(r, 150));
       try {
         const { base64, mimeType } = await VisionAPI.fileToBase64(file);
         const prompt = `Analise a etiqueta e retorne JSON: {"marca":"", "modelo":"", "serial":"", "categoria":""}`;
         novoData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
         if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        Toast.success("Equipamento novo lido!");
         modal.querySelector('#sub-novo-data').innerHTML = `
-          <strong style="color:var(--text);">S/N: ${novoData.serial || '?'}</strong> - ${novoData.marca} ${novoData.modelo} <span class="badge badge-normalizado" style="font-size:10px;">Novo</span>
+          <strong style="color:var(--text);">S/N: ${escapeHTML(novoData.serial || '?')}</strong> - ${escapeHTML(novoData.marca || '')} ${escapeHTML(novoData.modelo || '')} <span class="badge badge-normalizado" style="font-size:10px;">Novo</span>
         `;
         this._checkSubReady(modal, retiradoData, novoData);
       } catch (e) {
         if (document.body.contains(overlay)) document.body.removeChild(overlay);
-        await this._showCustomDialog("Erro na IA", e.message, false);
+        Toast.error(e.message, 6000);
+        await this._showCustomDialog("Erro na IA", `<p style="color:var(--coral); font-weight:600; margin-bottom:8px;">Erro ao analisar foto:</p><p style="color:var(--text);">${escapeHTML(e.message)}</p>`, false);
       }
     });
 
@@ -448,7 +471,7 @@ export default class EstoqueModule {
       const ticketText = select.options[select.selectedIndex].text;
       
       this._commitSubstitution(retiradoData, novoData, ticketId, ticketText);
-      document.body.removeChild(modal);
+      closeModal();
     });
   }
 

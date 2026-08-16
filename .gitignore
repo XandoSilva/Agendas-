@@ -3,5 +3,6 @@ node_modules/
 *.log
 .vercel
 .firebase/
-
-.vercel
+.env
+.env.*
+dist/

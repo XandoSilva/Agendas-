@@ -55,7 +55,16 @@ export class VisionAPI {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || `Erro HTTP ${response.status}`);
+        const rawMsg = errorData?.error?.message || '';
+        if (response.status === 429 || rawMsg.toLowerCase().includes('quota')) {
+          throw new Error("Limite de cota do Gemini atingido (máx 15 requisições/min). Aguarde 1 minuto e tente novamente.");
+        } else if (response.status === 503 || rawMsg.toLowerCase().includes('high demand') || rawMsg.toLowerCase().includes('unavailable')) {
+          throw new Error("O servidor do Gemini está temporariamente sobrecarregado. Tente novamente em alguns instantes.");
+        } else if (response.status === 400 || response.status === 403 || rawMsg.toLowerCase().includes('api key')) {
+          throw new Error("Chave da API do Gemini inválida ou sem permissão. Verifique a chave no ícone de engrenagem.");
+        } else {
+          throw new Error(rawMsg || `Erro na comunicação com a IA (HTTP ${response.status}).`);
+        }
       }
 
       const data = await response.json();
