@@ -28,7 +28,11 @@ export default class EstoqueModule {
 
     const filtered = this.data.filter(item => {
       const cat = (item['Categoria / Tipo'] || '').toUpperCase();
-      const matchCat = this.filterCat === 'TODOS' || cat.includes(this.filterCat.toUpperCase());
+      let matchCat = this.filterCat === 'TODOS' || cat.includes(this.filterCat.toUpperCase());
+      
+      if (this.filterCat === 'Módulo') {
+        matchCat = matchCat || cat.includes('TRANSCEPTOR');
+      }
 
       if (!this.searchTerm) return matchCat;
       
@@ -68,15 +72,15 @@ export default class EstoqueModule {
           <h2 class="module-title">📦 Estoque VERO</h2>
           <p class="module-subtitle">Controle de equipamentos e sobressalentes — ${this.data.length} registros</p>
           <div class="module-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn" id="btn-ai-scan" style="background:var(--primary);">
+            <button class="btn" id="btn-ai-scan" style="background:var(--primary); display:flex; align-items:center;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
-                <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM12 12v.01M16 16v.01M16 20v.01M20 16v.01M12 16v.01M12 20v.01M20 12v.01"/>
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
               </svg>
               Leitor IA
             </button>
-            <button class="btn" id="btn-substitute" style="background:var(--purple);">
+            <button class="btn" id="btn-substitute" style="background:var(--purple); display:flex; align-items:center;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
-                <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+                <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
               </svg>
               Substituição em Campo
             </button>
@@ -246,7 +250,7 @@ export default class EstoqueModule {
     return new Promise((resolve) => {
       const modalHtml = `
       <div class="modal-overlay" id="custom-dialog-modal">
-        <div class="modal-content" style="max-width:400px;">
+        <div class="modal-content" style="max-width:400px; width:90%;">
           <div class="modal-header">
             <h3>${title}</h3>
             <button class="close-btn" id="dialog-close-btn">&times;</button>
@@ -267,11 +271,19 @@ export default class EstoqueModule {
         if (document.body.contains(modal)) document.body.removeChild(modal);
       };
       
-      modal.querySelector('#dialog-close-btn').addEventListener('click', () => { cleanup(); resolve(false); });
+      const resolveCancel = () => { cleanup(); resolve({ confirmed: false }); };
+      const resolveConfirm = () => { 
+        const inputs = {};
+        modal.querySelectorAll('.modal-body input').forEach(inp => inputs[inp.id] = inp.value);
+        cleanup(); 
+        resolve({ confirmed: true, inputs }); 
+      };
+
+      modal.querySelector('#dialog-close-btn').addEventListener('click', resolveCancel);
       if (showCancel) {
-        modal.querySelector('#dialog-cancel-btn').addEventListener('click', () => { cleanup(); resolve(false); });
+        modal.querySelector('#dialog-cancel-btn').addEventListener('click', resolveCancel);
       }
-      modal.querySelector('#dialog-confirm-btn').addEventListener('click', () => { cleanup(); resolve(true); });
+      modal.querySelector('#dialog-confirm-btn').addEventListener('click', resolveConfirm);
     });
   }
 
@@ -291,25 +303,39 @@ export default class EstoqueModule {
       
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
       
+      const safeCat = escapeHTML(result.categoria || 'Outros');
+      const safeMarca = escapeHTML(result.marca || '');
+      const safeModelo = escapeHTML(result.modelo || '');
+      const safeSerial = escapeHTML(result.serial || 'S/N Desconhecido');
+
       const msgHtml = `
-        <p><strong>Resultados da IA:</strong></p>
-        <ul style="margin: 10px 0; padding-left: 20px;">
-          <li><b>Marca:</b> ${result.marca || '-'}</li>
-          <li><b>Modelo:</b> ${result.modelo || '-'}</li>
-          <li><b>S/N:</b> ${result.serial || '-'}</li>
-          <li><b>Categoria:</b> ${result.categoria || '-'}</li>
-        </ul>
-        <p style="margin-top:10px;">Deseja adicionar este item ao Estoque Disponível?</p>
+        <p style="margin-bottom:12px;">Revise os dados capturados pela IA antes de adicionar ao estoque:</p>
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Categoria</label>
+          <input type="text" id="ai-categoria" value="${safeCat}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Marca</label>
+          <input type="text" id="ai-marca" value="${safeMarca}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Modelo</label>
+          <input type="text" id="ai-modelo" value="${safeModelo}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted); font-weight:bold;">Nº de Série / Lote</label>
+          <input type="text" id="ai-serial" value="${safeSerial}" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
+        </div>
       `;
       
-      const confirmed = await this._showCustomDialog("Confirmação", msgHtml, true);
+      const { confirmed, inputs } = await this._showCustomDialog("Confirmar Entrada", msgHtml, true);
       
       if (confirmed) {
         const row = [
-          result.categoria || 'Outros',
-          result.marca || '',
-          result.modelo || '',
-          result.serial || 'S/N Desconhecido',
+          inputs['ai-categoria'] || 'Outros',
+          inputs['ai-marca'] || '',
+          inputs['ai-modelo'] || '',
+          inputs['ai-serial'] || 'S/N Desconhecido',
           1,
           1,
           'Disponível',
