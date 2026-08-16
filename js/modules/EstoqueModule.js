@@ -6,6 +6,7 @@ import { escapeHTML } from '../services/sheets-api.js';
 import { canEdit } from '../services/rbac.js';
 import { VisionAPI } from '../services/vision-api.js';
 import { enqueueWrite } from '../services/sheets-write-api.js';
+import * as Toast from '../components/Toast.js';
 
 export default class EstoqueModule {
   constructor() {
