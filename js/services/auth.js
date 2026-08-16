@@ -11,6 +11,10 @@ export function initAuth() {
   const saved = localStorage.getItem('vero_user');
   if (saved) {
     currentUser = JSON.parse(saved);
+    if (currentUser.picture && currentUser.picture.includes('ui-avatars.com')) {
+      currentUser.picture = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name)}&backgroundColor=14b8a6&textColor=ffffff`;
+      localStorage.setItem('vero_user', JSON.stringify(currentUser));
+    }
     _notifyListeners();
   }
 }
@@ -33,7 +37,7 @@ export function login(email, password, acessosList) {
     currentUser = {
       email: profile.Email,
       name: profile.Nome || cleanEmail.split('@')[0],
-      picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.Nome || cleanEmail)}&background=14b8a6&color=fff`,
+      picture: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile.Nome || cleanEmail)}&backgroundColor=14b8a6&textColor=ffffff`,
       role: profile.Perfil || 'VISUALIZADOR'
     };
     localStorage.setItem('vero_user', JSON.stringify(currentUser));
