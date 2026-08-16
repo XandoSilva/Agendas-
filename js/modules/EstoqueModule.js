@@ -256,10 +256,30 @@ export default class EstoqueModule {
       const prompt = `Analise a imagem desta etiqueta de equipamento e retorne um JSON estrito, sem markdown, contendo as chaves: "marca", "modelo", "serial", "categoria". Se não identificar algo, deixe vazio.`;
       const result = await VisionAPI.analyzeImage(base64, mimeType, prompt);
       
-      document.body.removeChild(overlay);
-      alert(`Resultados da IA:nMarca: ${result.marca}nModelo: ${result.modelo}nS/N: ${result.serial}nCategoria: ${result.categoria}`);
+      if (document.body.contains(overlay)) document.body.removeChild(overlay);
+      
+      const msg = `Resultados da IA:\n\nMarca: ${result.marca || '-'}\nModelo: ${result.modelo || '-'}\nS/N: ${result.serial || '-'}\nCategoria: ${result.categoria || '-'}\n\nDeseja adicionar este item ao Estoque Disponível?`;
+      
+      if (confirm(msg)) {
+        const row = [
+          result.categoria || 'Outros',
+          result.marca || '',
+          result.modelo || '',
+          result.serial || 'S/N Desconhecido',
+          1,
+          1,
+          'Disponível',
+          'Sede / Depósito',
+          new Date().toLocaleDateString('pt-BR'),
+          'Cadastrado via IA'
+        ];
+        
+        enqueueWrite('append', { sheetName: 'Estoque Disponível', rowData: row });
+        alert('Item adicionado à fila de sincronização com sucesso!');
+        import('../services/sheets-write-api.js').then(m => m.processQueue());
+      }
     } catch (err) {
-      document.body.removeChild(overlay);
+      if (document.body.contains(overlay)) document.body.removeChild(overlay);
       alert("Erro na IA: " + err.message);
     }
   }

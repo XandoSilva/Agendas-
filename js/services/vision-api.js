@@ -76,25 +76,45 @@ export class VisionAPI {
     }
   }
 
-  /**
-   * Utilitário para converter um File em Base64
-   * @param {File} file 
-   * @returns {Promise<{base64: string, mimeType: string}>}
-   */
   static async fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const result = reader.result; // "data:image/jpeg;base64,....."
-        const commaIdx = result.indexOf(',');
-        if (commaIdx === -1) {
-          reject(new Error("Erro ao ler o arquivo."));
-          return;
-        }
-        resolve({
-          base64: result.substring(commaIdx + 1),
-          mimeType: file.type
-        });
+        const result = reader.result;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width;
+          let h = img.height;
+          const MAX_DIM = 1024;
+          if (w > h && w > MAX_DIM) {
+            h = Math.round((h * MAX_DIM) / w);
+            w = MAX_DIM;
+          } else if (h > MAX_DIM) {
+            w = Math.round((w * MAX_DIM) / h);
+            h = MAX_DIM;
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          const commaIdx = dataUrl.indexOf(',');
+          resolve({
+            base64: dataUrl.substring(commaIdx + 1),
+            mimeType: 'image/jpeg'
+          });
+        };
+        img.onerror = () => {
+          // Fallback se não for possível comprimir
+          const commaIdx = result.indexOf(',');
+          if (commaIdx === -1) {
+            reject(new Error("Erro ao ler o arquivo."));
+            return;
+          }
+          resolve({ base64: result.substring(commaIdx + 1), mimeType: file.type });
+        };
+        img.src = result;
       };
       reader.onerror = (e) => reject(e);
       reader.readAsDataURL(file);
