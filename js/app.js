@@ -238,7 +238,7 @@ class App {
   }
 
   _applyRBAC(user) {
-    const navItems = document.querySelectorAll('.nav-item');
+    const navItems = document.querySelectorAll('.nav-item, .mobile-nav-item');
     if (!user) {
       // Bloqueia acesso a tudo, exceto talvez um aviso
       navItems.forEach(item => item.style.display = 'none');
@@ -285,8 +285,8 @@ class App {
       item.style.display = visible ? 'flex' : 'none';
     });
 
-    // Redireciona para o primeiro disponível se o atual estiver escondido
-    const currentNav = document.querySelector(`.nav-item[data-target="${this.currentModule}"]`);
+    // Redireciona para o primeiro disponvel se o atual estiver escondido
+    const currentNav = Array.from(navItems).find(i => i.dataset.target === this.currentModule);
     if (currentNav && currentNav.style.display === 'none') {
       const firstVisible = Array.from(navItems).find(i => i.style.display !== 'none');
       if (firstVisible) {
