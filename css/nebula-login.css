@@ -1,0 +1,149 @@
+/* 
+   ========================================
+   Nebula Login Overlay
+   ========================================
+*/
+.nebula-login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #3952dc; /* Azul/Roxo do topo da imagem */
+    background: linear-gradient(180deg, #3952dc 0%, #1a1a40 100%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.nebula-login-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.nebula-login-title {
+    color: #e94057; /* Laranja/Vermelho texto */
+    font-size: 3rem;
+    font-weight: 800;
+    font-family: serif; /* Na imagem parece uma serif moderna */
+    margin-bottom: 2rem;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.nebula-login-card {
+    background: #0C1222;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Tabs toggle (Login / Register visual only) */
+.nebula-tabs {
+    display: flex;
+    background: #151e32;
+    border-radius: 12px;
+    position: relative;
+    padding: 4px;
+    margin-bottom: 1rem;
+}
+
+.nebula-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: default; /* Como é só visual pra esse projeto */
+    z-index: 2;
+    position: relative;
+}
+
+.nebula-tab.active {
+    color: #ffffff;
+}
+
+.nebula-tab-marker {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    width: calc(50% - 4px);
+    background: linear-gradient(45deg, #8a2387, #e94057, #f27121);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(233, 64, 87, 0.4);
+    z-index: 1;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Form inputs */
+.nebula-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nebula-input-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+}
+
+.nebula-input-group input {
+    background: #151e32;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #ffffff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.nebula-input-group input:focus {
+    border-color: #e94057;
+    box-shadow: 0 0 10px rgba(233, 64, 87, 0.2);
+}
+
+.nebula-btn {
+    margin-top: 1rem;
+    background: linear-gradient(45deg, #8a2387, #e94057, #f27121);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(233, 64, 87, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nebula-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(233, 64, 87, 0.6);
+}
+
+.nebula-btn:active {
+    transform: translateY(0);
+}
+
+.nebula-error {
+    color: #ff4b4b;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: -0.5rem;
+    display: none;
+}

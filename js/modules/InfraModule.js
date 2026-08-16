@@ -3,6 +3,7 @@
  * Consome a aba "Infra RJ" (gid=170808402)
  */
 import { escapeHTML } from '../services/sheets-api.js';
+import { canEdit } from '../services/rbac.js';
 
 export default class InfraModule {
   constructor() {
@@ -10,7 +11,10 @@ export default class InfraModule {
     this.data = [];
     this.filterExec = 'ABERTOS';
     this.searchTerm = '';
+    this._editCallback = null;
   }
+
+  setEditCallback(cb) { this._editCallback = cb; }
 
   init(container) { this.container = container; }
 
@@ -54,22 +58,26 @@ export default class InfraModule {
           <h2 class="module-title">🏗️ Infraestrutura</h2>
           <p class="module-subtitle">Obras e passagem de cabos — ${this.data.length} registros</p>
         </div>
-        <div class="filters-bar">
-          <div class="search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="search-input" id="infra-search" placeholder="Buscar Nº, endereço..." value="${escapeHTML(this.searchTerm)}">
+        <div class="filters-container">
+          <div class="filters-actions">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="search-input" id="infra-search" placeholder="Buscar Nº, endereço..." value="${escapeHTML(this.searchTerm)}">
+            </div>
           </div>
-          ${['ABERTOS', 'TODOS', 'Concluído', 'Parcial', 'Pendente'].map(f => {
-            const active = this.filterExec === f ? 'active' : '';
-            let count = 0;
-            if (f === 'TODOS') count = this.data.length;
-            else if (f === 'ABERTOS') count = this.data.filter(i => {
-                const s = (i['Status Execução (Manual)'] || '').toUpperCase();
-                return !s.includes('CONCLUÍDO') && !s.includes('CONCLUIDO');
-            }).length;
-            else count = execCounts[f] || 0;
-            return `<button class="filter-chip ${active}" data-filter="${f}">${f} (${count})</button>`;
-          }).join('')}
+          <div class="filters-scroll">
+            ${['ABERTOS', 'TODOS', 'Concluído', 'Parcial', 'Pendente'].map(f => {
+              const active = this.filterExec === f ? 'active' : '';
+              let count = 0;
+              if (f === 'TODOS') count = this.data.length;
+              else if (f === 'ABERTOS') count = this.data.filter(i => {
+                  const s = (i['Status Execução (Manual)'] || '').toUpperCase();
+                  return !s.includes('CONCLUÍDO') && !s.includes('CONCLUIDO');
+              }).length;
+              else count = execCounts[f] || 0;
+              return `<button class="filter-chip ${active}" data-filter="${f}">${f} (${count})</button>`;
+            }).join('')}
+          </div>
         </div>
       </div>
 
@@ -102,6 +110,22 @@ export default class InfraModule {
       btn.addEventListener('click', () => {
         this.filterExec = btn.dataset.filter;
         this.render(allData);
+      });
+    });
+
+    // Edit buttons
+    this.container.querySelectorAll('.action-btn-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        const allFiltered = this.data.filter(i => {
+          const s = (i['Status Execução (Manual)'] || '').toUpperCase();
+          if (this.filterExec === 'TODOS') return true;
+          if (this.filterExec === 'ABERTOS') return !s.includes('CONCLUÍDO') && !s.includes('CONCLUIDO');
+          return s.includes(this.filterExec.toUpperCase());
+        });
+        if (allFiltered[idx] && this._editCallback) {
+          this._editCallback('infra', allFiltered[idx]);
+        }
       });
     });
   }
@@ -138,6 +162,18 @@ export default class InfraModule {
           <div class="field"><span class="field-label">Responsável: </span>${escapeHTML(item['Responsável pela infra (Manual)'] || 'A Definir')}</div>
           ${item['Observações'] ? `<div class="field"><span class="field-label">Obs: </span>${escapeHTML(item['Observações']).substring(0, 200)}</div>` : ''}
           ${item['Observação geral (Manual)'] ? `<div class="field"><span class="field-label">Nota: </span>${escapeHTML(item['Observação geral (Manual)'])}</div>` : ''}
+        </div>
+        <div class="data-card-footer">
+          <div class="data-card-actions">
+            ${item['Endereço'] ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(item['Endereço'] + ' ' + (item['Localidade (Bairro/RJ)'] || 'RJ'))}" target="_blank" class="action-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Maps
+            </a>` : ''}
+            ${canEdit('infra') ? `<button class="action-btn action-btn-edit" data-idx="${i}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>` : ''}
+          </div>
         </div>
       </div>
     `;

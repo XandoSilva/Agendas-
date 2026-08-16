@@ -1,38 +1,12 @@
 /**
- * auth.js - Gerenciamento de Autenticação Google e RBAC
+ * auth.js - Gerenciamento de Autenticação Customizada
+ * Baseado no e-mail presente na aba "Acessos"
  */
-export const CLIENT_ID = 'COLE_SEU_CLIENT_ID_AQUI.apps.googleusercontent.com';
 
-let tokenClient;
-let currentUser = null; // { email, name, picture, accessToken, role }
+let currentUser = null; // { email, name, picture, role }
 const listeners = [];
 
 export function initAuth() {
-  if (typeof google === 'undefined' || !google.accounts) {
-    console.error('Google Identity Services não carregado');
-    return;
-  }
-
-  // Inicializa o cliente OAuth2 para pegar o Access Token (para ler/escrever na API)
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
-    callback: (tokenResponse) => {
-      if (tokenResponse && tokenResponse.access_token) {
-        // Agora temos permissão para editar a planilha!
-        currentUser.accessToken = tokenResponse.access_token;
-        localStorage.setItem('vero_user', JSON.stringify(currentUser));
-        _notifyListeners();
-      }
-    },
-  });
-
-  // Inicializa o One Tap / Sign In button para Autenticação (descobrir quem é o usuário)
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback: handleCredentialResponse
-  });
-
   // Checa se há um usuário salvo
   const saved = localStorage.getItem('vero_user');
   if (saved) {
@@ -41,44 +15,35 @@ export function initAuth() {
   }
 }
 
-export function renderLoginButton(containerElement) {
-  if (typeof google === 'undefined') return;
-  google.accounts.id.renderButton(
-    containerElement,
-    { theme: 'outline', size: 'medium', shape: 'pill' }
-  );
-}
-
-function handleCredentialResponse(response) {
-  // Decodifica o JWT para pegar e-mail, nome, e foto
-  const jwt = response.credential;
-  const payload = JSON.parse(atob(jwt.split('.')[1]));
+/**
+ * Tenta fazer login com o e-mail e senha fornecidos
+ * @param {string} email 
+ * @param {string} password 
+ * @param {Array} acessosList - Lista de perfis lida da planilha
+ * @returns {boolean} true se o login for bem-sucedido
+ */
+export function login(email, password, acessosList) {
+  if (!acessosList || acessosList.length === 0) return false;
   
-  currentUser = {
-    email: payload.email,
-    name: payload.name,
-    picture: payload.picture,
-    accessToken: null, // Ainda não tem acesso à API, precisa do tokenClient
-    role: 'VISUALIZADOR' // Padrão, será sobrescrito ao cruzar com a aba Acessos
-  };
-
-  localStorage.setItem('vero_user', JSON.stringify(currentUser));
-  _notifyListeners();
+  const cleanEmail = email.trim().toLowerCase();
+  const profile = acessosList.find(a => (a.Email || '').trim().toLowerCase() === cleanEmail);
   
-  // Após descobrir quem é, pede permissão para editar a planilha
-  requestSheetAccess();
-}
-
-export function requestSheetAccess() {
-  if (tokenClient) {
-    tokenClient.requestAccessToken();
+  // Verifica se o usuário existe e se a senha confere (assumindo que a coluna se chame 'Senha')
+  if (profile && profile.Senha && profile.Senha.toString() === password) {
+    currentUser = {
+      email: profile.Email,
+      name: profile.Nome || cleanEmail.split('@')[0],
+      picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.Nome || cleanEmail)}&background=14b8a6&color=fff`,
+      role: profile.Perfil || 'VISUALIZADOR'
+    };
+    localStorage.setItem('vero_user', JSON.stringify(currentUser));
+    _notifyListeners();
+    return true;
   }
+  return false;
 }
 
 export function logout() {
-  if (typeof google !== 'undefined') {
-    google.accounts.id.disableAutoSelect();
-  }
   currentUser = null;
   localStorage.removeItem('vero_user');
   _notifyListeners();
@@ -102,4 +67,11 @@ export function onAuthStateChanged(cb) {
 
 function _notifyListeners() {
   listeners.forEach(cb => cb(currentUser));
+}
+
+/**
+ * Simula a verificação do token antigo (mantido para compatibilidade, mas sempre retorna true)
+ */
+export function ensureValidToken() {
+  return !!currentUser;
 }

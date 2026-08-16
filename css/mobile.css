@@ -24,6 +24,7 @@
     background: var(--bg-elevated);
     border-top: 1px solid var(--line);
     padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 60;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -44,6 +45,7 @@
     cursor: pointer;
     transition: all var(--transition-fast);
     min-width: 52px;
+    min-height: 48px; /* Touch target */
     flex-shrink: 0;
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
@@ -83,10 +85,10 @@
     letter-spacing: -0.02em;
   }
 
-  /* Content padding */
+  /* Content padding with safe areas */
   .app-content {
     padding: 16px;
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
   /* KPI grid 2 cols */
@@ -124,14 +126,19 @@
     gap: 10px;
   }
 
-  .filters-bar {
-    width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 4px;
+  .filters-container {
+    gap: 8px;
+  }
+  .filters-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
 
-  .filter-chip { flex-shrink: 0; }
+  .filter-chip {
+    flex-shrink: 0;
+    min-height: 36px; /* Touch target */
+  }
 
   .search-input { width: 100%; }
 
@@ -156,6 +163,66 @@
     z-index: 2;
     padding-top: 8px;
   }
+
+  /* ── Mobile action buttons larger ── */
+  .action-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .action-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ── FAB position with safe area ── */
+  .fab {
+    bottom: calc(var(--mobile-nav-height, 64px) + 16px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  /* ── Toast at bottom above nav ── */
+  .toast-container {
+    bottom: calc(var(--mobile-nav-height, 64px) + 16px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  /* ── Edit Modal fullscreen on mobile ── */
+  .edit-modal-sheet {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .edit-modal-sheet-tall {
+    max-height: 98vh;
+  }
+
+  .edit-modal-footer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ── Pending badge compact ── */
+  .pending-sync-badge {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+
+  /* ── Data card actions wrap ── */
+  .data-card-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .data-card-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -172,4 +239,27 @@
   .btn-sync span {
     display: none;
   }
+
+  /* ── Even more compact on small phones ── */
+  .module-title { font-size: 16px; }
+  .module-subtitle { font-size: 11px; }
+
+  .data-card { padding: 14px; }
+  .data-card-title { font-size: 12px; }
+  .data-card-meta { gap: 4px; }
+  .meta-tag { font-size: 10px; padding: 2px 6px; }
+
+  .edit-field-input { font-size: 16px; } /* Prevents iOS zoom */
 }
+
+/* ── iOS safe area support ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .mobile-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .app-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+

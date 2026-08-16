@@ -2,9 +2,25 @@
 <html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>VERO Telecom - Operações RJ</title>
+    <meta name="description" content="Portal operacional VERO Telecom - Gestão de chamados B2B, vistorias, infraestrutura e incidentes RJ.">
     
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0C1222">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VERO Ops">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#0C1222">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="VERO Telecom - Operações RJ">
+    <meta property="og:description" content="Portal operacional para técnicos de campo.">
+    <meta property="og:type" content="website">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +31,9 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/nebula-login.css">
 
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Custom Login -->
 </head>
 <body>
     <div class="app-shell">
@@ -141,6 +157,39 @@
                 <span>Estoque</span>
             </a>
         </nav>
+        <div id="toast-container"></div>
+
+    <!-- Nebula Login Overlay -->
+    <div id="nebula-login-overlay" class="nebula-login-overlay">
+        <h1 class="nebula-login-title">Nebula login</h1>
+        
+        <div class="nebula-login-card">
+            <!-- Tabs -->
+            <div class="nebula-tabs">
+                <div id="nebula-tab-marker" class="nebula-tab-marker"></div>
+                <div id="nebula-tab-login" class="nebula-tab active">Login</div>
+                <div id="nebula-tab-register" class="nebula-tab" style="opacity:0.5; cursor:pointer;">Register</div>
+            </div>
+
+            <div id="nebula-group-name" class="nebula-input-group" style="display:none;">
+                <label>FULL NAME</label>
+                <input type="text" id="nebula-name" placeholder="Seu nome completo">
+            </div>
+
+            <div class="nebula-input-group">
+                <label>EMAIL ADDRESS</label>
+                <input type="email" id="nebula-email" placeholder="nome@verointernet.com.br">
+            </div>
+
+            <div class="nebula-input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="nebula-password" placeholder="••••••••">
+            </div>
+
+            <div id="nebula-error" class="nebula-error">E-mail ou senha incorretos.</div>
+
+            <button id="nebula-login-btn" class="nebula-btn">LOGIN</button>
+        </div>
     </div>
 
     <script type="module" src="js/app.js"></script>

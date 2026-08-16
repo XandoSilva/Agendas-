@@ -13,6 +13,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  overscroll-behavior: none; /* Previne o pull-to-refresh nativo para PWA */
 }
 
 /* ── App Shell ── */
@@ -291,12 +292,32 @@ html, body {
   color: var(--muted);
 }
 
-/* ── Filters Bar ── */
-.filters-bar {
+/* ── Filters Container ── */
+.filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters-scroll {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 4px; /* for scrollbar */
+  scrollbar-width: none; /* Firefox */
+}
+
+.filters-scroll::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari */
 }
 
 .filter-chip {

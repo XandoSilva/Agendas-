@@ -1,27 +1,29 @@
-const CACHE_NAME = 'vistorias-v11';
+const CACHE_NAME = 'vero-ops-v1';
+
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './css/variables.css',
-  './css/base.css',
-  './css/components.css',
   './css/layout.css',
+  './css/components.css',
   './css/mobile.css',
   './js/app.js',
-  './js/modules/AgendaModule.js',
-  './js/modules/ManutencaoModule.js',
-  './js/utils/sanitizer.js',
-  './js/utils/formatters.js',
-  './js/services/api.js',
-  './js/services/parser.js',
-  './js/components/Header.js',
-  './js/components/Card.js',
-  './js/components/Timeline.js',
-  './js/components/Calendar.js',
-  './js/components/MobileNav.js',
-  './js/components/SettingsModal.js',
-  './js/components/Dashboard.js'
+  './js/services/auth.js',
+  './js/services/rbac.js',
+  './js/services/sheets-api.js',
+  './js/services/sheets-write-api.js',
+  './js/components/Toast.js',
+  './js/components/EditModal.js',
+  './js/components/CreateModal.js',
+  './js/components/PhotoCapture.js',
+  './js/modules/DashboardModule.js',
+  './js/modules/ChamadosB2BModule.js',
+  './js/modules/IncidentesModule.js',
+  './js/modules/VistoriasModule.js',
+  './js/modules/InfraModule.js',
+  './js/modules/POPsModule.js',
+  './js/modules/EstoqueModule.js'
 ];
 
 self.addEventListener('install', (e) => {
@@ -47,11 +49,17 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('supabase.co') || e.request.method !== 'GET') {
+  // Ignore Google APIs and non-HTTP requests (like chrome-extension://)
+  if (
+    e.request.url.includes('googleapis.com') || 
+    e.request.url.includes('docs.google.com') || 
+    e.request.method !== 'GET' ||
+    !e.request.url.startsWith('http')
+  ) {
     return;
   }
   
-  // Network-first: tenta rede, fallback para cache (offline)
+  // Network-first strategy for app shell
   e.respondWith(
     fetch(e.request)
       .then((res) => {

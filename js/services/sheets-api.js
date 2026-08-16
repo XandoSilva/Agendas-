@@ -17,7 +17,7 @@ export const SHEETS = {
   DADOS_ACESSO:   { gid: '384155401',  name: 'Dados de acesso',     key: 'dados_acesso' },
   LOGISTICA:      { gid: '1088075983', name: 'Logística Reversa',   key: 'logistica' },
   ESTOQUE:        { gid: '738843736',  name: 'Estoque Disponível',  key: 'estoque' },
-  ACESSOS:        { gid: 'YOUR_ACESSOS_GID', name: 'Acessos',       key: 'acessos' },
+  ACESSOS:        { gid: '1550019024',  name: 'Acessos',           key: 'acessos' },
 };
 
 const CACHE_PREFIX = 'vero_cache_';
@@ -90,7 +90,7 @@ function csvToObjects(rows, headerRowIndex = 0) {
     // Pula linhas de total
     if ((row[0] || '').toUpperCase().includes('TOTAL')) continue;
     
-    const obj = {};
+    const obj = { _rowIndex: i + 1 };
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = row[j] || '';
     }
@@ -198,6 +198,18 @@ export async function fetchApoioListas() {
   return lists;
 }
 
+// Acessos - retorna lista de controle de acesso
+export async function fetchAcessos() {
+  const rows = await fetchSheet(SHEETS.ACESSOS);
+  const headerIdx = rows.findIndex(r => r.some(cell => typeof cell === 'string' && cell.toLowerCase().replace('-', '').includes('email')));
+  if (headerIdx === -1) {
+    // Se a aba não existir ou não tiver header, retorna vazio
+    console.warn('[Sheets] Aba Acessos não encontrada ou sem header "Email"');
+    return [];
+  }
+  return csvToObjects(rows, headerIdx);
+}
+
 // Visão Geral - retorna KPIs e produtividade
 export async function fetchVisaoGeral() {
   const rows = await fetchSheet(SHEETS.VISAO_GERAL);
@@ -264,7 +276,7 @@ export async function fetchVisaoGeral() {
 export async function fetchAllData() {
   const start = Date.now();
   
-  const [visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, estoque, apoioListas] = 
+  const [visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, estoque, apoioListas, acessos] = 
     await Promise.all([
       fetchVisaoGeral(),
       fetchChamadosB2B(),
@@ -274,13 +286,14 @@ export async function fetchAllData() {
       fetchPOPs(),
       fetchEstoque(),
       fetchApoioListas(),
+      fetchAcessos(),
     ]);
   
   _lastRefresh = new Date();
   const elapsed = Date.now() - start;
-  console.log(`[Sheets] Todos os dados carregados em ${elapsed}ms`);
+  console.log(`[Sheets] Todos os dados carregados em ${elapsed}ms (${acessos.length} perfis de acesso)`);
   
-  const data = { visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, estoque, apoioListas };
+  const data = { visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, estoque, apoioListas, acessos };
   
   // Notificar listeners
   _listeners.forEach(cb => cb(data));
