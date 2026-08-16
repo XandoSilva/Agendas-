@@ -295,8 +295,10 @@ export default class EstoqueModule {
     const file = await this._promptCamera();
     if (!file) return;
 
+    // Mostra o overlay ANTES de qualquer processamento pesado
     const overlay = this._showLoading("Analisando imagem com IA...");
-    await new Promise(r => setTimeout(r, 50)); // Garante que a UI renderize o overlay
+    // Delay maior para garantir que o browser faça o repaint no iOS/Android antes do canvas pesado
+    await new Promise(r => setTimeout(r, 150));
     
     try {
       const { base64, mimeType } = await VisionAPI.fileToBase64(file);
@@ -355,6 +357,7 @@ export default class EstoqueModule {
       await this._showCustomDialog("Erro na IA", err.message, false);
     }
   }
+
 
   async _handleSubstitute() {
     if (!VisionAPI.hasApiKey()) {

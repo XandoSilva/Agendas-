@@ -115,26 +115,36 @@ export class VisionAPI {
         const result = reader.result;
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let w = img.width;
-          let h = img.height;
-          const MAX_DIM = 1024;
-          if (w > h && w > MAX_DIM) {
-            h = Math.round((h * MAX_DIM) / w);
-            w = MAX_DIM;
-          } else if (h > MAX_DIM) {
-            w = Math.round((w * MAX_DIM) / h);
-            h = MAX_DIM;
-          }
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          const commaIdx = dataUrl.indexOf(',');
-          resolve({
-            base64: dataUrl.substring(commaIdx + 1),
-            mimeType: 'image/jpeg'
+          // Aguarda um frame de renderização antes de iniciar o canvas pesado
+          // Isso permite que o overlay de "Analisando..." seja pintado no iOS/Android
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              try {
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                const MAX_DIM = 1024;
+                if (w > h && w > MAX_DIM) {
+                  h = Math.round((h * MAX_DIM) / w);
+                  w = MAX_DIM;
+                } else if (h > MAX_DIM) {
+                  w = Math.round((w * MAX_DIM) / h);
+                  h = MAX_DIM;
+                }
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                const commaIdx = dataUrl.indexOf(',');
+                resolve({
+                  base64: dataUrl.substring(commaIdx + 1),
+                  mimeType: 'image/jpeg'
+                });
+              } catch (e) {
+                reject(e);
+              }
+            }, 0);
           });
         };
         img.onerror = () => {
