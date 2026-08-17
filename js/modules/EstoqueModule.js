@@ -73,17 +73,11 @@ export default class EstoqueModule {
           <h2 class="module-title">📦 Estoque VERO</h2>
           <p class="module-subtitle">Controle de equipamentos e sobressalentes — ${this.data.length} registros</p>
           <div class="module-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn" id="btn-ai-scan" style="background:var(--primary); display:flex; align-items:center;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle>
-              </svg>
-              Leitor IA
+            <button id="btn-ai-scan" style="display:flex; align-items:center; gap:6px; background:var(--blue); color:#fff; border:none; padding:8px 16px; font-weight:600; font-size:13px; border-radius:var(--radius-md); cursor:pointer;">
+              <span style="font-size:16px;">📸</span> Leitor IA
             </button>
-            <button class="btn" id="btn-substitute" style="background:var(--purple); display:flex; align-items:center;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; margin-right:6px;">
-                <path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
-              </svg>
-              Substituição em Campo
+            <button id="btn-substitute" style="display:flex; align-items:center; gap:6px; background:var(--violet); color:#fff; border:none; padding:8px 16px; font-weight:600; font-size:13px; border-radius:var(--radius-md); cursor:pointer;">
+              <span style="font-size:16px;">🔄</span> Substituição em Campo
             </button>
           </div>
         </div>
