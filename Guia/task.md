@@ -1,8 +1,0 @@
-- [x] Criar arquivo `js/services/vision-api.js` para integrar com a API do Google Gemini.
-- [x] Adicionar lógica de armazenamento da chave de API no `localStorage`.
-- [x] Modificar `EstoqueModule.js` para incluir o botão de "Escanear com IA".
-- [x] Criar modal de "Substituição em Campo" na UI do Estoque.
-- [x] Implementar fluxo de identificação do equipamento (Defeituoso e Novo).
-- [x] Implementar integração com a planilha para dar baixa e gerar Logística Reversa.
-- [x] Implementar vínculo da substituição com o chamado (escrever na Observação do chamado).
-- [x] Testar a lógica de batch update na planilha.
