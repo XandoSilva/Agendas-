@@ -79,6 +79,9 @@ export default class EstoqueModule {
             <button id="btn-substitute" style="display:flex; align-items:center; gap:6px; background:var(--violet); color:#fff; border:none; padding:8px 16px; font-weight:600; font-size:13px; border-radius:var(--radius-md); cursor:pointer;">
               <span style="font-size:16px;">🔄</span> Substituição em Campo
             </button>
+            <button id="btn-add-logistica" style="display:flex; align-items:center; gap:6px; background:var(--rose); color:#fff; border:none; padding:8px 16px; font-weight:600; font-size:13px; border-radius:var(--radius-md); cursor:pointer;">
+              <span style="font-size:16px;">📥</span> Nova Log. Reversa
+            </button>
           </div>
         </div>
         <div class="filters-container">
@@ -229,6 +232,11 @@ export default class EstoqueModule {
     if (btnSubstitute) {
       btnSubstitute.addEventListener('click', () => this._handleSubstitute());
     }
+
+    const btnAddLogistica = this.container.querySelector('#btn-add-logistica');
+    if (btnAddLogistica) {
+      btnAddLogistica.addEventListener('click', () => this._handleNovaLogistica());
+    }
   }
 
   _showCustomDialog(title, htmlContent, showCancel = false) {
@@ -378,6 +386,160 @@ export default class EstoqueModule {
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
       Toast.error(err.message, 6000);
       await this._showCustomDialog("Erro na IA", `<p style="color:var(--coral); font-weight:600; margin-bottom:8px;">Não foi possível processar a imagem:</p><p style="color:var(--text);">${escapeHTML(err.message)}</p>`, false);
+    }
+  }
+
+  _promptLogisticaChoice() {
+    return new Promise((resolve) => {
+      const modalHtml = `
+      <div class="modal-overlay" id="custom-dialog-modal">
+        <div class="modal-content" style="max-width:400px; width:90%;">
+          <div class="modal-header">
+            <h3>Nova Logística Reversa</h3>
+            <button class="close-btn" id="dialog-close-btn">&times;</button>
+          </div>
+          <div class="modal-body" style="padding: 16px; font-size: 14px; text-align: left;">
+            <p style="margin-bottom:16px; color:var(--text-dim);">Como você deseja registrar o equipamento defeituoso?</p>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <button id="log-choice-ai" style="padding:12px; border-radius:8px; border:none; background:var(--blue); color:#fff; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span style="font-size:18px;">📸</span> Escanear Etiqueta com IA
+              </button>
+              <button id="log-choice-manual" style="padding:12px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span style="font-size:18px;">✍️</span> Preencher Manualmente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = document.getElementById('custom-dialog-modal');
+      
+      const cleanup = () => { if (document.body.contains(modal)) document.body.removeChild(modal); };
+      
+      modal.querySelector('#dialog-close-btn').addEventListener('click', () => { cleanup(); resolve(null); });
+      modal.querySelector('#log-choice-ai').addEventListener('click', () => { cleanup(); resolve('ai'); });
+      modal.querySelector('#log-choice-manual').addEventListener('click', () => { cleanup(); resolve('manual'); });
+    });
+  }
+
+  async _handleNovaLogistica() {
+    const choice = await this._promptLogisticaChoice();
+    if (!choice) return;
+
+    let initialData = { categoria: '', marca: '', modelo: '', serial: '' };
+    
+    if (choice === 'ai') {
+      const file = await this._promptCamera();
+      if (!file) return;
+
+      const overlay = this._showLoading("Analisando imagem com IA...");
+      Toast.info("Enviando foto para análise...", 3000);
+      await new Promise(r => setTimeout(r, 150));
+      
+      try {
+        const { base64, mimeType } = await VisionAPI.fileToBase64(file);
+        const prompt = `Analise a imagem desta etiqueta de equipamento e retorne um JSON estrito, sem markdown, contendo as chaves: "marca", "modelo", "serial", "categoria". Se não identificar algo, deixe vazio.`;
+        initialData = await VisionAPI.analyzeImage(base64, mimeType, prompt);
+        
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        Toast.success("Etiqueta identificada com sucesso!");
+      } catch (err) {
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        Toast.error(err.message, 6000);
+        await this._showCustomDialog("Erro na IA", `<p style="color:var(--coral); font-weight:600; margin-bottom:8px;">Não foi possível processar a imagem:</p><p style="color:var(--text);">${escapeHTML(err.message)}</p>`, false);
+        return;
+      }
+    }
+
+    const safeCat = escapeHTML(initialData.categoria || '');
+    const safeMarca = escapeHTML(initialData.marca || '');
+    const safeModelo = escapeHTML(initialData.modelo || '');
+    const safeSerial = escapeHTML(initialData.serial || '');
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+
+    const msgHtml = `
+      <p style="margin-bottom:12px; color:var(--text-dim);">Preencha/Revise os dados do equipamento para Logística Reversa:</p>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Categoria</label>
+          <input type="text" id="ai-categoria" value="${safeCat}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Marca</label>
+          <input type="text" id="ai-marca" value="${safeMarca}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Modelo</label>
+          <input type="text" id="ai-modelo" value="${safeModelo}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Nº de Série / Lote</label>
+          <input type="text" id="ai-serial" value="${safeSerial}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Qtd.</label>
+          <input type="number" id="ai-qtd" value="1" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Localização física</label>
+          <input type="text" id="ai-local" value="Sede / Depósito" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Status do Equipamento</label>
+          <input type="text" id="ai-status" value="Defeituoso" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Logistica VAG</label>
+          <input type="text" id="ai-vag" value="" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Data Cadastro</label>
+          <input type="text" id="ai-data" value="${dataAtual}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--muted); font-weight:bold;">Observação</label>
+          <input type="text" id="ai-obs" value="${choice === 'ai' ? 'Cadastrado via IA (Direto Reversa)' : 'Cadastrado Manualmente (Direto Reversa)'}" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text);">
+        </div>
+      </div>
+    `;
+    
+    const { confirmed, inputs } = await this._showCustomDialog("Confirmar Entrada", msgHtml, true);
+    
+    if (confirmed) {
+      if (!inputs['ai-marca'] || !inputs['ai-serial']) {
+        Toast.warning("Marca e Número de Série são obrigatórios.");
+        return;
+      }
+      
+      const row = [
+        inputs['ai-categoria'] || '',
+        inputs['ai-marca'] || '',
+        inputs['ai-modelo'] || '',
+        inputs['ai-serial'] || '',
+        inputs['ai-qtd'] || '1',
+        inputs['ai-local'] || '',
+        inputs['ai-status'] || '',
+        inputs['ai-vag'] || '',
+        inputs['ai-data'] || dataAtual,
+        inputs['ai-obs'] || ''
+      ];
+      
+      enqueueWrite('append', { sheetName: 'Logística Reversa', rowData: row });
+      Toast.success("Item adicionado à Logística Reversa!");
+      import('../services/sheets-write-api.js').then(m => m.processQueue());
     }
   }
 
