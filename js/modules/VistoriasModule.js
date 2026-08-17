@@ -33,7 +33,7 @@ export default class VistoriasModule {
 
       const term = this.searchTerm.toLowerCase();
       const fields = [
-        i['Contrato / Protocolo'], i['Razão Social / Cliente'], i['Localidade (Bairro/RJ)'], i['Responsável pela vistoria (Manual)']
+        i['Contrato / Protocolo'], i['Razão Social / Cliente'], i['Localidade (Bairro/RJ)'], i['Endereço'], i['Endereço (Manual)'], i['Responsável pela vistoria (Manual)']
       ].join(' ').toLowerCase();
 
       return execMatch && fields.includes(term);
@@ -164,7 +164,7 @@ export default class VistoriasModule {
         </div>
         <div class="data-card-footer">
           <div class="data-card-actions">
-            ${item['Localidade (Bairro/RJ)'] ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(item['Localidade (Bairro/RJ)'] + ' RJ')}" target="_blank" class="action-btn">
+            ${(item['Endereço (Manual)'] || item['Endereço (manual)'] || item['Endereço'] || item['Localidade (Bairro/RJ)']) ? `<a href="https://www.google.com/maps/search/${encodeURIComponent((item['Endereço (Manual)'] || item['Endereço (manual)'] || item['Endereço'] || item['Localidade (Bairro/RJ)']) + ' RJ')}" target="_blank" class="action-btn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Maps
             </a>` : ''}

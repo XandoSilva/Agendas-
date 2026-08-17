@@ -33,7 +33,7 @@ export default class InfraModule {
 
       const term = this.searchTerm.toLowerCase();
       const fields = [
-        i['Nº Vistoria Vinculada'], i['Tipo de Ocorrência'], i['Endereço'], i['Técnico / Equipe']
+        i['Contrato / Protocolo'], i['Razão Social / Cliente'], i['Localidade (Bairro/RJ)'], i['Endereço'], i['Endereço (Manual)'], i['Responsável pela infra (Manual)']
       ].join(' ').toLowerCase();
 
       return execMatch && fields.includes(term);
@@ -165,7 +165,7 @@ export default class InfraModule {
         </div>
         <div class="data-card-footer">
           <div class="data-card-actions">
-            ${item['Endereço'] ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(item['Endereço'] + ' ' + (item['Localidade (Bairro/RJ)'] || 'RJ'))}" target="_blank" class="action-btn">
+            ${(item['Endereço (Manual)'] || item['Endereço (manual)'] || item['Endereço'] || item['Localidade (Bairro/RJ)']) ? `<a href="https://www.google.com/maps/search/${encodeURIComponent((item['Endereço (Manual)'] || item['Endereço (manual)'] || item['Endereço'] || item['Localidade (Bairro/RJ)']) + ' RJ')}" target="_blank" class="action-btn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Maps
             </a>` : ''}
