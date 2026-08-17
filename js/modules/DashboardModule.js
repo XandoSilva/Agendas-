@@ -175,10 +175,11 @@ export default class DashboardModule {
     // Vistorias
     (data.vistorias || []).forEach(item => {
       const isAberto = this._isDateInPeriod(item['Data Agendada'], period);
+      const exec = item['Status Execução (Manual)'] || item['Concluído'] || '';
       const isConcluido = (item['Status da Vistoria'] || '').toUpperCase().includes('CONCLU') || 
                           (item['Status da Vistoria'] || '').toUpperCase().includes('REALIZAD') ||
-                          (item['Status Execução (Manual)'] || '').toUpperCase().includes('NORMALIZADO') ||
-                          (item['Status Execução (Manual)'] || '').toUpperCase().includes('CONCLU');
+                          exec.toUpperCase().includes('NORMALIZADO') ||
+                          exec.toUpperCase().includes('CONCLU');
       
       const isConcluidoInPeriod = isConcluido && isAberto;
       const inScope = isAberto;

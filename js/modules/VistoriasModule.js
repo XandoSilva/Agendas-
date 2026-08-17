@@ -23,7 +23,7 @@ export default class VistoriasModule {
     this.data = allData.vistorias || [];
 
     const filtered = this.data.filter(i => {
-      const s = (i['Status Execução (Manual)'] || 'Pendente').toUpperCase();
+      const s = (i['Status Execução (Manual)'] || i['Concluído'] || 'Pendente').toUpperCase();
       let execMatch = false;
       if (this.filterExec === 'TODOS') execMatch = true;
       else if (this.filterExec === 'ABERTOS') execMatch = !s.includes('CONCLUÍDO') && !s.includes('CONCLUIDO');
@@ -41,7 +41,7 @@ export default class VistoriasModule {
 
     const execCounts = { 'Concluído': 0, 'Pendente': 0, 'Não Realizado': 0 };
     this.data.forEach(i => {
-      const s = (i['Status Execução (Manual)'] || 'Pendente').trim();
+      const s = (i['Status Execução (Manual)'] || i['Concluído'] || 'Pendente').trim();
       if (s) execCounts[s] = (execCounts[s] || 0) + 1;
     });
 
@@ -72,7 +72,7 @@ export default class VistoriasModule {
               let count = 0;
               if (f === 'TODOS') count = this.data.length;
               else if (f === 'ABERTOS') count = this.data.filter(i => {
-                  const s = (i['Status Execução (Manual)'] || '').toUpperCase();
+                  const s = (i['Status Execução (Manual)'] || i['Concluído'] || '').toUpperCase();
                   return !s.includes('CONCLUÍDO') && !s.includes('CONCLUIDO');
               }).length;
               else count = execCounts[f] || 0;
@@ -121,7 +121,7 @@ export default class VistoriasModule {
         const idx = parseInt(btn.dataset.idx);
         // Find the item in the filtered+grouped data
         const allFiltered = this.data.filter(i => {
-          const s = (i['Status Execução (Manual)'] || 'Pendente').toUpperCase();
+          const s = (i['Status Execução (Manual)'] || i['Concluído'] || 'Pendente').toUpperCase();
           if (this.filterExec === 'TODOS') return true;
           if (this.filterExec === 'ABERTOS') return !s.includes('CONCLUÍDO') && !s.includes('CONCLUIDO');
           return s.includes(this.filterExec.toUpperCase());
@@ -139,7 +139,7 @@ export default class VistoriasModule {
       '<span class="badge badge-conectorizado">Conectorizado</span>' :
       '<span class="badge badge-mono">Mono</span>';
     
-    const exec = item['Status Execução (Manual)'] || '';
+    const exec = item['Status Execução (Manual)'] || item['Concluído'] || '';
     const execBadge = this._getExecBadge(exec);
 
     return `
