@@ -211,7 +211,7 @@ export default class IncidentesModule {
 
   _getStatusBadge(status) {
     const s = status.toUpperCase();
-    if (s.includes('NORMALIZADO') || s.includes('CONCLUÍDO')) return '<span class="badge badge-normalizado">Normalizado</span>';
+    if (s.includes('NORMALIZADO') || s.includes('CONCLUÍDO')) return '<span class="badge badge-normalizado">Concluído</span>';
     if (s.includes('PENDENTE'))    return '<span class="badge badge-pendente">Pendente</span>';
     if (s.includes('DESIGNADO'))   return '<span class="badge badge-designado">Designado</span>';
     if (s.includes('VALIDAÇÃO') || s.includes('VALIDACAO')) return '<span class="badge badge-validacao">Validação</span>';

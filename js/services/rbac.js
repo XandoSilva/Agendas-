@@ -15,7 +15,7 @@ const MODULE_PERMISSIONS = {
     vistorias: { view: true, edit: true, create: true },
     infra: { view: true, edit: true, create: true },
     pops: { view: true, edit: true, create: true },
-    estoque: { view: true, edit: true, create: true },
+    zabbix: { view: true, edit: false, create: false },
   },
   'TÉCNICO CAMPO': {
     dashboard: { view: false, edit: false },
@@ -24,7 +24,7 @@ const MODULE_PERMISSIONS = {
     vistorias: { view: true, edit: true, create: false },
     infra: { view: true, edit: true, create: false },
     pops: { view: false, edit: false, create: false },
-    estoque: { view: true, edit: false, create: false },
+    zabbix: { view: false, edit: false, create: false },
   },
   'TECNICO CAMPO': null, // alias → mapped in init
   'TÉCNICO B2B': {
@@ -34,7 +34,7 @@ const MODULE_PERMISSIONS = {
     vistorias: { view: false, edit: false, create: false },
     infra: { view: false, edit: false, create: false },
     pops: { view: false, edit: false, create: false },
-    estoque: { view: false, edit: false, create: false },
+    zabbix: { view: false, edit: false, create: false },
   },
   'TECNICO B2B': null,
   'INFRA': {
@@ -44,19 +44,9 @@ const MODULE_PERMISSIONS = {
     vistorias: { view: false, edit: false, create: false },
     infra: { view: true, edit: true, create: true },
     pops: { view: true, edit: true, create: false },
-    estoque: { view: false, edit: false, create: false },
+    zabbix: { view: true, edit: false, create: false },
   },
   'INFRAESTRUTURA': null,
-  'LOGÍSTICA': {
-    dashboard: { view: false, edit: false },
-    b2b: { view: false, edit: false, create: false },
-    incidentes: { view: false, edit: false, create: false },
-    vistorias: { view: false, edit: false, create: false },
-    infra: { view: false, edit: false, create: false },
-    pops: { view: false, edit: false, create: false },
-    estoque: { view: true, edit: true, create: true },
-  },
-  'LOGISTICA': null,
   'VISUALIZADOR': {
     dashboard: { view: true, edit: false },
     b2b: { view: true, edit: false, create: false },
@@ -64,7 +54,7 @@ const MODULE_PERMISSIONS = {
     vistorias: { view: true, edit: false, create: false },
     infra: { view: true, edit: false, create: false },
     pops: { view: true, edit: false, create: false },
-    estoque: { view: true, edit: false, create: false },
+    zabbix: { view: true, edit: false, create: false },
   },
 };
 
@@ -75,7 +65,6 @@ const EDITABLE_FIELDS = {
   vistorias: ['Responsável pela vistoria (Manual)', 'Status Execução (Manual)', 'Observação geral (Manual)'],
   infra: ['Responsável pela infra (Manual)', 'Status Execução (Manual)', 'Observação geral (Manual)'],
   pops: ['Status', 'Observações'],
-  estoque: ['Quantidade', 'Status Equipamento', 'Observações'],
 };
 
 // ─── Alias resolution ────────────────────────────────────────────
@@ -84,7 +73,6 @@ const ALIASES = {
   'TECNICO CAMPO': 'TÉCNICO CAMPO',
   'TECNICO B2B': 'TÉCNICO B2B',
   'INFRAESTRUTURA': 'INFRA',
-  'LOGISTICA': 'LOGÍSTICA',
 };
 
 function resolveRole(role) {
@@ -174,7 +162,7 @@ export function canEditField(moduleKey, fieldName) {
  * Retorna a lista de módulos visíveis para o perfil atual
  */
 export function getVisibleModules() {
-  const allModules = ['dashboard', 'b2b', 'incidentes', 'vistorias', 'infra', 'pops', 'estoque'];
+  const allModules = ['dashboard', 'b2b', 'incidentes', 'vistorias', 'infra', 'pops', 'zabbix'];
   return allModules.filter(m => canView(m));
 }
 

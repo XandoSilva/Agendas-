@@ -15,9 +15,8 @@ export const SHEETS = {
   INFRA_RJ:       { gid: '170808402',  name: 'Infra RJ',            key: 'infra_rj' },
   POPS:           { gid: '705477249',  name: 'POPs & Preventivas',  key: 'pops' },
   DADOS_ACESSO:   { gid: '384155401',  name: 'Dados de acesso',     key: 'dados_acesso' },
-  LOGISTICA:      { gid: '1088075983', name: 'Logística Reversa',   key: 'logistica' },
-  ESTOQUE:        { gid: '738843736',  name: 'Estoque Disponível',  key: 'estoque' },
   ACESSOS:        { gid: '1550019024',  name: 'Acessos',           key: 'acessos' },
+  ZABBIX:         { gid: '947495222',  name: 'Monitoramento Zabbix', key: 'zabbix' },
 };
 
 const CACHE_PREFIX = 'vero_cache_';
@@ -173,13 +172,17 @@ export async function fetchPOPs() {
   return csvToObjects(rows, headerIdx);
 }
 
-// Estoque - header na linha que começa com "Categoria"
-export async function fetchEstoque() {
-  const rows = await fetchSheet(SHEETS.ESTOQUE);
-  const headerIdx = rows.findIndex(r => (r[0] || '').includes('Categoria'));
+// Zabbix - header na linha que começa com "Data/Hora Coleta"
+export async function fetchZabbix() {
+  // Ignora se o GID for o placeholder
+  if (SHEETS.ZABBIX.gid === 'URL_AQUI') return [];
+  
+  const rows = await fetchSheet(SHEETS.ZABBIX);
+  const headerIdx = rows.findIndex(r => (r[0] || '').includes('Data/Hora Coleta'));
   if (headerIdx === -1) return [];
   return csvToObjects(rows, headerIdx);
 }
+
 
 // Apoio & Listas - retorna listas de valores para filtros
 export async function fetchApoioListas() {
@@ -276,7 +279,7 @@ export async function fetchVisaoGeral() {
 export async function fetchAllData() {
   const start = Date.now();
   
-  const [visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, estoque, apoioListas, acessos] = 
+  const [visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, zabbix, apoioListas, acessos] = 
     await Promise.all([
       fetchVisaoGeral(),
       fetchChamadosB2B(),
@@ -284,7 +287,7 @@ export async function fetchAllData() {
       fetchVistorias(),
       fetchInfra(),
       fetchPOPs(),
-      fetchEstoque(),
+      fetchZabbix(),
       fetchApoioListas(),
       fetchAcessos(),
     ]);
@@ -293,7 +296,7 @@ export async function fetchAllData() {
   const elapsed = Date.now() - start;
   console.log(`[Sheets] Todos os dados carregados em ${elapsed}ms (${acessos.length} perfis de acesso)`);
   
-  const data = { visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, estoque, apoioListas, acessos };
+  const data = { visaoGeral, chamadosB2B, incidentes, vistorias, infra, pops, zabbix, apoioListas, acessos };
   
   // Notificar listeners
   _listeners.forEach(cb => cb(data));

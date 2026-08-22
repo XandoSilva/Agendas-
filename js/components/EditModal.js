@@ -49,24 +49,7 @@ const SHEET_META = {
     // Use Data Agendada (col A, index 0) + Contrato as composite key
     compositeKey: (item) => `${item['Data Agendada'] || ''}|${item['Contrato / Protocolo'] || ''}`,
   },
-  estoque: {
-    sheetName: 'Estoque Disponível',
-    keyColumn: 'D', // Nº de Série / Lote
-    keyField: 'Nº de Série / Lote',
-    fields: [
-      { name: 'Categoria / Tipo', col: 0, type: 'select', staticOptions: ['ONU', 'Rádio', 'Cabo', 'Switch', 'Transceptor Óptico', 'Outros'] },
-      { name: 'Marca / Fabricante', col: 1, type: 'text' },
-      { name: 'Modelo', col: 2, type: 'text' },
-      { name: 'Nº de Série / Lote', col: 3, type: 'text' },
-      { name: 'Qtd. em Estoque', col: 4, type: 'number' },
-      { name: 'Estoque Mínimo', col: 5, type: 'number' },
-      { name: 'Status do Equipamento', col: 6, type: 'select', staticOptions: ['Disponível', 'Em Uso', 'Reserva', 'Em Falta'] },
-      { name: 'Localização Física', col: 7, type: 'text' },
-      { name: 'Data Última Mov.', col: 8, type: 'text' },
-      { name: 'Observação / Histórico', col: 9, type: 'textarea' },
-    ],
-    headerOffset: 3,
-  },
+
   infra: {
     sheetName: 'Infra RJ',
     keyColumn: 'E', // Contrato / Protocolo

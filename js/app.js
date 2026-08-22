@@ -13,7 +13,7 @@ import IncidentesModule from './modules/IncidentesModule.js';
 import VistoriasModule from './modules/VistoriasModule.js';
 import InfraModule from './modules/InfraModule.js';
 import POPsModule from './modules/POPsModule.js';
-import EstoqueModule from './modules/EstoqueModule.js';
+import ZabbixModule from './modules/ZabbixModule.js';
 
 class App {
   constructor() {
@@ -25,7 +25,7 @@ class App {
       vistorias: new VistoriasModule(),
       infra: new InfraModule(),
       pops: new POPsModule(),
-      estoque: new EstoqueModule()
+      zabbix: new ZabbixModule()
     };
     
     this.moduleTitles = {
@@ -35,7 +35,7 @@ class App {
       vistorias: 'Vistorias RJ',
       infra: 'Infraestrutura',
       pops: 'POPs & Preventivas',
-      estoque: 'Estoque VERO'
+      zabbix: 'Monitoramento Zabbix'
     };
 
     this.data = null;
@@ -188,8 +188,8 @@ class App {
     const b2bBadge = document.getElementById('badge-b2b');
     if (b2bBadge && this.data.chamadosB2B) {
       const pendentes = this.data.chamadosB2B.filter(i => {
-        const s = (i['Agendamento / Acesso'] || '').toUpperCase();
-        return !s.includes('NORMALIZADO') && !s.includes('CANCELADO');
+        const s = (i['Status'] || '').toUpperCase();
+        return !s.includes('NORMALIZADO') && !s.includes('CANCELADO') && !s.includes('CONCLU');
       }).length;
       
       b2bBadge.textContent = pendentes;
@@ -206,6 +206,18 @@ class App {
       
       incBadge.textContent = pendentes;
       incBadge.style.display = pendentes > 0 ? 'inline-block' : 'none';
+    }
+
+    // Zabbix Alarms
+    const zbxBadge = document.getElementById('badge-zabbix');
+    if (zbxBadge && this.data.zabbix) {
+      const ativos = this.data.zabbix.length;
+      zbxBadge.textContent = ativos;
+      zbxBadge.style.display = ativos > 0 ? 'inline-block' : 'none';
+      if (ativos > 0) {
+        zbxBadge.style.background = 'var(--red)';
+        zbxBadge.style.color = '#fff';
+      }
     }
   }
 

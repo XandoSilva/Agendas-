@@ -6,3 +6,7 @@ node_modules/
 .env
 .env.*
 dist/
+
+credentials.json
+token.json
+__pycache__/

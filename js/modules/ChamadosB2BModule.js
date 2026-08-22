@@ -31,11 +31,14 @@ export default class ChamadosB2BModule {
     const tecnicos = this._getUniqueValues('Técnico / Responsável');
     const diagnosticos = this._getUniqueValues('Diagnóstico / Tipo de Falha');
 
-    const normalizadoCount = this.data.filter(i => (i['Agendamento / Acesso'] || '').toUpperCase().includes('NORMALIZADO')).length;
-    const canceladoCount = this.data.filter(i => (i['Agendamento / Acesso'] || '').toUpperCase().includes('CANCELADO')).length;
+    const normalizadoCount = this.data.filter(i => {
+      const s = (i['Status'] || '').toUpperCase();
+      return s.includes('NORMALIZADO') || s.includes('CONCLU');
+    }).length;
+    const canceladoCount = this.data.filter(i => (i['Status'] || '').toUpperCase().includes('CANCELADO')).length;
     const pendentesCount = this.data.length - normalizadoCount - canceladoCount;
     const atenuacaoCount = this.data.filter(i => {
-      const s = (i['Agendamento / Acesso'] || '').toUpperCase();
+      const s = (i['Status'] || '').toUpperCase();
       return s.includes('ATENUAÇÃO') || s.includes('ATENUACAO');
     }).length;
 
@@ -83,7 +86,7 @@ export default class ChamadosB2BModule {
 
   _applyFilters() {
     this.filteredData = this.data.filter(item => {
-      const status = (item['Agendamento / Acesso'] || '').toUpperCase();
+      const status = (item['Status'] || '').toUpperCase();
       
       if (this.filterTecnico && (item['Técnico / Responsável'] || '').trim() !== this.filterTecnico) {
         return false;
@@ -95,8 +98,8 @@ export default class ChamadosB2BModule {
 
       let matchStatus = false;
       if (this.filterStatus === 'TODOS') matchStatus = true;
-      else if (this.filterStatus === 'PENDENTES') matchStatus = !status.includes('NORMALIZADO') && !status.includes('CANCELADO');
-      else if (this.filterStatus === 'CONCLUÍDOS') matchStatus = status.includes('NORMALIZADO');
+      else if (this.filterStatus === 'PENDENTES') matchStatus = !status.includes('NORMALIZADO') && !status.includes('CANCELADO') && !status.includes('CONCLU');
+      else if (this.filterStatus === 'CONCLUÍDOS') matchStatus = status.includes('NORMALIZADO') || status.includes('CONCLU');
       else matchStatus = status.includes(this.filterStatus.toUpperCase());
       
       if (!this.searchTerm) return matchStatus;
@@ -124,17 +127,17 @@ export default class ChamadosB2BModule {
         count = this.data.length;
       } else if (f.id === 'PENDENTES') {
         count = this.data.filter(item => {
-          const s = (item['Agendamento / Acesso'] || '').toUpperCase();
-          return !s.includes('NORMALIZADO') && !s.includes('CANCELADO');
+          const s = (item['Status'] || '').toUpperCase();
+          return !s.includes('NORMALIZADO') && !s.includes('CANCELADO') && !s.includes('CONCLU');
         }).length;
       } else if (f.id === 'CONCLUÍDOS') {
         count = this.data.filter(item => {
-          const s = (item['Agendamento / Acesso'] || '').toUpperCase();
-          return s.includes('NORMALIZADO');
+          const s = (item['Status'] || '').toUpperCase();
+          return s.includes('NORMALIZADO') || s.includes('CONCLU');
         }).length;
       } else {
         count = this.data.filter(item => {
-          const s = (item['Agendamento / Acesso'] || '').toUpperCase();
+          const s = (item['Status'] || '').toUpperCase();
           return s.includes(f.id.toUpperCase());
         }).length;
       }
@@ -153,7 +156,7 @@ export default class ChamadosB2BModule {
     }
 
     return this.filteredData.map((item, i) => {
-      const statusBadge = this._getStatusBadge(item['Agendamento / Acesso'] || '');
+      const statusBadge = this._getStatusBadge(item['Status'] || '');
       const diagBadge = this._getDiagBadge(item['Diagnóstico / Tipo de Falha'] || '');
       const endereco = item['Endereço'] || '';
       const numero = item['Número / Complemento'] || '';
@@ -203,7 +206,10 @@ export default class ChamadosB2BModule {
   _getStatusBadge(status) {
     const s = status.toUpperCase();
     const text = escapeHTML(status) || 'Sem status';
-    if (s.includes('NORMALIZADO')) return `<span class="badge badge-normalizado">${text}</span>`;
+    if (s.includes('NORMALIZADO')) {
+      const display = text.replace(/normalizado/gi, 'Concluído');
+      return `<span class="badge badge-normalizado">${display}</span>`;
+    }
     if (s.includes('PENDENTE'))    return `<span class="badge badge-pendente">${text}</span>`;
     if (s.includes('ATENUAÇÃO') || s.includes('ATENUACAO')) return `<span class="badge badge-atenuacao">${text}</span>`;
     if (s.includes('AGENDAMENTO')) return `<span class="badge badge-agendado">${text}</span>`;

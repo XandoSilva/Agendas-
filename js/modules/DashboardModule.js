@@ -134,7 +134,7 @@ export default class DashboardModule {
     (data.chamadosB2B || []).forEach(item => {
       const isAberto = this._isDateInPeriod(item['Dt. Abertura'], period);
       const isConcluido = this._isDateInPeriod(item['Dt. Finalizado'] || item['Dt. Finalizado / Previsão'], period) && 
-                          (item['Agendamento / Acesso'] || '').toUpperCase().includes('NORMALIZADO');
+                          ((item['Status'] || '').toUpperCase().includes('NORMALIZADO') || (item['Status'] || '').toUpperCase().includes('CONCLU'));
       
       const inScope = isAberto || isConcluido;
       const p = getProd(item['Técnico / Responsável']);
@@ -151,7 +151,7 @@ export default class DashboardModule {
 
     // Incidentes
     (data.incidentes || []).forEach(item => {
-      const isConcluido = (item['Status'] || '').toUpperCase().includes('NORMALIZADO');
+      const isConcluido = (item['Status'] || '').toUpperCase().includes('NORMALIZADO') || (item['Status'] || '').toUpperCase().includes('CONCLU');
       const isConcluidoInPeriod = isConcluido && this._isDateInPeriod(item['Data Finalizado'], period);
       
       // Consider pending as open if Geral, otherwise we need an opening date which we don't have.
